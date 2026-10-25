@@ -30,6 +30,9 @@ var won := false
 var share := GodData.START_SHARE
 var reputation := GodData.START_REPUTATION
 var lost_to_gaetan := false
+## What Dad handed over on day 1 (cash + the full tank at the starting price): the owner's capital on the
+## balance sheet; everything above it is retained earnings.
+var start_capital := 0.0
 ## Last night's numbers, for the report: {share_from, share_to, rep_from, rep_to}.
 var last_night := {}
 ## Round 8, for the newspaper's charts: the wholesale price after each delivery (the first entry is
@@ -51,6 +54,7 @@ func _init(m: MetaState = null) -> void:
 	cash = mods.start_cash
 	tank = mods.tank_capacity  # Dad's last delivery: the tank starts full
 	price_history = [price]
+	start_capital = cash + tank / GodData.PUMP_PRICE * price
 
 
 func mods() -> Dictionary:
@@ -299,9 +303,10 @@ func books(report: Dictionary) -> Dictionary:
 	var gas_in_tank: float = at_cost.call(tank)
 	var loan := 300.0 if next_delivery_extra > 0.0 else 0.0  # the cousin's loan, repaid on the next delivery
 	var assets := cash + gas_in_tank + equipment
+	var equity := assets - loan
 	return {"sales": sales, "tips": tips, "gas_sold": gas_sold, "spills": spills, "drones": drones, "fines": fines,
 		"net": net, "cash": cash, "gas_in_tank": gas_in_tank, "equipment": equipment, "assets": assets,
-		"loan": loan, "equity": assets - loan}
+		"loan": loan, "liabilities": loan, "equity": equity, "capital": start_capital, "retained": equity - start_capital}
 
 
 func next_day() -> void:

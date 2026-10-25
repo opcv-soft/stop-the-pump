@@ -516,8 +516,8 @@ func test_a_flying_drone_burns_gas() -> void:
 	assert_almost_eq(car.amount, 0.0, 0.001)
 
 
-func test_xp_is_litres_times_one_plus_average_combo_times_accuracy() -> void:
-	assert_eq(GodPump.xp_formula(30.0, 2.0, 0.9), 81)
+func test_xp_is_litres_times_the_sum_of_chains_times_accuracy() -> void:
+	assert_eq(GodPump.xp_formula(30.0, 6, 0.9), 162)
 	_open()
 	for i in 3:  # three Perfects in a row: combo paid x1, x2, x3 = 6 combo points
 		var car := _parked("sedan", Vector2(300 + i * 150, 380), 20.0)
@@ -526,8 +526,7 @@ func test_xp_is_litres_times_one_plus_average_combo_times_accuracy() -> void:
 	var litres := 3 * 19.6 / game.economy.price_per_liter
 	assert_almost_eq(game.day_stats.litres, litres, 0.01)
 	assert_eq(game.day_stats.combo_points, 6)
-	assert_almost_eq(game.avg_combo(), 2.0, 0.001)
-	assert_eq(game.day_report().xp, GodPump.xp_formula(litres, 2.0, game.day_accuracy()))
+	assert_eq(game.day_report().xp, GodPump.xp_formula(litres, 6, game.day_accuracy()), "one chain of 3: 1 + 2 + 3")
 
 
 func test_drone_fills_add_litres_but_no_combo_points() -> void:
@@ -538,7 +537,7 @@ func test_drone_fills_add_litres_but_no_combo_points() -> void:
 	game._settle(car)
 	assert_gt(game.day_stats.litres, 0.0)
 	assert_eq(game.day_stats.combo_points, 0)
-	assert_eq(game.day_report().xp, GodPump.xp_formula(game.day_stats.litres, 0.0, game.day_accuracy()), "volume still counts")
+	assert_eq(game.day_report().xp, 0, "no chain, no XP")
 
 
 func test_a_car_a_drone_touched_never_tips() -> void:
@@ -718,3 +717,22 @@ func test_the_dog_runs_out_every_12_seconds() -> void:
 	for i in int(GodPump.HERD_EVERY / 0.05) + 2:
 		game.step(0.05)
 	assert_gt(game.herd_t, 0.0)
+
+
+func test_one_long_chain_beats_several_short_ones() -> void:
+	_open()
+	for i in 6:  # one chain of 6: 1 + 2 + 3 + 4 + 5 + 5 (capped at x5)
+		var car := _parked("sedan", Vector2(200 + i * 120, 380), 20.0)
+		car.amount = 19.6
+		game._settle(car)
+	assert_eq(game.day_stats.combo_points, 20)
+	_open()
+	for i in 6:  # three chains of 2, broken by an OK each time
+		var car := _parked("sedan", Vector2(200 + i * 120, 380), 20.0)
+		car.amount = 19.6
+		game._settle(car)
+		if i % 2 == 1:
+			var ok := _parked("sedan", Vector2(200 + i * 120, 480), 20.0)
+			ok.amount = 17.0
+			game._settle(ok)
+	assert_eq(game.day_stats.combo_points, 9)

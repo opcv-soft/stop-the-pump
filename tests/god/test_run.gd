@@ -172,6 +172,8 @@ func test_the_books_count_gas_at_what_the_truck_charged() -> void:
 	assert_almost_eq(b.net, 60.0 + 12.0 - 45.0 - 3.0 - 1.5 - 10.0, 0.001)
 	assert_almost_eq(b.gas_in_tank, 100.0 / GodData.PUMP_PRICE * 1.5, 0.001)
 	assert_almost_eq(b.equity, b.cash + b.gas_in_tank + b.equipment - b.loan, 0.001)
+	assert_almost_eq(b.assets, b.liabilities + b.equity, 0.001, "it balances")
+	assert_almost_eq(b.capital + b.retained, b.equity, 0.001)
 
 
 func test_the_shop_sells_nodes_in_order() -> void:
@@ -186,7 +188,7 @@ func test_the_shop_sells_nodes_in_order() -> void:
 func test_garage_purchases_apply_and_are_saved() -> void:
 	var m := MetaState.new()
 	m.path = SAVE
-	m.xp = 25000  # round 10: Garage prices ×5
+	m.xp = 75000  # round 10: Garage prices ×15
 	assert_true(m.buy_nozzle("laser"))
 	assert_true(m.buy_bling("receipt"))
 	assert_true(m.buy_perk("nest_egg"))

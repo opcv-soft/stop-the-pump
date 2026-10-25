@@ -2,6 +2,14 @@
 
 One entry per hypothesis. Newest first.
 
+## 2026-10-25 — v0.46 reviewed (design pass)  (#37)
+Hypothesis: Coins on the lot, MULTI-JET, Gaétan and the market share, the spill branch and a cartoon look make the run worth fighting for.
+Variable: v0.46.0 and the look test
+Sessions: design review with the designer
+Observed: Coins good, MULTI-JET good, Batch B good, the cartoon look approved. XP: combos should multiply as you chain, and each broken chain adds its value to the sum (L × sum × accuracy) "to encourage chaining". The balance sheet should show assets, liabilities and equity "like a real business"; rename P&L to Today's results. The vacuum tube man needs a sucking animation.
+Biggest weakness: XP didn't reward chaining (the average combo flattened it).
+Decision: XP = litres × the sum of chains (each chain = the sum of its multipliers) × accuracy. Real balance sheet. Sucking animation. Redraw in the cartoon style, then batch D.
+
 ## 2026-10-25 — Round 10 batch A, played  (#37)
 Hypothesis: A visible nozzle ring, coins in stacks off the lot, a day bar and quiet regulars bring the focus back to the pour.
 Variable: v0.45.0

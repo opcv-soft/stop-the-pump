@@ -739,6 +739,7 @@ func _step_tube_man(dt: float) -> void:
 const VACUUM_AT := Vector2(1060, 560)
 const VACUUM_EVERY := 4.0
 const VACUUM_RETURN := 0.7
+const VACUUM_SLURP := 1.4  # how long the slurp plays: lean over, suck, swallow
 var _vacuum_cd := VACUUM_EVERY
 var vacuumed := 0.0
 ## The puddle he's sucking up now (for the drawing), and how long the slurp has left.
@@ -764,7 +765,7 @@ func _step_vacuum(dt: float) -> void:
 	tank += back
 	vacuumed += back
 	round_wasted = maxf(round_wasted - back, 0.0)  # the books count only what's really lost
-	vacuum_slurp = {"pos": biggest.pos, "t": 0.6}
+	vacuum_slurp = {"pos": biggest.pos, "t": VACUUM_SLURP, "r": biggest.r}
 	puddles.erase(biggest)
 
 
@@ -1010,20 +1011,14 @@ func _count(car: ProtoCar, t: String, combo_paid := 0) -> void:
 	day_stats.accuracy_sum += car.accuracy()
 	day_stats.litres += minf(car.amount, car.target) / economy.price_per_liter
 	day_stats.combo_points += combo_paid
-	day_stats.xp = xp_formula(day_stats.litres, avg_combo(), day_accuracy())
+	day_stats.xp = xp_formula(day_stats.litres, day_stats.combo_points, day_accuracy())
 
 
-## The day's average combo: the combo points over the cars fueled (0 when none had a hand-poured
-## Good-or-better fill).
-func avg_combo() -> float:
-	return float(day_stats.combo_points) / day_stats.cars if not day_stats.is_empty() and day_stats.cars > 0 else 0.0
-
-
-## Round 10: a day's XP = litres put in cars × (1 + average combo) × accuracy (playtest 10). Playing more
-## (litres) and playing better (combo, accuracy) both pay, and it grows in step with the day's size
-## (playtest 9's litres × combo points grew with its square).
-static func xp_formula(litres: float, combo: float, accuracy: float) -> int:
-	return int(round(litres * (1.0 + combo) * accuracy))
+## Round 10 (playtest 11): a day's XP = litres put in cars × the sum of the day's chains × accuracy. A
+## chain's value is the sum of the multipliers it paid (x1 + x2 + x3 + x4 = 10), so one chain of 6 (20)
+## beats three chains of 2 (9): it pays to keep chaining. The chains' sum is the day's combo points.
+static func xp_formula(litres: float, combo_points: int, accuracy: float) -> int:
+	return int(round(litres * combo_points * accuracy))
 
 
 func day_accuracy() -> float:
@@ -1164,7 +1159,7 @@ func day_report() -> Dictionary:
 		"accuracy": day_accuracy(), "best_combo": _best_combo, "wasted": round_wasted, "fines": fines,
 		"stolen": stolen, "out_of_gas": tank <= 0.0001, "hockey": hockey_night,
 		"tube_gas": tube_gas, "tube_grabs": tube_grabs, "litres": day_stats.litres,
-		"combo_points": day_stats.combo_points, "avg_combo": avg_combo(), "drone_gas": drone_gas,
+		"combo_points": day_stats.combo_points, "drone_gas": drone_gas,
 		"chat": chat_log.duplicate(), "rep": day_stats.rep, "rival_cars": rival_cars}
 
 
@@ -1664,22 +1659,71 @@ func _draw_drones(o: Node2D) -> void:
 
 
 ## Troublemakers wear a badge (a mask, a lightning bolt, a broom, dizzy stars); Dad wears his name.
-## The Aspirateur gonflable: the tube man's blue cousin by the lot's corner, and the gas he slurps up.
+## The Aspirateur gonflable (playtest 11: "an animation that he sucks"): a blue inflatable tube man by the
+## lot's corner, drawn as a wobbly tube of segments with a face. Idle he dances. When he slurps a puddle
+## he leans over it, his mouth opens wide, the puddle shrinks, and gold bulges run down his tube to the
+## tank at his feet.
 func _draw_vacuum(o: Node2D) -> void:
 	if int(mods.get("puddle_vacuum", 0)) <= 0:
 		return
-	var strip := anim_tex("tube_man")
 	var base := scr(VACUUM_AT)
-	if strip:
-		var fw := strip.get_width() / 8.0
-		var at := base - Vector2(fw, strip.get_height() * 2.0) + Vector2(0, 8)
-		o.draw_texture_rect_region(strip, Rect2(at, Vector2(fw, strip.get_height()) * 2.0), Rect2(fw * (int(_t * 12.0) % 8), 0, fw, strip.get_height()), Color(0.45, 0.75, 1.0))
-	if not vacuum_slurp.is_empty():  # a gold stream from the puddle into his mouth
+	var k := 0.0  # 0 idle .. 1 fully leaning over the puddle
+	var target := base + Vector2(-40, -150)
+	var slurp := not vacuum_slurp.is_empty()
+	if slurp:
+		var left: float = vacuum_slurp.t / VACUUM_SLURP
+		k = smoothstep(1.0, 0.75, left) * smoothstep(0.0, 0.2, left)  # lean in, hold, straighten
+		var puddle := scr(vacuum_slurp.pos)
+		var r: float = vacuum_slurp.get("r", 20.0) * clampf((left - 0.2) / 0.6, 0.0, 1.0)
+		if r > 1.0:  # the puddle shrinks as he sucks it up
+			o.draw_set_transform(puddle, 0.0, Vector2(1.0, 0.45))
+			o.draw_circle(Vector2.ZERO, r + 3.0, Color(0.11, 0.1, 0.17))
+			o.draw_circle(Vector2.ZERO, r, GAS)
+			o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		target = target.lerp(puddle + Vector2(0, -22), k * 0.75)
+	var sway := Vector2(sin(_t * 5.0) * 18.0, sin(_t * 7.3) * 6.0) * (1.0 - k)
+	var mid := base.lerp(target, 0.5) + Vector2(cos(_t * 4.0) * 22.0, 0) * (1.0 - k) + Vector2(0, -20)
+	var head := target + sway
+	var ink := Color(0.11, 0.1, 0.17)
+	var blue := Color(0.3, 0.62, 1.0)
+	o.draw_rect(Rect2(base + Vector2(-20, -12), Vector2(40, 18)), ink)  # his blower, a little tank
+	o.draw_rect(Rect2(base + Vector2(-17, -9), Vector2(34, 12)), Color(0.82, 0.84, 0.9))
+	var n := 14
+	var pts: Array[Vector2] = []
+	for i in n + 1:
+		var u := float(i) / n
+		pts.append(base.lerp(mid, u).lerp(mid.lerp(head, u), u))
+	for pass_i in 2:  # an outline pass, then the blue
+		for i in n + 1:
+			var u := float(i) / n
+			var w := 13.0
+			if slurp:  # gold gulps travelling down the tube
+				for g in 3:
+					var at := fmod(_t * 1.8 + g / 3.0, 1.0)
+					w += 7.0 * exp(-pow((1.0 - u - at) * 9.0, 2.0)) * k
+			o.draw_circle(pts[i], w + (3.0 if pass_i == 0 else 0.0), ink if pass_i == 0 else blue)
+	if slurp:
+		for g in 3:
+			var at := fmod(_t * 1.8 + g / 3.0, 1.0)
+			var idx := clampi(int((1.0 - at) * n), 0, n)
+			o.draw_circle(pts[idx], 6.0 * k, Color(GAS, 0.9))
+	for side in [-1.0, 1.0]:  # flailing arms
+		var shoulder := pts[n - 3]
+		var hand := shoulder + Vector2(side * 30.0, -10.0 + sin(_t * 9.0 + side) * 16.0 * (1.0 - k) + 18.0 * k)
+		o.draw_line(shoulder, hand, ink, 11.0, true)
+		o.draw_line(shoulder, hand, blue, 6.0, true)
+	o.draw_circle(head, 19.0, ink)
+	o.draw_circle(head, 16.0, blue.lightened(0.15))
+	for side in [-1.0, 1.0]:
+		o.draw_circle(head + Vector2(side * 6.0, -5.0), 4.5, Color.WHITE)
+		o.draw_circle(head + Vector2(side * 6.0 + 1.0, -4.0), 2.2, ink)
+	var mouth := 3.0 + 7.0 * k + (sin(_t * 30.0) * 1.5 if slurp else 0.0)
+	o.draw_circle(head + Vector2(0, 7), mouth, ink)  # an O when he sucks
+	if slurp and k > 0.3:  # the gas going in
 		var from := scr(vacuum_slurp.pos)
-		var mouth := base + Vector2(0, -70)
 		for i in 6:
-			var k := fmod(_t * 4.0 + i / 6.0, 1.0)
-			o.draw_circle(from.lerp(mouth, k) + Vector2(0, -sin(k * PI) * 40.0), 4.0, Color(GAS, 0.9))
+			var u := fmod(_t * 3.0 + i / 6.0, 1.0)
+			o.draw_circle(from.lerp(head + Vector2(0, 7), u), 4.0 * (1.0 - u * 0.5), Color(GAS, 0.95))
 
 
 ## The Chien de berger robot: a little grey robot dog, legs going, a red eye. He waits by the door and

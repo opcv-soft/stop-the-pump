@@ -31,6 +31,11 @@ Tried along the way (price rise per delivery, fresh save):
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
 
+## Round 10, take 3: XP = litres × the sum of chains × accuracy (playtest 11, 2026-10-25)
+- 12 fresh runs: 9,557 XP a run, **16,755 XP per hour** (×14.5 round 8). Garage prices **×15** round 8; F6 / F1 give 15,000 XP.
+
+    campaign: first win 9 of 12 players; median 2.9 h
+
 ## Round 10 batch B: the fight with Gaétan (2026-10-25)
 The win is now 100% market share (day 50 is gone). Constants in GodData: reputation per car (Topped off +2,
 Perfect +1.25, Good +0.6, OK 0, Overfilled −0.75, Unserved −0.5), Gaétan's push −0.5 a night, the share

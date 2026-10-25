@@ -6,7 +6,7 @@ extends Node
 ##   TITLE → (first time: INTRO → NAMING) → DAY → REPORT → NIGHT (shop, truck → TRUCK → CARDS) → DAY ...
 ##   → bankrupt or 0% share: RUN_OVER → GARAGE → new run   ·   100% share: REPORT → ENDING → RUN_OVER → GARAGE
 ## Designer keys: F1 opens the dev configurator (DevPanel), F3 ends the day, F4 gives $100, F6 gives
-## 5000 XP.
+## 15000 XP.
 
 const DAY_SCENE := preload("res://scenes/god/day/god_pump.tscn")
 
@@ -389,5 +389,5 @@ func _unhandled_input(e: InputEvent) -> void:
 				run.cash += 100.0
 				night.refresh()
 		KEY_F6:
-			meta.xp += 5000
+			meta.xp += 15000
 			meta.save()

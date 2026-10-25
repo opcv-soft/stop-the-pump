@@ -1,8 +1,8 @@
 class_name DayReportScreen
 extends Control
 ## End of a day. Round 10 (playtests 9 and 10): the fight with Gaétan on top (market share and
-## reputation, with Dad's reaction), then three columns: the day (accuracy, cars, combo, XP, grades), the
-## books (a P&L at wholesale cost and a balance sheet) and what was overheard (the visitor's chat, read
+## reputation, with Dad's reaction), then four columns: the day (accuracy, cars, combo, XP, grades), today's
+## results (the P&L at wholesale cost), the balance sheet (assets, liabilities, equity) and what was overheard (the visitor's chat, read
 ## here instead of over the pour). ENTER or the button goes on.
 
 signal done
@@ -73,25 +73,26 @@ func _draw() -> void:
 	if report.get("out_of_gas", false):
 		GodUI.text(self, Vector2(576, 84), tr("out of gas before closing!"), 15, GodUI.RED, true)
 	_draw_fight()
-	_draw_day(Rect2(48, 200, 330, 340))
-	_draw_books(Rect2(400, 200, 340, 340))
-	_draw_chat(Rect2(762, 200, 344, 340))
+	_draw_day(Rect2(46, 200, 250, 340))
+	_draw_results(Rect2(318, 200, 250, 340))
+	_draw_balance(Rect2(590, 200, 250, 340))
+	_draw_chat(Rect2(862, 200, 244, 340))
 
 
 ## The market share bar (you in gold, Gaétan in green), the reputation, and Dad.
 func _draw_fight() -> void:
 	var night: Dictionary = run.last_night if run else {}
 	var share: float = night.get("share_to", run.share if run else 50.0)
-	var moved: float = share - night.get("share_from", share)
+	var moved := int(round(share)) - int(round(night.get("share_from", share)))  # whole points, so the bar adds up
 	var bar := Rect2(150, 104, 852, 26)
 	draw_rect(bar.grow(3), Color(0, 0, 0, 0.9))
 	draw_rect(bar, Color(0.3, 0.62, 0.35))  # Gaétan's
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * share / 100.0, bar.size.y)), GodUI.GOLD)
 	GodUI.text(self, Vector2(bar.position.x - 12 - GodUI.font().get_string_size(tr("YOU"), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x, bar.end.y - 6), tr("YOU"), 18, GodUI.GOLD)
 	GodUI.text(self, Vector2(bar.end.x + 12, bar.end.y - 6), "GAÉTAN", 18, Color(0.45, 0.85, 0.5))
-	var label := "%d%%  (%s%d)" % [int(round(share)), "+" if moved >= 0.0 else "", int(round(moved))]
+	var label := "%d%%  (%s%d)" % [int(round(share)), "+" if moved >= 0 else "", moved]
 	GodUI.text(self, Vector2(bar.position.x + 10, bar.end.y - 6), label, 17, GodUI.INK)
-	var theirs := "%d%%" % int(round(100.0 - share))
+	var theirs := "%d%%" % (100 - int(round(share)))
 	GodUI.text(self, Vector2(bar.end.x - 10 - GodUI.font().get_string_size(theirs, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x, bar.end.y - 6), theirs, 17, GodUI.INK)
 	var rep: float = night.get("rep_to", run.reputation if run else 50.0)
 	var rep_moved: float = rep - night.get("rep_from", rep)
@@ -115,7 +116,7 @@ func _draw_day(r: Rect2) -> void:
 	y += 26
 	_row(r, y, tr("XP"), "+%d" % report.get("xp", 0), GodUI.GOLD)
 	y += 20
-	var sum := tr("%.0f L x (1 + %.1f combo) x %d%%") % [report.get("litres", 0.0), report.get("avg_combo", 0.0), int(report.get("accuracy", 0.0) * 100.0)]
+	var sum := tr("%.0f L x %d combo x %d%%") % [report.get("litres", 0.0), report.get("combo_points", 0), int(report.get("accuracy", 0.0) * 100.0)]
 	GodUI.text(self, Vector2(r.end.x - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, y), sum, 12, Color(GodUI.CREAM, 0.6))
 	var tiers: Dictionary = report.get("tiers", {})
 	var grades := [[ScoreTiers.SUPER_PERFECT, "SUPER"], [ScoreTiers.PERFECT, "PERFECT"], [ScoreTiers.GOOD, "GOOD"],
@@ -128,36 +129,57 @@ func _draw_day(r: Rect2) -> void:
 	GodUI.text(self, Vector2(r.get_center().x, r.end.y - 12), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 14, Color(GodUI.CREAM, 0.7), true)
 
 
-## The day's P&L (gas at what the truck charged) and tonight's balance sheet.
-func _draw_books(r: Rect2) -> void:
+## Today's results (the P&L, playtest 11): what came in, what the gas cost at the truck's price.
+func _draw_results(r: Rect2) -> void:
 	var b := run.books(report) if run else {}
 	if b.is_empty():
 		return
-	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("P&L"), 18, GodUI.GOLD, true)
-	var y := r.position.y + 40
+	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("TODAY'S RESULTS"), 18, GodUI.GOLD, true)
+	var y := r.position.y + 46
 	for row in [[tr("Sales"), b.sales], [tr("Tips"), b.tips], [tr("Gas sold, at cost"), -b.gas_sold],
 			[tr("Spilled gas"), -b.spills], [tr("Drone gas"), -b.drones], [tr("Fines"), -b.fines]]:
 		if absf(row[1]) < 0.5 and row[0] in [tr("Drone gas"), tr("Fines")]:
 			continue
 		_row(r, y, row[0], _money(row[1]), GodUI.CREAM if row[1] >= 0.0 else GodUI.RED, 14)
-		y += 20
-	draw_line(Vector2(r.position.x, y - 12), Vector2(r.end.x, y - 12), Color(GodUI.GOLD_DIM, 0.8), 1.0)
+		y += 22
+	draw_line(Vector2(r.position.x, y - 14), Vector2(r.end.x, y - 14), Color(GodUI.GOLD_DIM, 0.8), 1.0)
 	_row(r, y + 2, tr("Net profit"), _money(b.net), GodUI.GREEN if b.net >= 0.0 else GodUI.RED, 16)
-	y += 40
-	GodUI.text(self, Vector2(r.get_center().x, y), tr("BALANCE SHEET"), 18, GodUI.GOLD, true)
-	y += 26
-	for row in [[tr("Cash"), b.cash], [tr("Gas in the tank, at cost"), b.gas_in_tank], [tr("Equipment, at cost"), b.equipment]]:
-		_row(r, y, row[0], _money(row[1]), GodUI.CREAM, 14)
-		y += 20
-	if b.loan > 0.0:
-		_row(r, y, tr("Cousin's loan"), _money(-b.loan), GodUI.RED, 14)
-		y += 20
-	draw_line(Vector2(r.position.x, y - 12), Vector2(r.end.x, y - 12), Color(GodUI.GOLD_DIM, 0.8), 1.0)
-	_row(r, y + 2, tr("Equity"), _money(b.equity), GodUI.GOLD, 16)
+
+
+## Tonight's balance sheet, like a real business: assets = liabilities + equity (Dad's capital, plus
+## what the gaz bar has earned since).
+func _draw_balance(r: Rect2) -> void:
+	var b := run.books(report) if run else {}
+	if b.is_empty():
+		return
+	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("BALANCE SHEET"), 18, GodUI.GOLD, true)
+	var y := r.position.y + 42
+	GodUI.text(self, Vector2(r.position.x, y), tr("ASSETS"), 12, Color(GodUI.GOLD, 0.8))
+	y += 18
+	for row in [[tr("Cash"), b.cash], [tr("Gas in the tank"), b.gas_in_tank], [tr("Equipment"), b.equipment]]:
+		_row(r, y, row[0], _money(row[1]), GodUI.CREAM, 13)
+		y += 18
+	_row(r, y, tr("Total assets"), _money(b.assets), GodUI.GOLD, 14)
+	y += 28
+	GodUI.text(self, Vector2(r.position.x, y), tr("LIABILITIES"), 12, Color(GodUI.GOLD, 0.8))
+	y += 18
+	_row(r, y, tr("Cousin's loan"), _money(-b.loan) if b.loan > 0.0 else "$0", GodUI.RED if b.loan > 0.0 else GodUI.CREAM, 13)
+	y += 18
+	_row(r, y, tr("Total liabilities"), _money(b.liabilities), GodUI.GOLD, 14)
+	y += 28
+	GodUI.text(self, Vector2(r.position.x, y), tr("EQUITY"), 12, Color(GodUI.GOLD, 0.8))
+	y += 18
+	_row(r, y, tr("Dad's capital"), _money(b.capital), GodUI.CREAM, 13)
+	y += 18
+	_row(r, y, tr("Retained earnings"), _money(b.retained), GodUI.GREEN if b.retained >= 0.0 else GodUI.RED, 13)
+	y += 18
+	_row(r, y, tr("Total equity"), _money(b.equity), GodUI.GOLD, 14)
+	y += 22
+	GodUI.text(self, Vector2(r.get_center().x, y + 4), tr("Assets = liabilities + equity"), 11, Color(GodUI.CREAM, 0.5), true)
 
 
 static func _money(v: float) -> String:
-	return ("-$%.0f" % absf(v)) if v < -0.5 else "$%.0f" % v
+	return ("-$%.0f" % absf(v)) if v < -0.5 else "$%.0f" % maxf(v, 0.0)
 
 
 ## Playtest 10: the visitor's chat, read after closing instead of over the pour, to keep the story going.

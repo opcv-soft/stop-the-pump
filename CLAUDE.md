@@ -54,7 +54,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs 
 ## Designer tools (in game)
 - **I:** cycle the views: HD-2D (default), three-quarter pixel, flat top-down.
 - **F1 dev mode:** a configurator panel (pauses a day): cash, gas in the tank, day, XP, cars filled (car-type unlocks), game speed, NEXT NIGHT, END THE DAY, RESET SAVE (two clicks).
-- **F3:** end the day now. **F4:** +$100 (day or night). **F6:** +5000 XP (for the garage).
+- **F3:** end the day now. **F4:** +$100 (day or night). **F6:** +15000 XP (for the garage).
 - **Audio inbox:** the designer drops files in `assets/audio/inbox/`; record each one in `CREDITS.md`.
 - **Audio direction:** plain SFX + looping background music. No music engineering unless the designer asks again.
 - Bump `config/version` in `project.godot` every build the designer plays (shown on the title screen).

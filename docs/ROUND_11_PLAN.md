@@ -1,5 +1,7 @@
 # GOD PUMP: round 11 build plan (2026-10-25)
 
+> **Status: built in v0.48.0 (2026-10-25), awaiting playtest.** Balance numbers: docs/balance/GOD_PUMP_BALANCE.md.
+
 > From playtest 12 (v0.47.0). "The report works." Biggest weaknesses: three upgrade layers that confuse,
 > chaining that no longer matters, and moments (closing, the cash, new unlocks) that don't land.
 > **DECIDED** marks a call the Committee made, to review at the playtest.

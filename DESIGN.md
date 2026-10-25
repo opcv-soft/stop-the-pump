@@ -4,7 +4,7 @@
 > fuel-truck bill, cards, car types and Papa's Garage, is **docs/GOD_PUMP_PLAN.md**. Sections below that
 > describe the key-per-pump game are history.
 
-> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.47.0: round 10 built (A, B, C pass 1, D, E), awaiting playtest; C pass 2 (menus, icons) next; plan in docs/ROUND_10_PLAN.md)
+> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.48.0: round 11 built (docs/ROUND_11_PLAN.md), awaiting playtest; the menus' cartoon redraw (round 10 C pass 2) still to do)
 > **Last updated:** 2026-10-25
 > This file is the Committee's memory. Read it before every Godot or Blender action. Update it after every approved decision.
 
@@ -259,4 +259,5 @@ Failure is cheap early: a miss costs a little money and teaches the rule.
 | 2026-10-25 | Harder, and a faster car ladder (÷2.5: the trio elétrico at 3,600 XP): reputation Topped off 1.8, Perfect 1.1, Good 0.5; Gaétan's push 0.5 + 0.03 a day; the share moves 5 points a night at most; Garage prices doubled. Bot (even split): 1 win in 24, shares spread around even | Playtest 12: "kind of easy to win", "the ladder is too slow" | Round 11 (#37) |
 | 2026-10-25 | The chain on screen: the combo pill swells with each step, burns hotter, gets flames from x3, shakes grey when it breaks; under it "CHAIN 1+2+3 = 6" and "TODAY n combo"; a broken chain's value flies into the total | Playtest 12: "make the number move and pop" | Round 11C (#37) |
 | 2026-10-25 | A first-day tutorial that teaches by doing (scripts/components/tutorial.gd): pour, let go at F, make a chain of two, what a chain is worth, the red E cars and Gaétan, the day bar, then the night's two tabs. The clock is held while it runs (never more than 30 s a step); saved once done | Playtest 12: "a tutorial to make it obvious what the point is" | Round 11C (#37) |
+| 2026-10-25 | Closing like opening a pack: the report opens while the coins still pour into the register (the tray and register stay visible below it); rays burst, the panel pops open, the share bar sweeps, the numbers count up, the four columns pop in one by one (2 s; Enter skips). A new car type gets its own card: rays, the car spinning in, its name and rule | Playtest 12 | Round 11D (#37) |
 | 2026-10-25 | Market share is per run: 50/50 with Gaétan at the start, win at 100%, lose broke or at 0%; XP and the Garage carry over. The cartoon art starts with a look test | Designer, 2026-10-25 | Round 10 B, C (#37) |

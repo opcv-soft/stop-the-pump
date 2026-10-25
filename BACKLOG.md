@@ -23,7 +23,8 @@
 - [x] `[innovation]` **Round 11B (built): Papa's Garage in the run (night tab, paid with XP), the nozzle ladder, cards as rule-changers, no meta**
 - [x] `[tech]` **Round 11 balance (done): faster car ladder, harder to win**
 - [x] `[innovation]` **Round 11C (built): combo juice, the chain's value on screen, a first-day tutorial**
-- [ ] `[juice]` **Round 11D: pack-opening closing and report, new-car card reveal**
+- [x] `[juice]` **Round 11D (built): pack-opening closing and report, new-car card reveal**
+- [ ] Playtest v0.48: the tutorial (first run: reset the save from F1), chaining on screen, the Garage tab and nozzle ladder, the new cards, the closing and the report's reveal, the new-car card, difficulty (100% should take work)
 - [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)
 - [x] `[art]` **Scene view for the god pump: isometric tried, three-quarter top-down kept; dépanneur, neon, regulars, vintage pump, tip jar** (#36, v0.32.0, kept)

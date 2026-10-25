@@ -21,6 +21,9 @@ var run: RunState
 var meta: MetaState
 var _t := 0.0
 var _btn: Button
+## Round 11D: the report reveals itself like opening a pack, and a new car type gets its own card.
+var _card_open := false
+var _count_k := 1.0  # numbers count up from 0 as the THE DAY column pops in
 
 
 func _init() -> void:
@@ -28,7 +31,7 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_btn = GodUI.button("THE NIGHT  »")
 	_btn.position = Vector2(466, 572)
-	_btn.pressed.connect(func() -> void: done.emit())
+	_btn.pressed.connect(_go_on)
 	add_child(_btn)
 
 
@@ -37,6 +40,7 @@ func show_report(r: Dictionary, the_run: RunState, the_meta: MetaState) -> void:
 	run = the_run
 	meta = the_meta
 	_t = 0.0
+	_card_open = not (run.last_night.get("unlocked", []) as Array).is_empty() if run else false
 	_btn.text = tr("THE END  »") if run.won else tr("THE NIGHT  »")
 	visible = true
 	queue_redraw()
@@ -51,7 +55,38 @@ func _process(dt: float) -> void:
 func _unhandled_input(e: InputEvent) -> void:
 	if visible and e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
 		get_viewport().set_input_as_handled()
-		done.emit()
+		_go_on()
+
+
+## Enter or the button: first closes the new-car card (if one is up), then goes on to the night.
+func _go_on() -> void:
+	if _t < REVEAL:
+		_t = REVEAL  # skip the reveal
+		return
+	if _card_open:
+		_card_open = false
+		return
+	done.emit()
+
+
+func _gui_input(e: InputEvent) -> void:
+	if e is InputEventMouseButton and e.pressed and _card_open and _t >= REVEAL:
+		_card_open = false
+		accept_event()
+
+
+const REVEAL := 2.0  # seconds the pack-opening takes
+
+
+## 0..1 with an elastic overshoot.
+static func _pop(k: float) -> float:
+	k = clampf(k, 0.0, 1.0)
+	return 1.0 + 0.25 * sin(k * PI) * (1.0 - k) if k < 1.0 else 1.0
+
+
+## Scales what's drawn next around `centre` by `s` (a pop-in).
+func _scale_at(centre: Vector2, s: float) -> void:
+	draw_set_transform(centre - centre * s, 0.0, Vector2(s, s))
 
 
 ## What Dad says tonight.
@@ -66,24 +101,76 @@ func dad_line() -> String:
 func _draw() -> void:
 	if report.is_empty():
 		return
-	GodUI.dim(self, size, 0.6)
+	GodUI.dim(self, Vector2(size.x, 564), 0.6)  # the tray and the register stay visible below
+	var centre := Vector2(576, 290)
+	if _t < 1.4:  # rays burst behind the pack as it opens
+		var a := clampf(1.0 - _t / 1.4, 0.0, 1.0)
+		for i in 16:
+			var ang := _t * 0.8 + i * TAU / 16.0
+			draw_colored_polygon(PackedVector2Array([centre, centre + Vector2.from_angle(ang - 0.08) * 700.0, centre + Vector2.from_angle(ang + 0.08) * 700.0]), Color(1.0, 0.85, 0.35, 0.18 * a))
+	var open := clampf(_t / 0.35, 0.0, 1.0)
+	_scale_at(centre, (0.55 + 0.45 * open) * _pop(_t / 0.5))
 	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), Rect2(28, 20, 1096, 540))
 	var day: int = report.get("day", 1)
 	GodUI.text(self, Vector2(576, 60), tr("FERMÉ  ·  DAY %d") % day, 30, GodUI.GOLD, true)
 	if report.get("out_of_gas", false):
 		GodUI.text(self, Vector2(576, 84), tr("out of gas before closing!"), 15, GodUI.RED, true)
-	_draw_fight()
-	_draw_day(Rect2(46, 200, 250, 340))
-	_draw_results(Rect2(318, 200, 250, 340))
-	_draw_balance(Rect2(590, 200, 250, 340))
-	_draw_chat(Rect2(862, 200, 244, 340))
+	draw_set_transform(Vector2.ZERO)
+	if _t > 0.35:
+		_draw_fight(clampf((_t - 0.4) / 0.8, 0.0, 1.0))
+	var cols := [[Rect2(46, 200, 250, 340), 0.8], [Rect2(318, 200, 250, 340), 1.05], [Rect2(590, 200, 250, 340), 1.3], [Rect2(862, 200, 244, 340), 1.55]]
+	for i in cols.size():
+		var r: Rect2 = cols[i][0]
+		var k: float = (_t - cols[i][1]) / 0.35
+		if k <= 0.0:
+			continue
+		_scale_at(r.get_center(), minf(k, 1.0) * _pop(k))
+		match i:
+			0:
+				_count_k = clampf((_t - 0.8) / 0.9, 0.0, 1.0)
+				_draw_day(r)
+			1:
+				_draw_results(r)
+			2:
+				_draw_balance(r)
+			3:
+				_draw_chat(r)
+		draw_set_transform(Vector2.ZERO)
+	if _card_open and _t >= REVEAL:
+		_draw_new_car()
+
+
+## Round 11D (playtest 12: "when you unlock a new car it needs to be obvious"): a card flies in over the
+## report, rays spinning behind it, the car spinning in, its name and rule. A click or Enter puts it away.
+func _draw_new_car() -> void:
+	var fresh: Array = run.last_night.get("unlocked", [])
+	if fresh.is_empty():
+		return
+	var id: String = fresh[-1]
+	var t: Dictionary = GodData.CAR_TYPES[id]
+	var k := clampf((_t - REVEAL) / 0.45, 0.0, 1.0)
+	var centre := Vector2(576, 300)
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.45 * k))
+	for i in 12:
+		var ang := _t * 0.6 + i * TAU / 12.0
+		draw_colored_polygon(PackedVector2Array([centre, centre + Vector2.from_angle(ang - 0.1) * 420.0, centre + Vector2.from_angle(ang + 0.1) * 420.0]), Color(1.0, 0.85, 0.35, 0.22 * k))
+	_scale_at(centre, maxf(k, 0.01) * _pop(k * 1.2))
+	CartoonArt.box(self, Rect2(centre - Vector2(230, 160), Vector2(460, 320)), Color(1.0, 0.97, 0.88), 22.0, 5.0)
+	CartoonArt.label(self, centre + Vector2(0, -112), tr("NEW CAR!"), 40, Color(1.0, 0.55, 0.24), true, 8)
+	var spin := (1.0 - k) * TAU * 1.5
+	CartoonArt.car(self, centre + Vector2(0, -36), spin, id, CartoonArt.paint(id, 0), Vector2.ONE, 0.0, _t, 1.6 if not id in ["tank", "trio"] else 1.1)
+	CartoonArt.label(self, centre + Vector2(0, 42), t.name, 26, Color.WHITE, true, 6)
+	GodUI.para(self, centre + Vector2(0, 74), tr(t.helps), 16, 400, CartoonArt.INK)
+	GodUI.text(self, centre + Vector2(0, 148), tr("on the lot tomorrow  ·  click to continue"), 13, Color(CartoonArt.INK, 0.6), true)
+	draw_set_transform(Vector2.ZERO)
 
 
 ## The market share bar (you in gold, Gaétan in green), the reputation, and Dad.
-func _draw_fight() -> void:
+func _draw_fight(sweep := 1.0) -> void:
 	var night: Dictionary = run.last_night if run else {}
-	var share: float = night.get("share_to", run.share if run else 50.0)
-	var moved := int(round(share)) - int(round(night.get("share_from", share)))  # whole points, so the bar adds up
+	var share_to: float = night.get("share_to", run.share if run else 50.0)
+	var moved := int(round(share_to)) - int(round(night.get("share_from", share_to)))  # whole points, so the bar adds up
+	var share: float = lerpf(night.get("share_from", share_to), share_to, smoothstep(0.0, 1.0, sweep))  # the bar sweeps
 	var bar := Rect2(150, 104, 852, 26)
 	draw_rect(bar.grow(3), Color(0, 0, 0, 0.9))
 	draw_rect(bar, Color(0.3, 0.62, 0.35))  # Gaétan's
@@ -108,13 +195,14 @@ func _row(r: Rect2, y: float, label: String, value: String, col := GodUI.CREAM, 
 func _draw_day(r: Rect2) -> void:
 	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("THE DAY"), 18, GodUI.GOLD, true)
 	var y := r.position.y + 46
-	_row(r, y, tr("Accuracy"), "%d%%" % int(report.get("accuracy", 0.0) * 100.0), GodUI.GOLD)
+	var k := _count_k
+	_row(r, y, tr("Accuracy"), "%d%%" % int(report.get("accuracy", 0.0) * 100.0 * k), GodUI.GOLD)
 	y += 26
-	_row(r, y, tr("Cars fueled"), str(report.get("cars", 0)), GodUI.GOLD)
+	_row(r, y, tr("Cars fueled"), str(int(report.get("cars", 0) * k)), GodUI.GOLD)
 	y += 26
 	_row(r, y, tr("Best combo"), "x%d" % report.get("best_combo", 1), GodUI.GOLD)
 	y += 26
-	_row(r, y, tr("XP"), "+%d" % report.get("xp", 0), GodUI.GOLD)
+	_row(r, y, tr("XP"), "+%d" % int(report.get("xp", 0) * k), GodUI.GOLD, 15 if k >= 1.0 else 17)
 	y += 20
 	var sum := tr("%.0f L x %d combo x %d%%") % [report.get("litres", 0.0), report.get("combo_points", 0), int(report.get("accuracy", 0.0) * 100.0)]
 	GodUI.text(self, Vector2(r.end.x - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, y), sum, 12, Color(GodUI.CREAM, 0.6))
@@ -122,12 +210,12 @@ func _draw_day(r: Rect2) -> void:
 	var grades := [[ScoreTiers.SUPER_PERFECT, "SUPER"], [ScoreTiers.PERFECT, "PERFECT"], [ScoreTiers.GOOD, "GOOD"],
 		[ScoreTiers.OK, "OK"], [ScoreTiers.MISS, "OVERFILLED"], [ScoreTiers.UNSERVED, "UNSERVED"]]
 	for i in grades.size():
-		var x := r.position.x + 27.0 + i * 55.0
+		var x := r.position.x + 20.0 + i * 42.0  # six grades across the column's 250 px
 		var col: Color = GodPump.TIER_COLORS[grades[i][0]]
-		GodUI.text(self, Vector2(x, y + 50), str(tiers.get(grades[i][0], 0)), 24, col, true)
-		GodUI.text(self, Vector2(x, y + 68), tr(grades[i][1]), 9, Color(col, 0.8), true)
+		GodUI.text(self, Vector2(x, y + 50), str(tiers.get(grades[i][0], 0)), 22, col, true)
+		GodUI.text(self, Vector2(x, y + 66), tr(grades[i][1]), 7, Color(col, 0.8), true)
 	var fresh: Array = run.last_night.get("unlocked", []) if run else []
-	if not fresh.is_empty():  # round 10 D: the ladder's next rung arrives tomorrow
+	if not fresh.is_empty():  # round 10 D: the ladder's next rung arrives tomorrow (11D: and gets its card)
 		CartoonArt.label(self, Vector2(r.get_center().x, r.end.y - 64), tr("NEW TOMORROW: %s!") % GodData.CAR_TYPES[fresh[-1]].name, 16, Color(1.0, 0.8, 0.3))
 	elif run and not run.next_unlock().is_empty():
 		var n := run.next_unlock()

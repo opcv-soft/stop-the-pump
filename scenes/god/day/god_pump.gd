@@ -169,6 +169,7 @@ var _chain_fly := {}  # a broken chain's value flying to today's total: {"value"
 ## Round 11: the big OUVERT / FERMÉ sign over the lot: {"open": bool, "t": seconds since it swung in}.
 var banner := {}
 var _cash_in := 0.0
+var _reported := false  # round 11D: the report opens while the coins are still pouring in
 ## The GAZ BAR neon flashes like a pinball machine on Good or better (seconds left, and the grade).
 var neon_flash := 0.0
 var neon_tier := ""
@@ -527,6 +528,8 @@ func step(dt: float) -> void:
 			say(QUIPS.low_gas)
 	if _cash_in > 0.0:
 		_cash_in -= dt
+		if not _reported and cash_in_progress() >= 0.55:
+			_report_now()  # the report opens as the stacks start pouring into the register
 		if _cash_in <= 0.0:
 			_finish_day()
 	if not banner.is_empty():
@@ -1149,6 +1152,7 @@ func end_round() -> void:
 			m.t = minf(m.t, 0.0)
 			m.screen = true
 	banner = {"open": false, "t": 0.0}  # the sign flips to FERMÉ
+	_reported = false
 	_cash_in = cash_in_time
 	if _cash_in <= 0.0:
 		_finish_day()
@@ -1174,6 +1178,13 @@ func _finish_day() -> void:
 	money.clear()
 	shown_cash = cash
 	_play("cash")
+	if not _reported:
+		_report_now()
+
+
+## The day is over for GodGame: the report opens (the coins may still be pouring into the register).
+func _report_now() -> void:
+	_reported = true
 	if managed:
 		day_over.emit(day_report())
 

@@ -202,3 +202,20 @@ func test_the_night_has_a_garage_tab_paid_with_xp() -> void:
 	assert_eq(g.run.nozzle_tier, 1)
 	g.night.set_tab("shop")
 	assert_true(g.night.tree.visible)
+
+
+func test_the_report_reveals_itself_and_a_new_car_gets_its_card() -> void:
+	g.run.xp = GodData.CAR_TYPES.pickup.unlock - 1
+	g.day.reset_day_stats()
+	g.day.day_stats.xp = 5
+	watch_signals(g.report_screen)
+	g.day.end_round()
+	assert_eq(g.state, "report")
+	assert_eq(g.run.last_night.unlocked, ["pickup"])
+	assert_true(g.report_screen._card_open)
+	g.report_screen._go_on()  # skips the reveal
+	g.report_screen._go_on()  # puts the card away
+	assert_false(g.report_screen._card_open)
+	assert_signal_not_emitted(g.report_screen, "done")
+	g.report_screen._go_on()  # then on to the night
+	assert_signal_emitted(g.report_screen, "done")

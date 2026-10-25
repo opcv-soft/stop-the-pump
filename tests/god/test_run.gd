@@ -178,15 +178,16 @@ func test_the_shop_sells_nodes_in_order() -> void:
 
 func test_the_garage_spends_this_runs_xp() -> void:
 	var r := _run()
-	r.xp = 1500
+	r.xp = 3000
 	assert_true(r.buy_nozzle(), "Le Costaud, the next nozzle")
 	assert_eq(r.nozzle_tier, 1)
 	assert_almost_eq(r.mods().flow_mult, 1.2, 0.001)
 	assert_almost_eq(r.mods().stream_radius, 8.0, 0.001)
 	assert_true(r.buy_bling("pine"))
 	assert_true(r.buy_perk("lucky"))
-	assert_eq(r.xp_left(), 1500 - 300 - 350 - 200)
-	assert_eq(r.xp, 1500, "the car ladder counts all the XP earned")
+	var spent: int = GodData.NOZZLES[1].price + GodData.item(GodData.BLING, "pine").price + GodData.item(GodData.PERKS, "lucky").price
+	assert_eq(r.xp_left(), 3000 - spent)
+	assert_eq(r.xp, 3000, "the car ladder counts all the XP earned")
 	assert_false(r.buy_nozzle(), "not enough XP left for Le Chromé")
 
 
@@ -219,7 +220,7 @@ func test_car_types_unlock_with_cars_filled() -> void:
 	var r2 := RunState.new(m)
 	assert_eq(r2.unlocked_cars(), ["sedan"], "round 10 D: every run starts with sedans only")
 	assert_eq(r2.next_unlock().id, "pickup")
-	r2.xp = 450
+	r2.xp = GodData.CAR_TYPES.cadillac.unlock
 	assert_true("cadillac" in r2.unlocked_cars())
 	assert_eq(r2.next_unlock().id, "bazou")
 
@@ -335,7 +336,7 @@ func test_the_forward_contract_freezes_every_fourth_delivery() -> void:
 
 func test_a_new_car_type_is_announced_the_night_it_unlocks() -> void:
 	var r := _run()
-	r.end_day({"loot": 10.0, "xp": 200})
+	r.end_day({"loot": 10.0, "xp": GodData.CAR_TYPES.pickup.unlock})
 	assert_eq(r.last_night.unlocked, ["pickup"])
 	r.end_day({"loot": 10.0, "xp": 10})
 	assert_true(r.last_night.unlocked.is_empty())

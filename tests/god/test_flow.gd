@@ -194,7 +194,7 @@ func test_the_night_opens_the_car_codex() -> void:
 func test_the_night_has_a_garage_tab_paid_with_xp() -> void:
 	g.day.end_round()
 	g._after_report()
-	g.run.xp = 400
+	g.run.xp = GodData.NOZZLES[1].price
 	g.night.set_tab("garage")
 	assert_true(g.night.garage.visible)
 	assert_false(g.night.tree.visible)

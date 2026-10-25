@@ -21,6 +21,7 @@ const CELLS := {
 	"nozzle": [Vector2i(-1, 0), Vector2i(-2, 0), Vector2i(-3, 0), Vector2i(-4, 0), Vector2i(-5, 0), Vector2i(-6, 0)],
 	"attractions": [Vector2i(-1, -1), Vector2i(-2, -2), Vector2i(-3, -3), Vector2i(-4, -4)],
 	"multi": [Vector2i(-2, -1), Vector2i(-3, -1), Vector2i(-4, -1), Vector2i(-5, -1)],  # off Bec large
+	"spill": [Vector2i(-1, 2), Vector2i(-1, 3), Vector2i(-2, 3)],  # off Gros réservoir
 }
 ## Where each two-parent upgrade sits: in the wedge between its parents' branches.
 const LINK_CELLS := {
@@ -30,7 +31,7 @@ const LINK_CELLS := {
 }
 const FILL := {"hours": Color(0.2, 0.24, 0.42), "marketing": Color(0.42, 0.22, 0.38), "attractions": Color(0.2, 0.38, 0.36),
 	"nozzle": Color(0.5, 0.14, 0.11), "tank": Color(0.35, 0.3, 0.12), "service": Color(0.2, 0.36, 0.22), "vibe": Color(0.47, 0.33, 0.13),
-	"truck": Color(0.45, 0.18, 0.16), "link": Color(0.3, 0.22, 0.42), "multi": Color(0.62, 0.36, 0.08)}
+	"truck": Color(0.45, 0.18, 0.16), "link": Color(0.3, 0.22, 0.42), "multi": Color(0.62, 0.36, 0.08), "spill": Color(0.16, 0.36, 0.5)}
 const NODE := 46.0
 
 var area := Rect2(250, 96, 880, 470)
@@ -204,7 +205,9 @@ func _draw() -> void:
 	for b in GodData.BRANCHES:
 		var last: Vector2i = CELLS[b.id][b.nodes.size() - 1]
 		var dir := Vector2(last).normalized()
-		GodUI.text(self, _pos(last) + dir * _unit * 0.95 + Vector2(0, 5), b.name, 13, Color(GodUI.GOLD, 0.6), true)
+		var half := GodUI.font().get_string_size(b.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x * 0.5
+		var away := maxf(_unit * 0.95, NODE * 0.5 + 8.0 + half * absf(dir.x))  # sideways labels clear their node
+		GodUI.text(self, _pos(last) + dir * away + Vector2(0, 5), b.name, 13, Color(GodUI.GOLD, 0.6), true)
 	if hover != "":
 		_draw_tooltip(hover)
 
@@ -254,7 +257,8 @@ func _draw_node(n: Dictionary) -> void:
 	if tex:
 		draw_texture_rect(tex, Rect2(p - Vector2(half, half) * 0.8, Vector2(half, half) * 1.6), false, tint)
 	elif n.node.has("glyph"):  # no icon drawn yet: a short sign instead
-		GodUI.text(self, p + Vector2(0, 7), n.node.glyph, 20, GodUI.CREAM * tint, true, 4)
+		var gs := 20 if n.node.glyph.length() <= 2 else 14
+		GodUI.text(self, p + Vector2(0, gs * 0.35), n.node.glyph, gs, GodUI.CREAM * tint, true, 4)
 	if n.state == 1:
 		var can2 := run.cash >= price
 		var label := "$%.0f" % price

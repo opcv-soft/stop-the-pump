@@ -484,6 +484,8 @@ func step(dt: float) -> void:
 		_step_roles(dt)
 		_step_drones(dt)
 		_step_tube_man(dt)
+		_step_vacuum(dt)
+		_step_herd(dt)
 		_step_visit(dt)
 		if int(mods.get("tank_alarm", 0)) > 0 and tank < LOW_GAS and not _alarm_said:
 			_alarm_said = true  # Jauge d'alarme: the regulars notice before you run dry
@@ -732,6 +734,83 @@ func _step_tube_man(dt: float) -> void:
 			return
 
 
+## Round 10 E, the spill branch: the Aspirateur gonflable, a second tube man by the lot. Every few seconds
+## he sucks up the biggest puddle and puts most of it back in the tank. Serves: Mastery (spills hurt less).
+const VACUUM_AT := Vector2(1060, 560)
+const VACUUM_EVERY := 4.0
+const VACUUM_RETURN := 0.7
+var _vacuum_cd := VACUUM_EVERY
+var vacuumed := 0.0
+## The puddle he's sucking up now (for the drawing), and how long the slurp has left.
+var vacuum_slurp := {}
+
+
+func _step_vacuum(dt: float) -> void:
+	if not vacuum_slurp.is_empty():
+		vacuum_slurp.t -= dt
+		if vacuum_slurp.t <= 0.0:
+			vacuum_slurp = {}
+	if int(mods.get("puddle_vacuum", 0)) <= 0:
+		return
+	_vacuum_cd -= dt
+	if _vacuum_cd > 0.0 or puddles.is_empty():
+		return
+	_vacuum_cd = VACUUM_EVERY
+	var biggest: Dictionary = puddles[0]
+	for p in puddles:
+		if p.get("gas", 0.0) > biggest.get("gas", 0.0):
+			biggest = p
+	var back: float = biggest.get("gas", 0.0) * VACUUM_RETURN
+	tank += back
+	vacuumed += back
+	round_wasted = maxf(round_wasted - back, 0.0)  # the books count only what's really lost
+	vacuum_slurp = {"pos": biggest.pos, "t": 0.6}
+	puddles.erase(biggest)
+
+
+## Round 10 E, the MULTI-JET branch: the Chien de berger robot. Every HERD_EVERY seconds he runs out and
+## rounds your customers up into a tight circle around where the nozzle points, so one ring can reach two
+## or three of them; then they go back to their rounds. Serves: Mastery (set up the multi-fill).
+const HERD_EVERY := 12.0
+const HERD_SECONDS := 2.6
+var _herd_cd := HERD_EVERY
+var herd_t := 0.0
+var herd_centre := Vector2.ZERO
+var dog_pos := Vector2(216, 190)
+
+
+func _step_herd(dt: float) -> void:
+	if int(mods.get("herd_dog", 0)) <= 0:
+		return
+	if herd_t > 0.0:
+		herd_t -= dt
+		dog_pos = dog_pos.lerp(herd_centre + Vector2.from_angle(_t * 6.0) * ring_radius() * 1.6, minf(dt * 6.0, 1.0))  # he runs circles round them
+		if herd_t <= 0.0:
+			for car in cars:
+				if car.herded:
+					car.herded = false
+					car.start_pattern(self)
+		return
+	dog_pos = dog_pos.lerp(Vector2(216, 190), minf(dt * 3.0, 1.0))  # back by the door
+	_herd_cd -= dt
+	if _herd_cd > 0.0:
+		return
+	_herd_cd = HERD_EVERY
+	herd()
+
+
+## The dog rounds the customers up now, around the nozzle's aim.
+func herd() -> void:
+	herd_centre = _aim.clamp(LOT.position + Vector2(60, 50), LOT.end - Vector2(60, 50))
+	herd_t = HERD_SECONDS
+	var flock := cars.filter(func(c: ProtoCar) -> bool: return c.customer and c.accepts_fuel() and c.phase == ProtoCar.Phase.WANDER and not c.clamped)
+	var r := maxf(ring_radius() * 0.75, 24.0)
+	for i in flock.size():
+		var car: ProtoCar = flock[i]
+		car.herded = true
+		car.herd_to = herd_centre + Vector2.from_angle(TAU * i / flock.size()) * (r if flock.size() > 1 else 0.0)
+
+
 ## He's got it: its gas goes into the tank (spat as gold blobs at the pump).
 func tube_siphon(car: ProtoCar) -> void:
 	var gas := rng.randf_range(8.0, 16.0)
@@ -779,6 +858,7 @@ func _new_car(at: Vector2) -> ProtoCar:
 	car.sprite = _tex.get(CAR_SPRITES[look % CAR_SPRITES.size()])
 	car.stack = STACKS[look % STACKS.size()]
 	car.visible = view == "flat"
+	car.spill_grace = 0.25 + float(mods.get("overfill_grace", 0.0))
 	add_child(car)
 	move_child(car, _overlay.get_index())  # cars draw under the stream and HUD
 	cars.append(car)
@@ -1043,6 +1123,11 @@ func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> v
 	_visit_t = 0.0
 	_visit_done = false
 	_tube_cd = 3.0
+	_vacuum_cd = VACUUM_EVERY
+	vacuumed = 0.0
+	vacuum_slurp = {}
+	_herd_cd = HERD_EVERY
+	herd_t = 0.0
 	tube_gas = 0.0
 	tube_grabs = 0
 	_spits.clear()
@@ -1135,10 +1220,11 @@ func round_fuel_cost() -> float:
 func _spill(at: Vector2, dollars: float) -> void:
 	for p in puddles:
 		if p.pos.distance_to(at) < p.r * 0.8:
+			p.gas = p.get("gas", 0.0) + dollars
 			p.r = minf(p.r + dollars * 9.0, 46.0)
 			p.life = 9.0
 			return
-	puddles.append({"pos": at + Vector2(rng.randf_range(-3, 3), rng.randf_range(-3, 3)), "r": 7.0, "life": 9.0})
+	puddles.append({"pos": at + Vector2(rng.randf_range(-3, 3), rng.randf_range(-3, 3)), "r": 7.0, "life": 9.0, "gas": dollars})
 
 
 func _burst(car: ProtoCar, t: String) -> void:
@@ -1498,6 +1584,8 @@ func _draw_overlay() -> void:
 				car.draw_meter_at(o, car_top(car) + Vector2(0, -46))
 	_draw_road_gauges(o)
 	_draw_badges(o)
+	_draw_vacuum(o)
+	_draw_dog(o)
 	if not hd:
 		_draw_tube_man_2d(o)
 	_draw_drones(o)
@@ -1576,6 +1664,44 @@ func _draw_drones(o: Node2D) -> void:
 
 
 ## Troublemakers wear a badge (a mask, a lightning bolt, a broom, dizzy stars); Dad wears his name.
+## The Aspirateur gonflable: the tube man's blue cousin by the lot's corner, and the gas he slurps up.
+func _draw_vacuum(o: Node2D) -> void:
+	if int(mods.get("puddle_vacuum", 0)) <= 0:
+		return
+	var strip := anim_tex("tube_man")
+	var base := scr(VACUUM_AT)
+	if strip:
+		var fw := strip.get_width() / 8.0
+		var at := base - Vector2(fw, strip.get_height() * 2.0) + Vector2(0, 8)
+		o.draw_texture_rect_region(strip, Rect2(at, Vector2(fw, strip.get_height()) * 2.0), Rect2(fw * (int(_t * 12.0) % 8), 0, fw, strip.get_height()), Color(0.45, 0.75, 1.0))
+	if not vacuum_slurp.is_empty():  # a gold stream from the puddle into his mouth
+		var from := scr(vacuum_slurp.pos)
+		var mouth := base + Vector2(0, -70)
+		for i in 6:
+			var k := fmod(_t * 4.0 + i / 6.0, 1.0)
+			o.draw_circle(from.lerp(mouth, k) + Vector2(0, -sin(k * PI) * 40.0), 4.0, Color(GAS, 0.9))
+
+
+## The Chien de berger robot: a little grey robot dog, legs going, a red eye. He waits by the door and
+## runs circles round the customers when he herds them.
+func _draw_dog(o: Node2D) -> void:
+	if int(mods.get("herd_dog", 0)) <= 0:
+		return
+	var at := scr(dog_pos)
+	var run := herd_t > 0.0
+	var leg := sin(_t * (22.0 if run else 4.0)) * (5.0 if run else 1.0)
+	var steel := Color(0.72, 0.75, 0.8)
+	var dark := Color(0.1, 0.1, 0.12)
+	for x in [-9.0, 9.0]:  # legs
+		o.draw_line(at + Vector2(x, 2), at + Vector2(x + leg * (1 if x < 0 else -1), 12), dark, 4.0)
+	o.draw_rect(Rect2(at + Vector2(-14, -8), Vector2(28, 12)), dark)
+	o.draw_rect(Rect2(at + Vector2(-12, -6), Vector2(24, 8)), steel)
+	o.draw_rect(Rect2(at + Vector2(10, -16), Vector2(12, 11)), dark)  # head
+	o.draw_rect(Rect2(at + Vector2(12, -14), Vector2(8, 7)), steel)
+	o.draw_circle(at + Vector2(18, -11), 2.0, Color(1.0, 0.2, 0.15))
+	o.draw_line(at + Vector2(-14, -6), at + Vector2(-20, -14 + leg * 0.5), dark, 3.0)  # tail wags
+
+
 ## Round 10 batch B: a small fuel gauge over each car on the avenue that wants gas (low, red), and over
 ## Gaétan's customers driving away (full, green). That's all you see of his business.
 func _draw_road_gauges(o: Node2D) -> void:

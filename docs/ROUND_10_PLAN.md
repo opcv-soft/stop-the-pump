@@ -68,7 +68,7 @@
   - **Trio elétrico:** a full samba school on top, Rio style. Overfilling it is a disaster, but filling it
     well earns a lot of reputation.
 
-## Batch E: new upgrades (v0.49.0)
+## Batch E: new upgrades — built 2026-10-25 (with batch B in v0.46.0)
 - **A spill branch:** upgrades that soften the cost of spilled gas, including a second tube man who sucks
   spilled gas off the lot and puts it back in the tank.
 - **Herding dog robot:** every few seconds it runs out and rounds the cars up into a circle (so one ring

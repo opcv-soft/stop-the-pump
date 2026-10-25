@@ -54,6 +54,11 @@ var wants_in := false  # on the road: will pull in (customers and troublemakers)
 var by_drone := false  # filled by a drone
 ## Round 10 (playtest 10): a drone poured into it, even a little. Such a car never tips.
 var drone_touched := false
+## How much can run down its side before the fill counts as Overfilled (Bec anti-goutte raises it).
+var spill_grace := 0.25
+## Round 10 E: the robot dog is rounding it up; it stops its pattern and trots to `herd_to`.
+var herded := false
+var herd_to := Vector2.ZERO
 ## Round 10 batch B: on the road a car that wants gas shows a low gauge. It picks you or Gaétan across
 ## the road (`to_rival`): his cars pull into his station, wait, and drive on with a full gauge.
 var low_fuel := false
@@ -120,7 +125,7 @@ func fill() -> float:
 func stream_left() -> String:
 	if not accepts_fuel() or amount < target * LEAVE_AT - 0.0001:
 		return ""
-	tier = grade(fill(), spilled)
+	tier = grade(fill(), spilled, spill_grace)
 	phase = Phase.CELEBRATE
 	anim_t = 0.0
 	return tier
@@ -128,8 +133,8 @@ func stream_left() -> String:
 
 ## The grade for a fill (GOD PUMP plan): an overfill (a spill over $0.25) is a Miss; then Topped off
 ## (99.5%+), Perfect (97%+), Good (90%+), OK (80%+).
-static func grade(f: float, spill: float) -> String:
-	if spill > 0.25:
+static func grade(f: float, spill: float, grace := 0.25) -> String:
+	if spill > grace:
 		return ScoreTiers.MISS
 	if f >= 0.995:
 		return ScoreTiers.SUPER_PERFECT
@@ -225,6 +230,10 @@ func step(dt: float, game: GodPump) -> void:
 		Phase.WANDER:
 			if clamped:
 				pass  # it isn't going anywhere
+			elif herded:
+				position = position.move_toward(herd_to, 220.0 * dt)
+				if position.distance_to(herd_to) > 4.0:
+					heading = rotate_toward(heading, (herd_to - position).angle(), TURN_RATE * dt)
 			elif visitor:
 				if not parked:
 					_steer(game.VISITOR_SPOT, dt, 120.0)

@@ -19,6 +19,8 @@ const FX_OPS := {
 	"tank_alarm": "max", "bulk_discount": "add", "partial_rise_mult": "mul", "freeze_every": "max",
 	"coffee_sale": "add", "hockey_every": "max", "loyalty_every": "max", "night_tip_mult": "mul",
 	"drone_bonus": "add", "tube_man": "add", "clamp_thief": "max", "clamp_wait": "max",
+	# round 10 E: the spill branch and the herding dog
+	"puddle_vacuum": "max", "overfill_grace": "add", "herd_dog": "max",
 }
 
 ## The defaults a day runs on before anything is bought.
@@ -32,7 +34,7 @@ const BASE := {
 	"cards_offered": 3, "rerolls": 0, "bling_slots": 1, "price_rise_mult": 1.0, "sale_mult": 1.0,
 	"tank_alarm": 0, "bulk_discount": 0.0, "partial_rise_mult": 1.0, "freeze_every": 0, "coffee_sale": 0.0,
 	"hockey_every": 0, "loyalty_every": 0, "night_tip_mult": 1.0, "drone_bonus": 0.0, "tube_man": 0,
-	"clamp_thief": 0, "clamp_wait": 0,
+	"clamp_thief": 0, "clamp_wait": 0, "puddle_vacuum": 0, "overfill_grace": 0.0, "herd_dog": 0,
 }
 
 # --- The night shop (cash, always available) ----------------------------------------------------
@@ -67,6 +69,7 @@ const BRANCHES := [
 		{"id": "twin_1", "name": "Double pistolet", "helps": "fills two cars at once when both are inside the ring", "price": 220.0, "glyph": "x2", "fx": {"twin_stream": 1}},
 		{"id": "ring_1", "name": "Bec évasé", "helps": "a bigger ring: easier to catch two cars", "price": 180.0, "glyph": "( )", "fx": {"stream_radius": 10.0}},
 		{"id": "twin_2", "name": "Triple pistolet", "helps": "fills three cars at once", "price": 460.0, "glyph": "x3", "fx": {"twin_stream": 1}},
+		{"id": "herd_dog", "name": "Chien de berger robot", "helps": "every 12 s a robot dog rounds your customers up around the nozzle", "price": 520.0, "glyph": "DOG", "fx": {"herd_dog": 1}},
 	]},
 	{"id": "service", "name": "SERVICE", "nodes": [
 		{"id": "tip_sign", "name": "Pancarte pourboire", "helps": "tips +20%", "price": 60.0, "fx": {"tip_mult": 1.2}},
@@ -82,6 +85,12 @@ const BRANCHES := [
 		{"id": "tank_1", "name": "Gros réservoir", "helps": "the tank holds $200 more gas", "price": 120.0, "fx": {"tank_capacity": 200.0}},
 		{"id": "tank_2", "name": "Gros réservoir II", "helps": "$200 more", "price": 240.0, "fx": {"tank_capacity": 200.0}},
 		{"id": "tank_3", "name": "Gros réservoir III", "helps": "$300 more", "price": 400.0, "fx": {"tank_capacity": 300.0}},
+	]},
+	# Round 10 (playtest 9): softer spills. Hangs off Gros réservoir.
+	{"id": "spill", "name": "DÉGÂTS", "root": "tank_1", "nodes": [
+		{"id": "litter", "name": "Litière à chat", "helps": "a bag of kitty litter: spills waste 25% less gas", "price": 120.0, "glyph": "~", "fx": {"spill_mult": 0.75}},
+		{"id": "vacuum", "name": "Aspirateur gonflable", "helps": "a second tube man sucks up a puddle every 4 s and puts 70% of it back in the tank", "price": 260.0, "glyph": "VAC", "fx": {"puddle_vacuum": 1}},
+		{"id": "anti_drip", "name": "Bec anti-goutte", "helps": "a drip under 50 cents no longer counts as Overfilled", "price": 380.0, "glyph": "!", "fx": {"overfill_grace": 0.5}},
 	]},
 	# Round 8: the truck itself. Plays on the tension between refuelling early (cards) and late (price).
 	{"id": "truck", "name": "CAMION", "nodes": [

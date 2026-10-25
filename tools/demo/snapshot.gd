@@ -24,7 +24,7 @@ func _initialize() -> void:
 	if args.size() > 2:
 		mode = args[2]
 	DisplayServer.window_set_size(Vector2i(1152, 648))
-	if mode == "report":
+	if mode in ["report", "night"]:
 		game = load("res://scenes/god/god_game.tscn").instantiate()
 		game.meta_path = ""
 		game.sound_on = false
@@ -41,6 +41,8 @@ func _open() -> void:
 	var m := GodData.BASE.duplicate()
 	m.drones = 2
 	m.twin_stream = 1
+	m.herd_dog = 1
+	m.puddle_vacuum = 1
 	m.queue = 4
 	m.close_hour = 23.0
 	day.start_day(m, 700.0, 3, ["sedan", "pickup", "cadillac"])
@@ -52,6 +54,8 @@ func _process(_dt: float) -> bool:
 	f += 1
 	if mode == "report":
 		return _report_frame()
+	if mode == "night":
+		return _night_frame()
 	if f == 2:
 		_open()
 	if f < 3:
@@ -86,6 +90,24 @@ func _report_frame() -> bool:
 		game.day.chat_log.assign(["Papa: How's my pump, kid? Don't look at my hands.", "Bertrand: Thirty years, he topped off to the cent.", "Papa: To the CENT."])
 		game.day.end_round()
 	if f == int(seconds * 30.0) + 10:
+		root.get_viewport().get_texture().get_image().save_png(out)
+		print("saved ", out)
+		return true
+	return false
+
+
+## The night shop with a few branches bought, MULTI-JET and DÉGÂTS opened.
+func _night_frame() -> bool:
+	if not game.day or not game.run:
+		return false
+	if f == 5:
+		game.run.cash = 3000.0
+		for b in ["nozzle", "multi", "multi", "tank", "spill", "hours", "service"]:
+			game.run.buy(b)
+		game.day.end_round()
+	if f == 8:
+		game._after_report()
+	if f == 20:
 		root.get_viewport().get_texture().get_image().save_png(out)
 		print("saved ", out)
 		return true

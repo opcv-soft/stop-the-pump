@@ -648,3 +648,73 @@ func test_the_day_counts_reputation_by_grade() -> void:
 	game._settle(b)
 	var expected: float = GodData.REPUTATION[ScoreTiers.SUPER_PERFECT] + GodData.REPUTATION[b.tier]
 	assert_almost_eq(game.day_report().rep, expected, 0.001)
+
+
+# --- Round 10, batch E: the spill branch and the herding dog --------------------------------------
+
+func test_the_spill_branch_opens_after_gros_reservoir() -> void:
+	var run := RunState.new()
+	run.cash = 5000.0
+	assert_false(run.buy("spill"))
+	assert_true(run.buy("tank"))  # Gros réservoir
+	assert_true(run.buy("spill"))  # Litière à chat
+	assert_almost_eq(run.mods().spill_mult, 0.75, 0.001)
+
+
+func test_the_vacuum_puts_most_of_a_puddle_back_in_the_tank() -> void:
+	_open({"puddle_vacuum": 1})
+	game.aim(Vector2(800, 450))
+	game.set_pouring(true)
+	game.step(1.0)  # $4 on the ground
+	game.set_pouring(false)
+	var tank_before := game.tank
+	var wasted_before := game.round_wasted
+	for i in 100:
+		game.step(0.05)
+	assert_gt(game.vacuumed, 0.0)
+	assert_almost_eq(game.tank - tank_before, game.vacuumed, 0.001)
+	assert_almost_eq(game.vacuumed, wasted_before * GodPump.VACUUM_RETURN, 0.2)
+	assert_lt(game.round_wasted, wasted_before, "the books count only what's lost")
+
+
+func test_bec_anti_goutte_forgives_a_small_drip() -> void:
+	_open({"overfill_grace": 0.5})
+	var car := _parked("sedan", Vector2(500, 380), 20.0)
+	car.amount = 20.0
+	car.spilled = 0.4
+	game._settle(car)
+	assert_ne(car.tier, ScoreTiers.MISS)
+	_open()
+	var car2 := _parked("sedan", Vector2(500, 380), 20.0)
+	car2.amount = 20.0
+	car2.spilled = 0.4
+	game._settle(car2)
+	assert_eq(car2.tier, ScoreTiers.MISS, "without it, the same drip is Overfilled")
+
+
+func test_the_robot_dog_rounds_customers_up_around_the_nozzle() -> void:
+	_open({"herd_dog": 1})
+	var a := _parked("sedan", Vector2(250, 250))
+	var b := _parked("sedan", Vector2(900, 520))
+	a.moving = true
+	b.moving = true
+	a.phase = ProtoCar.Phase.WANDER
+	b.phase = ProtoCar.Phase.WANDER
+	game.aim(Vector2(576, 380))
+	game.herd()
+	for i in 40:
+		game.step(0.05)
+	for c in [a, b]:
+		assert_lt(c.position.distance_to(game.herd_centre), game.ring_radius() + 2.0, "in the ring")
+	game.streams()
+	for i in 20:
+		game.step(0.05)
+	assert_false(a.herded, "then back to their rounds")
+
+
+func test_the_dog_runs_out_every_12_seconds() -> void:
+	_open({"herd_dog": 1, "close_hour": 23.0})
+	_parked()
+	for i in int(GodPump.HERD_EVERY / 0.05) + 2:
+		game.step(0.05)
+	assert_gt(game.herd_t, 0.0)

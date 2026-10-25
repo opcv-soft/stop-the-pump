@@ -31,3 +31,19 @@ Feature: The night shop's tree  (round 8, docs/ROUND_8_PLAN.md)
       | Prix affiché       | every sale pays 5% more                                                    |
       | Sabot de Denver    | a thief gets clamped: it can't flee and what it stole goes back in my tank |
       | Sabot de Denver II | a customer about to give up gets clamped: it stops and waits a while longer |
+
+  # --- Round 10, batch E (playtest 9) ------------------------------------------------------------
+
+  Scenario: DÉGÂTS, the spill branch  (opens after Gros réservoir)
+    Given Litière à chat
+    Then spills waste 25% less gas
+    Given the Aspirateur gonflable
+    Then every 4 s a second tube man sucks up the biggest puddle and puts 70% of it back in the tank
+    Given Bec anti-goutte
+    Then a drip under 50 cents no longer counts as Overfilled
+
+  Scenario: MULTI-JET, the multi-fill branch  (opens after Bec large, playtest 10)
+    Then Double pistolet fills two cars in the ring, Bec évasé grows the ring, Triple pistolet fills three
+    Given the Chien de berger robot
+    Then every 12 s a robot dog rounds my customers up in a tight circle around where the nozzle points
+    And then they go back to their rounds

@@ -16,7 +16,8 @@
 - [x] `[innovation]` **Round 10 batch B (built): Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
 - [ ] `[art]` **Round 10 batch C: the 2D cartoon look test, then the redraw**
 - [ ] `[standard]` **Round 10 batch D: car codex, in-run unlocks by XP, bumper car, in a rush, the tank, trio elétrico**
-- [ ] `[standard]` **Round 10 batch E: the spill branch (a second tube man returns spills), the herding dog robot**
+- [x] `[standard]` **Round 10 batch E (built): the spill branch (a second tube man returns spills), the herding dog robot**
+- [ ] Playtest v0.46: Gaétan and the market share (does the fight feel winnable, is the report readable), coins on the lot, MULTI-JET and the dog, DÉGÂTS, the drone tip rule, the new XP
 - [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)
 - [x] `[art]` **Scene view for the god pump: isometric tried, three-quarter top-down kept; dépanneur, neon, regulars, vintage pump, tip jar** (#36, v0.32.0, kept)

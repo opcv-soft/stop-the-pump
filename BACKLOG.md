@@ -13,7 +13,7 @@
 - [x] Playtest v0.44 (playtest 9): bubbles steal focus, Double jet broken, cars under the money; asked for the rival station and market share, new cars, the cartoon look (docs/ROUND_10_PLAN.md)
 - [x] `[standard]` **Round 10 batch A (v0.45.0, built): the nozzle ring and a working Double jet, chips in poker stacks, the day bar, the regulars step aside, drones burn gas, XP = litres × combo × accuracy** (#37)
 - [x] Playtest v0.45 (playtest 10): ring much better, focus better, XP good; coins back on the lot, MULTI-JET branch, drone-touched cars don't tip, XP = L × (1 + avg combo) × accuracy, chat beside the report (done, not yet played)
-- [ ] `[innovation]` **Round 10 batch B: Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
+- [x] `[innovation]` **Round 10 batch B (built): Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
 - [ ] `[art]` **Round 10 batch C: the 2D cartoon look test, then the redraw**
 - [ ] `[standard]` **Round 10 batch D: car codex, in-run unlocks by XP, bumper car, in a rush, the tank, trio elétrico**
 - [ ] `[standard]` **Round 10 batch E: the spill branch (a second tube man returns spills), the herding dog robot**

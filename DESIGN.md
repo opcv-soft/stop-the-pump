@@ -4,7 +4,7 @@
 > fuel-truck bill, cards, car types and Papa's Garage, is **docs/GOD_PUMP_PLAN.md**. Sections below that
 > describe the key-per-pump game are history.
 
-> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.45.0: round 10 batch A, awaiting playtest; plan in docs/ROUND_10_PLAN.md)
+> **Current phase:** 5 — Vertical Slice (GOD PUMP round 10: batches A and B built, E next, then the C look test; plan in docs/ROUND_10_PLAN.md)
 > **Last updated:** 2026-10-25
 > This file is the Committee's memory. Read it before every Godot or Blender action. Update it after every approved decision.
 
@@ -236,4 +236,8 @@ Failure is cheap early: a miss costs a little money and teaches the rule.
 | 2026-10-25 | A car a drone touched never tips (it still pays for its gas) | Playtest 10 | Round 10 A2 (#37) |
 | 2026-10-25 | XP = litres × (1 + average combo) × accuracy; average combo = combo points ÷ cars fueled. Replaces litres × combo points × accuracy (it grew with the square of a day). Garage prices ×5 of the round-8 prices (campaign median first day 50: 3.0 h) | Playtest 10 | Round 10 A2 (#37) |
 | 2026-10-25 | The visitors' chat is shown beside the day report (OVERHEARD TODAY); in the day it stays wordless | Playtest 10: "to keep the narrative going" | Round 10 A2 (#37) |
+| 2026-10-25 | The rival across the road: cars both ways on the avenue may want gas (a low gauge over them); each picks you or Chez Gaétan by your market share. His customers pull into his station (canopy, two pumps), wait by a pump and drive on with a full gauge. At 50% you get round 9's traffic | Designer, playtest 9 | Round 10 B (#37) |
+| 2026-10-25 | Reputation (0–100, starts 50): per car Topped off +2, Perfect +1.25, Good +0.6, OK 0, Overfilled −0.75, Unserved −0.5; Gaétan's specials −0.5 a night. Market share (starts 50) moves toward reputation by at most 8 points a night. 100% wins (the ending: Dad is avenged and dies happy); 0% loses. Replaces day 50, Dad's postcards and the fishing story | Designer, playtest 9; balance bot: fresh runs end at 37–86% (1 lucky win in 16), Garage players first win at a median 3.6 h | Round 10 B (#37) |
+| 2026-10-25 | The day report: market share bar (you vs Gaétan) with the change, reputation, cars that went to Gaétan, one line from Dad; three columns: the day, the books (P&L at wholesale cost, balance sheet), OVERHEARD TODAY | Playtests 9 and 10 | Round 10 B (#37) |
+| 2026-10-25 | New lore (docs/LORE.md): Dad, the best gas man in the village, shaky hands, Gaétan opened across the road, "ces gars-là l'ont pas", the keys. Dad visits on days 3, 15, 25 | Designer, playtest 9 | Round 10 B (#37) |
 | 2026-10-25 | Market share is per run: 50/50 with Gaétan at the start, win at 100%, lose broke or at 0%; XP and the Garage carry over. The cartoon art starts with a look test | Designer, 2026-10-25 | Round 10 B, C (#37) |

@@ -6,12 +6,12 @@ extends SceneTree
 ##
 ##     godot --headless -s tools/sim/god_bot.gd -- 20 fresh      (runs, meta level: fresh | mid | late)
 ##     godot --headless -s tools/sim/god_bot.gd -- 10 campaign   (10 players from a fresh save: run after
-##         run, spending XP in Papa's Garage; reports the hour of play of each one's first day 50)
+##         run, spending XP in Papa's Garage; reports the hour of play of each one's first win)
 
 const DT := 0.05
 const AIM_SPEED := 900.0  # px/s the "mouse" moves
 const REACT := 0.25  # seconds between letting go and moving on
-const PRIORITY := ["hours", "marketing", "nozzle", "attractions", "service", "tank", "vibe", "truck"]
+const PRIORITY := ["hours", "marketing", "nozzle", "attractions", "service", "tank", "vibe", "truck", "multi"]
 
 var runs := 20
 var level := "fresh"
@@ -52,10 +52,11 @@ func _run_all() -> void:
 	var wins := results.filter(func(r: Dictionary) -> bool: return r.won).size()
 	var lines := [
 		"GOD PUMP bot: %d runs, meta %s, %.0f s" % [runs, level, (Time.get_ticks_msec() - t0) / 1000.0],
-		"days survived: median %d, mean %.1f, min %d, max %d; reached day 50: %d" % [days[days.size() / 2], float(total) / runs, days[0], days[-1], wins],
+		"days survived: median %d, mean %.1f, min %d, max %d; won (100%% share): %d" % [days[days.size() / 2], float(total) / runs, days[0], days[-1], wins],
 		"per run (days / deliveries / cars / XP / cash at end): " + ", ".join(results.map(func(r: Dictionary) -> String: return "%d/%d/%d/%d/$%.0f" % [r.days, r.deliveries, r.cars, r.xp, r.cash])),
 		"mean per run: XP %.0f, play time %.1f min  ->  %.0f XP per hour of play" % [_mean(results, "xp"), _mean(results, "minutes"), _mean(results, "xp") / maxf(_mean(results, "minutes"), 0.01) * 60.0],
 		"mean per day: loot $%.0f, gas used $%.0f, cars %.1f" % [_mean(results, "loot_per_day"), _mean(results, "gas_per_day"), _mean(results, "cars_per_day")],
+		"market share at the end: " + ", ".join(results.map(func(r: Dictionary) -> String: return "%d%%" % int(r.share))) + "; lost to Gaétan (0%%): %d" % results.filter(func(r: Dictionary) -> bool: return r.lost).size(),
 	]
 	for l in lines:
 		print(l)
@@ -118,6 +119,7 @@ func play_run(seed: int, meta: MetaState) -> Dictionary:
 	var last_gas := 150.0
 	while not run.over:
 		var tank_before := run.tank
+		day.market_share = run.share
 		day.start_day(run.mods(), run.tank, run.day, meta.unlocked_cars())
 		seconds += (run.mods().close_hour - GodData.OPEN_HOUR) * GodData.HOUR_SECONDS + 25.0
 		_play_day(day)
@@ -134,12 +136,10 @@ func play_run(seed: int, meta: MetaState) -> Dictionary:
 		if run.bankrupt() or run.tank < 1.0:
 			break
 		run.next_day()
-		if run.day > GodData.FINAL_DAY:
-			break
 	day.queue_free()
 	if level == "campaign":
 		run.finish()  # banks XP and cars into the meta
-	return {"days": run.day, "won": run.won, "deliveries": run.deliveries, "cars": run.totals.cars, "xp": run.xp,
+	return {"days": run.day, "won": run.won, "share": run.share, "lost": run.lost_to_gaetan, "deliveries": run.deliveries, "cars": run.totals.cars, "xp": run.xp,
 		"cash": run.cash, "loot_per_day": run.totals.loot / run.day, "gas_per_day": gas_used / run.day,
 		"cars_per_day": float(run.totals.cars) / run.day, "minutes": seconds / 60.0}
 
@@ -263,11 +263,11 @@ func _campaigns() -> void:
 				first = minutes / 60.0
 			_shop(meta)
 		firsts.append(first)
-		lines.append("player %d: first day 50 at %s; runs (days): %s" % [p + 1, "%.1f h" % first if first >= 0.0 else "never", " ".join(log)])
+		lines.append("player %d: first win at %s; runs (days): %s" % [p + 1, "%.1f h" % first if first >= 0.0 else "never", " ".join(log)])
 		lines.append("    garage: %s, nozzle %s, bling %s" % [meta.perk_tiers, meta.nozzle, meta.equipped_bling])
 	var won := firsts.filter(func(h: float) -> bool: return h >= 0.0)
 	won.sort()
-	lines.append("first day 50: %d of %d players; median %s" % [won.size(), runs, "%.1f h" % won[won.size() / 2] if not won.is_empty() else "-"])
+	lines.append("first win: %d of %d players; median %s" % [won.size(), runs, "%.1f h" % won[won.size() / 2] if not won.is_empty() else "-"])
 	for l in lines:
 		print(l)
 	if out_path != "":

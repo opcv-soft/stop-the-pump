@@ -25,6 +25,13 @@ var xp := 0
 var totals := {"cars": 0, "loot": 0.0, "supers": 0, "perfects": 0, "goods": 0, "oks": 0, "misses": 0, "unserved": 0, "best_combo": 1}
 var over := false
 var won := false
+## Round 10 batch B: the fight for Saint-Clin-Clin. `share` is your market share (the cars that want gas
+## and pick you), `reputation` what the village thinks of your pours. Both 0–100.
+var share := GodData.START_SHARE
+var reputation := GodData.START_REPUTATION
+var lost_to_gaetan := false
+## Last night's numbers, for the report: {share_from, share_to, rep_from, rep_to}.
+var last_night := {}
 ## Round 8, for the newspaper's charts: the wholesale price after each delivery (the first entry is
 ## the starting price), and the cash at the end of each day.
 var price_history: Array = []
@@ -253,9 +260,48 @@ func end_day(report: Dictionary) -> void:
 	totals.unserved += t.get(ScoreTiers.UNSERVED, 0)
 	totals.best_combo = maxi(totals.best_combo, report.get("best_combo", 1))
 	cash_history.append(cash)
-	if day >= GodData.FINAL_DAY:
+	_fight_for_the_village(report.get("rep", 0.0))
+
+
+## The night after a day: your fills move your reputation, Gaétan's specials take some back, and the
+## village follows your reputation, a few points a night. 100% wins the run; 0% loses it.
+func _fight_for_the_village(rep_gain: float) -> void:
+	last_night = {"share_from": share, "rep_from": reputation}
+	reputation = clampf(reputation + rep_gain - GodData.GAETAN_PUSH, 0.0, 100.0)
+	share = move_toward(share, reputation, GodData.SHARE_STEP)
+	last_night.share_to = share
+	last_night.rep_to = reputation
+	if share >= 100.0:
 		won = true
 		over = true
+	elif share <= 0.0:
+		lost_to_gaetan = true
+		over = true
+
+
+## The books for a day (round 10, playtest 9): a P&L at wholesale cost and a balance sheet. Gas is in
+## pump dollars in the game; the books count it at what the truck charged (`price` per litre).
+func books(report: Dictionary) -> Dictionary:
+	var at_cost := func(pump_dollars: float) -> float: return pump_dollars / GodData.PUMP_PRICE * price
+	var sales: float = report.get("sales", 0.0)
+	var tips: float = report.get("tips", 0.0)
+	var gas_sold: float = at_cost.call(report.get("litres", 0.0) * GodData.PUMP_PRICE)
+	var spills: float = at_cost.call(report.get("wasted", 0.0))
+	var drones: float = at_cost.call(report.get("drone_gas", 0.0))
+	var fines: float = report.get("fines", 0.0)
+	var net := sales + tips - gas_sold - spills - drones - fines
+	var equipment := 0.0
+	for b in GodData.BRANCHES:
+		for i in owned.get(b.id, 0):
+			equipment += b.nodes[i].price
+	for id in links:
+		equipment += GodData.link(id).price
+	var gas_in_tank: float = at_cost.call(tank)
+	var loan := 300.0 if next_delivery_extra > 0.0 else 0.0  # the cousin's loan, repaid on the next delivery
+	var assets := cash + gas_in_tank + equipment
+	return {"sales": sales, "tips": tips, "gas_sold": gas_sold, "spills": spills, "drones": drones, "fines": fines,
+		"net": net, "cash": cash, "gas_in_tank": gas_in_tank, "equipment": equipment, "assets": assets,
+		"loan": loan, "equity": assets - loan}
 
 
 func next_day() -> void:
@@ -269,6 +315,7 @@ func finish() -> void:
 	meta.total_cars += totals.cars
 	meta.runs += 1
 	meta.best_day = maxi(meta.best_day, day)
+	meta.best_share = maxf(meta.best_share, share)
 	if won:
 		meta.ending_seen = true
 	meta.bank_run(self)

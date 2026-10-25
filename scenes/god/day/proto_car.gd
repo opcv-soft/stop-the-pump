@@ -7,7 +7,7 @@ extends Node2D
 ## Patterns are learnable on purpose: spotting them is how you fill several cars in one sweep.
 ## Serves: Mastery (moving targets, juggling) and Comedy (the car's reaction).
 
-enum Phase { ROAD, ENTERING, WANDER, CELEBRATE, LEAVING, GONE, GRABBED }
+enum Phase { ROAD, ENTERING, WANDER, CELEBRATE, LEAVING, GONE, GRABBED, RIVAL }
 
 const SIZE := Vector2(58, 30)
 const ROAD_SPEED := 230.0
@@ -54,6 +54,13 @@ var wants_in := false  # on the road: will pull in (customers and troublemakers)
 var by_drone := false  # filled by a drone
 ## Round 10 (playtest 10): a drone poured into it, even a little. Such a car never tips.
 var drone_touched := false
+## Round 10 batch B: on the road a car that wants gas shows a low gauge. It picks you or Gaétan across
+## the road (`to_rival`): his cars pull into his station, wait, and drive on with a full gauge.
+var low_fuel := false
+var to_rival := false
+var rival_full := false
+var _rival_wait := 0.0
+const RIVAL_WAIT := 2.2
 ## Round 9: a visitor (Visitors) comes to chat, not to fill up: it parks by the store and waits.
 var visitor := false
 var parked := false
@@ -198,9 +205,14 @@ func step(dt: float, game: GodPump) -> void:
 	match phase:
 		Phase.ROAD:
 			position.x += ROAD_SPEED * dt * road_dir
-			if road_dir < 0.0 and position.x < -100:
+			var past_entrance := position.x >= game.ENTRANCE.x if road_dir > 0.0 else position.x <= game.ENTRANCE.x
+			if to_rival and not rival_full and _passed(game.RIVAL_TURN_X):
+				phase = Phase.RIVAL  # Gaétan's: up across the road to his pumps
+				_route = [Vector2(game.RIVAL_TURN_X, game.ROAD_Y - 34), game.rival_spot(self)]
+				_rival_wait = RIVAL_WAIT
+			elif road_dir < 0.0 and position.x < -100:
 				phase = Phase.GONE
-			elif (customer or wants_in) and position.x >= game.ENTRANCE.x and game.lot_has_room():
+			elif not to_rival and (customer or wants_in) and past_entrance and game.lot_has_room():
 				phase = Phase.ENTERING
 				_route = [Vector2(game.ENTRANCE.x, game.LOT.position.y + 40)]
 				game.customers_arrived += 1
@@ -231,6 +243,19 @@ func step(dt: float, game: GodPump) -> void:
 		Phase.LEAVING:
 			if _drive_route(dt, 190.0):
 				phase = Phase.GONE
+		Phase.RIVAL:
+			if not _crawl_route(dt, 110.0):
+				pass
+			elif _rival_wait > 0.0:
+				_rival_wait -= dt  # at his pump
+				if _rival_wait <= 0.0:
+					low_fuel = false
+					rival_full = true  # topped off across the road
+					var lane := game.ROAD_Y + (12.0 if road_dir > 0.0 else -14.0)
+					_route = [Vector2(position.x + 50.0 * road_dir, lane), Vector2(position.x + 140.0 * road_dir, lane)]
+			else:
+				phase = Phase.ROAD  # back on the avenue, full
+				heading = 0.0 if road_dir > 0.0 else PI
 		Phase.GRABBED:
 			_step_grab(dt, game)
 	queue_redraw()
@@ -303,6 +328,25 @@ func _move_pattern(dt: float, game: GodPump) -> void:
 
 
 ## Follows _route; true when the last point is reached.
+## Like _drive_route, but slides straight to each point (turning as it goes) so it can't circle a
+## tight spot: pulling in at Gaétan's pumps.
+func _crawl_route(dt: float, speed: float) -> bool:
+	if _route.is_empty():
+		return true
+	var goal: Vector2 = _route[0]
+	if position.distance_to(goal) > 2.0:
+		heading = rotate_toward(heading, (goal - position).angle(), TURN_RATE * 2.0 * dt)
+	position = position.move_toward(goal, speed * dt)
+	if position.distance_to(goal) < 2.0:
+		_route.pop_front()
+	return _route.is_empty()
+
+
+## Has the car reached `x`, going its way along the road?
+func _passed(x: float) -> bool:
+	return position.x >= x if road_dir > 0.0 else position.x <= x
+
+
 func _drive_route(dt: float, speed: float) -> bool:
 	if _route.is_empty():
 		return true

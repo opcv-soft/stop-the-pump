@@ -277,5 +277,92 @@ The driver gets out. Sunburnt. Smells like a lake.,The driver gets out. Sunburnt
 He looks at the lot. The regulars. The jar.,He looks at the lot. The regulars. The jar.,Y regarde le terrain. Les habitués. Le pot.
 """T'es un vrai gaz bar boy.""","""T'es un vrai gaz bar boy.""",« T'es un vrai gaz bar boy. »
 Thanks for playing.,Thanks for playing.,Merci d'avoir joué.
-"%.0f L x (1 + %.1f combo) x %d%%","%.0f L x (1 + %.1f combo) x %d%%","%.0f L x (1 + %.1f combo) x %d %%"
+%.0f L x (1 + %.1f combo) x %d%%,%.0f L x (1 + %.1f combo) x %d%%,%.0f L x (1 + %.1f combo) x %d %%
 OVERHEARD TODAY,OVERHEARD TODAY,ENTENDU AUJOURD'HUI
+That's my kid!,That's my kid!,"C'est mon jeune, ça!"
+Gaétan's sweating. I can see it from here.,Gaétan's sweating. I can see it from here.,Gaétan sue. Je le vois d'ici.
+To the cent. TO THE CENT.,To the cent. TO THE CENT.,À la cenne. À LA CENNE.
+Ti-Guy says the whole rang is talking about you.,Ti-Guy says the whole rang is talking about you.,Ti-Guy dit que tout le rang parle de toi.
+"Hold the line, kid.","Hold the line, kid.","Tiens bon, le jeune."
+Gaétan isn't going anywhere. Neither are we.,Gaétan isn't going anywhere. Neither are we.,Gaétan bouge pas. Nous autres non plus.
+Steady hands. That's all it takes.,Steady hands. That's all it takes.,Des mains stables. C'est tout ce que ça prend.
+Half the village at Gaétan's. Câlisse.,Half the village at Gaétan's. Câlisse.,La moitié du village chez Gaétan. Câlisse.
+My hands shook too. Shake it off.,My hands shook too. Shake it off.,Mes mains tremblaient aussi. Secoue-toi.
+"Tomorrow, kid. Tomorrow we take them back.","Tomorrow, kid. Tomorrow we take them back.","Demain, le jeune. Demain on les reprend."
+FERMÉ  ·  DAY %d,FERMÉ  ·  DAY %d,FERMÉ  ·  JOUR %d
+YOU,YOU,TOI
+MARKET SHARE  ·  reputation %d (%s%.1f)  ·  %d cars went to Gaétan today,MARKET SHARE  ·  reputation %d (%s%.1f)  ·  %d cars went to Gaétan today,PART DE MARCHÉ  ·  réputation %d (%s%.1f)  ·  %d autos chez Gaétan aujourd'hui
+THE DAY,THE DAY,LA JOURNÉE
+P&L,P&L,ÉTAT DES RÉSULTATS
+Sales,Sales,Ventes
+Tips,Tips,Pourboires
+"Gas sold, at cost","Gas sold, at cost","Essence vendue, au coûtant"
+Spilled gas,Spilled gas,Essence renversée
+Drone gas,Drone gas,Essence des drones
+Fines,Fines,Amendes
+Net profit,Net profit,Bénéfice net
+BALANCE SHEET,BALANCE SHEET,BILAN
+Cash,Cash,Encaisse
+"Gas in the tank, at cost","Gas in the tank, at cost","Essence au réservoir, au coûtant"
+"Equipment, at cost","Equipment, at cost","Équipement, au coûtant"
+Cousin's loan,Cousin's loan,Prêt du cousin
+Equity,Equity,Avoir
+Nobody came by to chat.,Nobody came by to chat.,Personne n'est venu jaser.
+THE WHOLE VILLAGE IS BACK!,THE WHOLE VILLAGE IS BACK!,TOUT LE VILLAGE EST REVENU!
+GAÉTAN TAKES THE WHOLE VILLAGE,GAÉTAN TAKES THE WHOLE VILLAGE,GAÉTAN PREND TOUT LE VILLAGE
+100% of Saint-Clin-Clin fills up at the gaz bar. Dad is avenged.,100% of Saint-Clin-Clin fills up at the gaz bar. Dad is avenged.,100 % de Saint-Clin-Clin fait le plein au gaz bar. Papa est vengé.
+"Not one car left. ""Ces gars-là l'ont pas,"" sighs Dad.","Not one car left. ""Ces gars-là l'ont pas,"" sighs Dad.","Plus une auto. « Ces gars-là l'ont pas », soupire Papa."
+"No gas, no money, and the truck won't come. Across the road, Gaétan waves.","No gas, no money, and the truck won't come. Across the road, Gaétan waves.","Pas de gaz, pas d'argent, et le camion viendra pas. En face, Gaétan salue."
+Market share,Market share,Part de marché
+Best market share: %d%%   ·   Runs: %d   ·   XP: %d,Best market share: %d%%   ·   Runs: %d   ·   XP: %d,Meilleure part de marché : %d %%   ·   Parties : %d   ·   XP : %d
+Dad is avenged!,Dad is avenged!,Papa est vengé!
+Best market share,Best market share,Meilleure part de marché
+"Market share at the end, run by run","Market share at the end, run by run","Part de marché à la fin, partie par partie"
+Runs: %d   ·   Best market share: %d%%,Runs: %d   ·   Best market share: %d%%,Parties : %d   ·   Meilleure part de marché : %d %%
+"For thirty years, your father was the best gas man in the village. He topped off to the cent.","For thirty years, your father was the best gas man in the village. He topped off to the cent.","Pendant trente ans, ton père a été le meilleur pompiste du village. Il faisait le plein à la cenne."
+Saint-Clin-Clin never needed a second gas station.,Saint-Clin-Clin never needed a second gas station.,Saint-Clin-Clin n'a jamais eu besoin d'un deuxième gaz bar.
+Then his hands started to shake.,Then his hands started to shake.,Puis ses mains se sont mises à trembler.
+And Gaétan opened across the road. Câlisse.,And Gaétan opened across the road. Câlisse.,Et Gaétan a ouvert en face. Câlisse.
+"Dad tried hiring. ""Ces gars-là l'ont pas.""","Dad tried hiring. ""Ces gars-là l'ont pas.""",Papa a essayé d'engager. « Ces gars-là l'ont pas. »
+So he hands you the keys... to THE GOD PUMP.,So he hands you the keys... to THE GOD PUMP.,Alors il te donne les clés... de LA POMPE DIVINE.
+"""Win them back, kid. All of them.""","""Win them back, kid. All of them.""","« Ramène-les, le jeune. Tous. »"
+100% of Saint-Clin-Clin fills up at your gaz bar.,100% of Saint-Clin-Clin fills up at your gaz bar.,100 % de Saint-Clin-Clin fait le plein à ton gaz bar.
+"Across the road, Gaétan turns off his sign.","Across the road, Gaétan turns off his sign.","En face, Gaétan éteint son enseigne."
+The village cheers. The regulars cheer. Ti-Guy cries.,The village cheers. The regulars cheer. Ti-Guy cries.,Le village applaudit. Les habitués applaudissent. Ti-Guy pleure.
+"Dad gets up from the bench. For once, his hands are steady.","Dad gets up from the bench. For once, his hands are steady.","Papa se lève du banc. Pour une fois, ses mains sont stables."
+"""To the cent, kid. TO THE CENT!""","""To the cent, kid. TO THE CENT!""","« À la cenne, le jeune. À LA CENNE! »"
+He laughs. He laughs so hard his heart gives out.,He laughs. He laughs so hard his heart gives out.,Il rit. Il rit tellement que son cœur lâche.
+He died the happiest gas man in Québec. Avenged.,He died the happiest gas man in Québec. Avenged.,Il est mort le pompiste le plus heureux du Québec. Vengé.
+Papa,Papa,Papa
+"Gaétan, from across the road. Half the village fills up at my place now.","Gaétan, from across the road. Half the village fills up at my place now.","Gaétan, d'en face. La moitié du village fait le plein chez nous astheure."
+Only because the old man's hands shake.,Only because the old man's hands shake.,Juste parce que les mains du vieux tremblent.
+"Hands don't lie, Ti-Guy.","Hands don't lie, Ti-Guy.","Les mains mentent pas, Ti-Guy."
+"How's my pump, kid? Don't look at my hands.","How's my pump, kid? Don't look at my hands.","Comment va ma pompe, le jeune? Regarde pas mes mains."
+"Thirty years, he topped off to the cent.","Thirty years, he topped off to the cent.","Trente ans, il a fait le plein à la cenne."
+To the CENT.,To the CENT.,À la CENNE.
+"Is the kid single, though?","Is the kid single, though?","Mais le jeune, lui, est-tu célibataire?"
+Your father tried to hire me once. I spilled on his shoes.,Your father tried to hire me once. I spilled on his shoes.,Ton père a essayé de m'engager une fois. J'ai renversé sur ses souliers.
+Both shoes.,Both shoes.,Les deux souliers.
+"""Ces gars-là l'ont pas,"" he said. I'm one of those guys.","""Ces gars-là l'ont pas,"" he said. I'm one of those guys.","« Ces gars-là l'ont pas », qu'il a dit. Je suis un de ces gars-là."
+Gaétan asked me to draw up papers. To buy you out.,Gaétan asked me to draw up papers. To buy you out.,Gaétan m'a demandé de préparer des papiers. Pour te racheter.
+Tell him to fill up his own tank.,Tell him to fill up his own tank.,Dis-y de faire le plein de son propre char.
+I'll... phrase it differently.,I'll... phrase it differently.,Je vais... le formuler autrement.
+Half my parish fills up across the road now. I pray for you both.,Half my parish fills up across the road now. I pray for you both.,La moitié de ma paroisse fait le plein en face. Je prie pour vous deux.
+"Pray harder for Gaétan, mon père.","Pray harder for Gaétan, mon père.","Priez plus fort pour Gaétan, mon père."
+I watched your Perfects from the window. My hands were steady once.,I watched your Perfects from the window. My hands were steady once.,"J'ai regardé tes Parfaits de la fenêtre. Mes mains étaient stables, dans le temps."
+Steadiest in Québec.,Steadiest in Québec.,Les plus stables au Québec.
+Gaétan never topped off a thing in his life.,Gaétan never topped off a thing in his life.,Gaétan a jamais fait un plein comme du monde de sa vie.
+Gaétan bought a new sign. A NEW SIGN.,Gaétan bought a new sign. A NEW SIGN.,Gaétan s'est acheté une enseigne neuve. UNE ENSEIGNE NEUVE.
+Breathe. Your heart.,Breathe. Your heart.,Respire. Ton cœur.
+My heart is fine. My heart is GREAT.,My heart is fine. My heart is GREAT.,Mon cœur va bien. Mon cœur va TRÈS bien.
+Gaétan is asking about his options.,Gaétan is asking about his options.,Gaétan s'informe de ses options.
+He has one.,He has one.,Il en a une.
+Which is?,Which is?,Laquelle?
+Losing.,Losing.,Perdre.
+Gaétan's cousin says he's thinking of opening a car wash instead.,Gaétan's cousin says he's thinking of opening a car wash instead.,Le cousin de Gaétan dit qu'il pense ouvrir un lave-auto à la place.
+A car wash! HA!,A car wash! HA!,Un lave-auto! HA!
+"If you ever win them all back, I'll close. Ha. As if.","If you ever win them all back, I'll close. Ha. As if.","Si jamais tu les ramènes tous, je ferme. Ha. Voyons donc."
+"Keep pouring, kid.","Keep pouring, kid.","Continue de verser, le jeune."
+fills two cars at once when both are inside the ring,fills two cars at once when both are inside the ring,remplit deux autos à la fois si elles sont dans le cercle
+a bigger ring: easier to catch two cars,a bigger ring: easier to catch two cars,un plus grand cercle : plus facile d'attraper deux autos
+fills three cars at once,fills three cars at once,remplit trois autos à la fois

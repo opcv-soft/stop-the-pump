@@ -31,6 +31,23 @@ Tried along the way (price rise per delivery, fresh save):
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
 
+## Round 10 batch B: the fight with Gaétan (2026-10-25)
+The win is now 100% market share (day 50 is gone). Constants in GodData: reputation per car (Topped off +2,
+Perfect +1.25, Good +0.6, OK 0, Overfilled −0.75, Unserved −0.5), Gaétan's push −0.5 a night, the share
+moves toward reputation by at most 8 points a night. Cars both ways may want gas (×1.1), split by share.
+
+Tried (12–16 fresh runs, then a 12-player campaign):
+- Push 1.5, Overfilled −1, Unserved −1, Good +0.5: the bot loses to Gaétan in 8 of 10 fresh runs (0%). Far too harsh.
+- Push 0.75, Unserved −0.5: fresh runs end at 14–57%.
+- Push 0.5, Overfilled −0.75: fresh 31–70%; campaign first win median 3.8 h (2 of 12 never).
+- Push 0.4: campaign median 4.1 h (noise: the limit is surviving the price wall, not the push).
+- **Chosen:** push 0.5, and good fills worth 25% more (Topped off 2, Perfect 1.25, Good 0.6):
+
+    fresh (16 runs): days survived median 37; market share at the end 37–86%, one lucky win (100%); lost to Gaétan: 0
+    campaign: first win 10 of 12 players; median 3.6 h
+
+Open: a fresh save can (rarely) win. If the designer wants 100% out of reach at first, lower Topped off/Perfect a notch.
+
 ## Round 10 retune, take 2 (playtest 10, 2026-10-25)
 XP is now **litres × (1 + average combo) × accuracy**: it grows in step with a day's size instead of with its square.
 - 10 fresh runs: 3,502 XP a run, **5,717 XP per hour** (×5 the round-8 1,152).

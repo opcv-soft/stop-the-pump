@@ -26,9 +26,22 @@ Feature: A GOD PUMP run  (#37, docs/GOD_PUMP_PLAN.md)
     Given an empty tank and too little cash for a delivery
     Then the run is over
 
-  Scenario: Day 50
-    When day 50 ends
-    Then the run is won (Dad drives in)
+  Scenario: The fight for the village  (round 10 B, replaces day 50)
+    Given a new run
+    Then my market share and my reputation start at 50%
+    When a day ends
+    Then my reputation moves by the day's fills (Topped off, Perfect and Good raise it; Overfilled and Unserved lower it)
+    And Gaétan's specials take a little back
+    And my market share moves toward my reputation, by at most a few points a night
+    When my market share reaches 100%
+    Then the run is won: the ending plays (Dad is avenged)
+    When my market share falls to 0%
+    Then the run is over: Gaétan has the whole village
+
+  Scenario: The books  (round 10, playtest 9)
+    When a day ends
+    Then the report shows a P&L: sales, tips, gas sold at cost, spilled gas, drone gas, fines, net profit
+    And a balance sheet: cash, gas in the tank at cost, equipment at cost, the cousin's loan, equity
 
   Scenario: Papa's Garage
     Given XP
@@ -45,12 +58,12 @@ Feature: A GOD PUMP run  (#37, docs/GOD_PUMP_PLAN.md)
     And a partial delivery under half a tank deals no cards
     And the run is only over when the tank is dry and I have under $20
 
-  Scenario: Day 50 needs about two hours of Papa's Garage  (playtest 7)
+  Scenario: 100% needs hours of Papa's Garage  (playtest 7, round 10 B)
     Given a fresh save
-    Then the gas price climbs 25% a delivery and no run reaches day 50
+    Then the gas price climbs 25% a delivery and runs go broke before 100%
     When I own the supplier's contract (prices rise 20% slower a tier)
     And premium gas (every sale pays 10% more a tier)
-    Then day 50 is within reach (balance bot: about 2 h of XP, then the winning run)
+    Then 100% is within reach (balance bot: a first win around 3 to 4 h)
 
   Scenario: Bonhomme gonflable, the tube man  (round 8, Papa's Garage perk)
     Given the tube man perk at tier 1
@@ -72,14 +85,14 @@ Feature: A GOD PUMP run  (#37, docs/GOD_PUMP_PLAN.md)
     And the dangling ones (dice, pine, medal, rabbit's foot) swing when I move the nozzle
 
   Scenario: The lore drives in  (round 9: replaces the morning paper)
-    Given a day when someone visits (Gaétan, Sylvie, Me Tremblay, cousin Réjean, the curé, the mail carrier)
-    Then their car pulls in and parks by the store
-    And they trade a few lines with the regulars in speech bubbles, then drive off
-    And on days 10, 20, 30 and 40 the mail carrier reads out Dad's postcard, signed "un pêcheur"
+    Given a day when someone visits (Gaétan, Papa, Sylvie, Me Tremblay, cousin Réjean, the curé)
+    Then their car pulls in and parks in the lot's corner by the store
+    And they chat with the regulars in small wordless bubbles, then drive off
+    And the day report shows what they said (OVERHEARD TODAY), with a line from Dad about the market share
 
   Scenario: The story so far, on the menu screen  (round 8)
     Then the title screen shows my lifetime numbers
-    And a scrapbook: days survived run by run, the last thing overheard, and Dad's postcards so far
+    And a scrapbook: the market share each run ended at, and the last thing overheard
 
   Scenario: The run's last front page  (round 8)
     When a run ends

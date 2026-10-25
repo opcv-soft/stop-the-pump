@@ -12,6 +12,8 @@ var xp := 0
 var total_cars := 0
 var runs := 0
 var best_day := 0
+## Round 10 batch B: the best market share a run reached.
+var best_share := 0.0
 var ending_seen := false
 var intro_seen := false
 var station_name := "GAZ BAR"
@@ -44,6 +46,7 @@ static func load_from(p: String) -> MetaState:
 	m.total_cars = cfg.get_value("meta", "total_cars", 0)
 	m.runs = cfg.get_value("meta", "runs", 0)
 	m.best_day = cfg.get_value("meta", "best_day", 0)
+	m.best_share = cfg.get_value("meta", "best_share", 0.0)
 	m.ending_seen = cfg.get_value("meta", "ending_seen", false)
 	m.intro_seen = cfg.get_value("meta", "intro_seen", false)
 	m.station_name = cfg.get_value("meta", "station_name", "GAZ BAR")
@@ -69,6 +72,7 @@ func save() -> void:
 	cfg.set_value("meta", "total_cars", total_cars)
 	cfg.set_value("meta", "runs", runs)
 	cfg.set_value("meta", "best_day", best_day)
+	cfg.set_value("meta", "best_share", best_share)
 	cfg.set_value("meta", "ending_seen", ending_seen)
 	cfg.set_value("meta", "intro_seen", intro_seen)
 	cfg.set_value("meta", "station_name", station_name)
@@ -96,7 +100,7 @@ func bank_run(run: RunState) -> void:
 		lifetime[k] = lifetime.get(k, 0) + add[k]
 	lifetime["best_combo"] = maxi(lifetime.get("best_combo", 1), t.best_combo)
 	lifetime["top_price"] = maxf(lifetime.get("top_price", 0.0), run.price)
-	history.append({"days": run.day, "won": run.won, "loot": t.loot, "deliveries": run.deliveries, "xp": run.xp})
+	history.append({"days": run.day, "won": run.won, "loot": t.loot, "deliveries": run.deliveries, "xp": run.xp, "share": run.share})
 	while history.size() > 24:
 		history.pop_front()
 

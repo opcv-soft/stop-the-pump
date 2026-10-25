@@ -37,7 +37,7 @@
    - **Risk to watch:** litres and combo points both grow with the cars served, so XP grows with the
      square of a day's size. Long late days will pay a lot more than short early ones.
 
-## Batch B: the rival across the road (v0.46.0)
+## Batch B: the rival across the road — built 2026-10-25 (numbers in docs/balance/GOD_PUMP_BALANCE.md)
 - **New lore** (docs/LORE.md rewritten): Dad was the best gas man in Saint-Clin-Clin, topping off to the
   cent; the village never needed a second station. Then his hands got shaky, and Gaétan opened across the
   road. Dad tried hiring: "ces gars-là l'ont pas." So he hands you the keys. He's alive, on the bench with

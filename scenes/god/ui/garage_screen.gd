@@ -117,7 +117,7 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.06, 0.045, 0.035, 0.96))
 	GodUI.text(self, Vector2(576, 56), tr("PAPA'S GARAGE"), 38, GodUI.GOLD, true)
 	GodUI.text(self, Vector2(1120 - GodUI.font().get_string_size("XP %d" % meta.xp, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x, 56), tr("XP %d") % meta.xp, 26, GodUI.GOLD)
-	GodUI.text(self, Vector2(32, 56), tr("Runs: %d   ·   Best day: %d") % [meta.runs, meta.best_day], 15, Color(GodUI.CREAM, 0.7))
+	GodUI.text(self, Vector2(32, 56), tr("Runs: %d   ·   Best market share: %d%%") % [meta.runs, int(meta.best_share)], 15, Color(GodUI.CREAM, 0.7))
 	for i in TABS.size():
 		var r := tab_rect(i)
 		draw_style_box(GodUI.panel_box(GodUI.GOLD if i == tab else GodUI.GOLD_DIM, Color(0.2, 0.15, 0.09) if i == tab else Color(0.1, 0.08, 0.06), 8), r)

@@ -61,15 +61,15 @@ func _draw() -> void:
 	GodUI.text_in(self, bold, band.get_center() + Vector2(0, 6), tr("SPECIAL EDITION"), 14, GodUI.PAPER, true)
 	GodUI.text_in(self, bold, Vector2(p.get_center().x, p.position.y + 78), tr("L'ÉCHO DE SAINT-CLIN-CLIN"), 34, ink, true)
 	draw_line(Vector2(L, p.position.y + 88), Vector2(R, p.position.y + 88), ink, 2.0)
-	var headline := tr("DAD IS BACK!") if run.won else tr("THE GAZ BAR CLOSES AFTER %d DAYS") % run.day
-	var sub := tr("\"T'es un vrai gaz bar boy,\" says the man in the orange hatchback.") if run.won else tr("No gas, no money, and the truck won't come. \"He'll be back,\" says Bertrand.")
+	var headline := tr("THE WHOLE VILLAGE IS BACK!") if run.won else (tr("GAÉTAN TAKES THE WHOLE VILLAGE") if run.lost_to_gaetan else tr("THE GAZ BAR CLOSES AFTER %d DAYS") % run.day)
+	var sub := tr("100% of Saint-Clin-Clin fills up at the gaz bar. Dad is avenged.") if run.won else (tr("Not one car left. \"Ces gars-là l'ont pas,\" sighs Dad.") if run.lost_to_gaetan else tr("No gas, no money, and the truck won't come. Across the road, Gaétan waves."))
 	var y := p.position.y + 130.0
 	y += GodUI.para_in(self, bold, Vector2(L, y), headline, 32, R - L, ink, 1.1)
 	y += GodUI.para_in(self, ital, Vector2(L, y), sub, 15, R - L, Color(ink, 0.85))
 	draw_line(Vector2(L, y - 6), Vector2(R, y - 6), Color(ink, 0.35), 1.0)
 	var t: Dictionary = run.totals
 	var rows := [
-		[tr("Days"), "%d / %d" % [run.day, GodData.FINAL_DAY]], [tr("Cars fueled"), str(t.cars)],
+		[tr("Days"), str(run.day)], [tr("Market share"), "%d%%" % int(round(run.share))], [tr("Cars fueled"), str(t.cars)],
 		[tr("Topped off · Perfect · Good"), "%d · %d · %d" % [t.supers, t.perfects, t.goods]],
 		[tr("OK · Overfilled · Unserved"), "%d · %d · %d" % [t.oks, t.misses, t.unserved]],
 		[tr("Best combo"), "×%d" % t.best_combo], [tr("Truck deliveries"), str(run.deliveries)],

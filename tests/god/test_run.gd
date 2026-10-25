@@ -119,12 +119,59 @@ func test_out_of_gas_and_broke_is_bankrupt() -> void:
 	assert_false(r.bankrupt())
 
 
-func test_surviving_day_50_wins_the_run() -> void:
+func test_a_run_starts_50_50_with_gaetan() -> void:
 	var r := _run()
-	r.day = GodData.FINAL_DAY
-	r.end_day({"loot": 10.0})
+	assert_almost_eq(r.share, 50.0, 0.001)
+	assert_almost_eq(r.reputation, 50.0, 0.001)
+
+
+func test_good_fills_raise_reputation_and_the_share_follows_slowly() -> void:
+	var r := _run()
+	r.end_day({"loot": 10.0, "rep": 20.0})
+	assert_almost_eq(r.reputation, 50.0 + 20.0 - GodData.GAETAN_PUSH, 0.001)
+	assert_almost_eq(r.share, 50.0 + GodData.SHARE_STEP, 0.001, "at most a few points a night")
+	assert_false(r.over)
+
+
+func test_gaetan_claws_back_a_little_every_night() -> void:
+	var r := _run()
+	r.end_day({"loot": 10.0, "rep": 0.0})
+	assert_almost_eq(r.reputation, 50.0 - GodData.GAETAN_PUSH, 0.001)
+	assert_lt(r.share, 50.0)
+
+
+func test_100_percent_wins_the_run() -> void:
+	var r := _run()
+	r.reputation = 100.0
+	r.share = 96.0
+	r.end_day({"loot": 10.0, "rep": 5.0})
+	assert_almost_eq(r.share, 100.0, 0.001)
 	assert_true(r.won)
 	assert_true(r.over)
+
+
+func test_0_percent_loses_the_run_to_gaetan() -> void:
+	var r := _run()
+	r.reputation = 0.0
+	r.share = 4.0
+	r.end_day({"loot": 10.0, "rep": -3.0})
+	assert_true(r.lost_to_gaetan)
+	assert_true(r.over)
+	assert_false(r.won)
+
+
+func test_the_books_count_gas_at_what_the_truck_charged() -> void:
+	var r := _run()
+	r.price = 1.5
+	r.cash = 200.0
+	r.tank = 100.0
+	var b := r.books({"sales": 60.0, "tips": 12.0, "litres": 30.0, "wasted": 4.0, "drone_gas": 2.0, "fines": 10.0})
+	assert_almost_eq(b.gas_sold, 30.0 * 1.5, 0.001)
+	assert_almost_eq(b.spills, 4.0 / GodData.PUMP_PRICE * 1.5, 0.001)
+	assert_almost_eq(b.drones, 2.0 / GodData.PUMP_PRICE * 1.5, 0.001)
+	assert_almost_eq(b.net, 60.0 + 12.0 - 45.0 - 3.0 - 1.5 - 10.0, 0.001)
+	assert_almost_eq(b.gas_in_tank, 100.0 / GodData.PUMP_PRICE * 1.5, 0.001)
+	assert_almost_eq(b.equity, b.cash + b.gas_in_tank + b.equipment - b.loan, 0.001)
 
 
 func test_the_shop_sells_nodes_in_order() -> void:

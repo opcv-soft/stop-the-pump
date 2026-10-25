@@ -4,7 +4,7 @@ extends Node
 ## run and the meta; the day itself is GodPump (the lot, the cars, the God Pump), which this node
 ## starts each morning and listens to each evening.
 ##   TITLE → (first time: INTRO → NAMING) → DAY → REPORT → NIGHT (shop, truck → TRUCK → CARDS) → DAY ...
-##   → bankrupt: RUN_OVER → GARAGE → new run   ·   day 50: REPORT → ENDING → RUN_OVER → GARAGE
+##   → bankrupt or 0% share: RUN_OVER → GARAGE → new run   ·   100% share: REPORT → ENDING → RUN_OVER → GARAGE
 ## Designer keys: F1 opens the dev configurator (DevPanel), F3 ends the day, F4 gives $100, F6 gives
 ## 5000 XP.
 
@@ -154,7 +154,7 @@ func _on_named(text: String) -> void:
 	start_day()
 
 
-## Opens today: the run's numbers, the tank, the unlocked car types. Day 50: Dad drives in first.
+## Opens today: the run's numbers, the tank, the unlocked car types and the market share.
 func start_day() -> void:
 	state = "day"
 	_hide_all()
@@ -168,12 +168,8 @@ func start_day() -> void:
 	if not day.visit.is_empty():
 		var first: Array = day.visit.lines[0]
 		meta.clip("%s\t%s" % [first[0], first[1]], day.visit.get("postcard", 0))  # who, line: translated when shown
+	day.market_share = run.share  # round 10 B: today's split of the avenue with Gaétan
 	day.start_day(run.mods(), run.tank, run.day, meta.unlocked_cars())
-	if run.day >= GodData.FINAL_DAY:
-		var dad := day.park_customer(30.0, Vector2(GodPump.ENTRANCE.x + 60, GodPump.LOT.position.y + 70))
-		dad.set_type("papa", day.rng)
-		dad.stack = "papa"  # the orange hatchback, a fishing rod on the roof
-		dad.patience = 9999.0
 
 
 func _on_day_over(report: Dictionary) -> void:
@@ -191,7 +187,7 @@ func _after_report() -> void:
 		run.finish()
 		_play_cinematic(Cinematic.ENDING, "run_over")
 		return
-	if run.bankrupt():
+	if run.bankrupt() or run.lost_to_gaetan:
 		run.finish()
 		_show_run_over()
 		return

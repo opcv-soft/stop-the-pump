@@ -7,7 +7,7 @@ extends Control
 
 signal finished
 
-## The opening: mock-biblical, then down to earth in Saint-Clin-Clin.
+## The opening: mock-biblical, then down to earth in Saint-Clin-Clin (round 10 B: the new lore).
 const INTRO := [
 	{"bg": "black", "text": "OPCV Games presents", "hold": 2.0},
 	{"bg": "black", "text": "In the beginning, there was gas."},
@@ -15,25 +15,23 @@ const INTRO := [
 	{"bg": "heaven", "nozzle": true, "text": "Then came the one who would pour it."},
 	{"bg": "heaven", "nozzle": true, "title": true, "text": "", "hold": 3.2, "choir": true},
 	{"bg": "scene", "text": "Saint-Clin-Clin-des-Meuh-Meuh, Québec."},
-	{"bg": "scene", "text": "Your father passed away last spring."},
-	{"bg": "scene", "text": "At the reading of the will, Me Tremblay, the notary, cleared his throat. Nervously."},
-	{"bg": "heaven", "nozzle": true, "text": "\"...and to my only child, I leave... THE GOD PUMP.\"", "choir": true},
-	{"bg": "scene", "text": "It's a gas station."},
-	{"bg": "scene", "text": "One pump. A boarded window. Ti-Guy, Mme Gagnon, Bertrand and Le Grand, four regulars who never leave."},
-	{"bg": "scene", "text": "He only opened mornings. After 11, he went fishing."},
-	{"bg": "scene", "text": "Are you worthy?", "last": true},
+	{"bg": "scene", "text": "For thirty years, your father was the best gas man in the village. He topped off to the cent."},
+	{"bg": "scene", "text": "Saint-Clin-Clin never needed a second gas station."},
+	{"bg": "scene", "text": "Then his hands started to shake."},
+	{"bg": "scene", "text": "And Gaétan opened across the road. Câlisse."},
+	{"bg": "scene", "text": "Dad tried hiring. \"Ces gars-là l'ont pas.\""},
+	{"bg": "heaven", "nozzle": true, "text": "So he hands you the keys... to THE GOD PUMP.", "choir": true},
+	{"bg": "scene", "text": "\"Win them back, kid. All of them.\"", "last": true},
 ]
-## Day 50: Dad drives in.
+## 100% market share: the whole village is back, and Dad goes out on top.
 const ENDING := [
-	{"bg": "scene", "text": "Day 50."},
-	{"bg": "scene", "text": "An old orange hatchback pulls in. A fishing rod sticks out the window."},
-	{"bg": "scene", "text": "You top it off. To the cent."},
-	{"bg": "scene", "text": "The driver gets out. Sunburnt. Smells like a lake."},
-	{"bg": "scene", "text": "\"Salut, mon grand.\""},
-	{"bg": "scene", "text": "\"After 11, I went fishing. Then I just... kept going.\""},
-	{"bg": "scene", "text": "Four postcards, signed \"un pêcheur\". Mme Gagnon gasps. Bertrand doesn't."},
-	{"bg": "scene", "text": "He looks at the lot. The regulars. The jar."},
-	{"bg": "heaven", "nozzle": true, "text": "\"T'es un vrai gaz bar boy.\"", "choir": true},
+	{"bg": "scene", "text": "100% of Saint-Clin-Clin fills up at your gaz bar."},
+	{"bg": "scene", "text": "Across the road, Gaétan turns off his sign."},
+	{"bg": "scene", "text": "The village cheers. The regulars cheer. Ti-Guy cries."},
+	{"bg": "scene", "text": "Dad gets up from the bench. For once, his hands are steady."},
+	{"bg": "scene", "text": "\"To the cent, kid. TO THE CENT!\""},
+	{"bg": "scene", "text": "He laughs. He laughs so hard his heart gives out."},
+	{"bg": "heaven", "nozzle": true, "text": "He died the happiest gas man in Québec. Avenged.", "choir": true},
 	{"bg": "heaven", "title": true, "text": "Thanks for playing.", "credits": true, "last": true},
 ]
 const SHOT_SECONDS := 3.6

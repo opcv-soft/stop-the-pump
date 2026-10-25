@@ -94,13 +94,13 @@ func _draw() -> void:
 	draw_string(f, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 0.9, clampf(0.35 - absf(shine - 0.5) * 0.7, 0.0, 0.35)))
 	GodUI.text(self, Vector2(576, 256), tr("Saint-Clin-Clin-des-Meuh-Meuh, Québec"), 20, GodUI.CREAM, true, 5)
 	if meta:
-		var line := tr("Best day: %d / %d   ·   Runs: %d   ·   XP: %d") % [meta.best_day, GodData.FINAL_DAY, meta.runs, meta.xp]
+		var line := tr("Best market share: %d%%   ·   Runs: %d   ·   XP: %d") % [int(meta.best_share), meta.runs, meta.xp]
 		GodUI.text(self, Vector2(576, 300), line, 16, Color(GodUI.CREAM, 0.75), true, 4)
 		var v := "v" + str(ProjectSettings.get_setting("application/config/version", ""))
 		GodUI.text(self, Vector2(12, 636), tr("OPCV Games"), 14, Color(1, 1, 1, 0.5))
 		GodUI.text(self, Vector2(1140 - GodUI.font().get_string_size(v, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, 636), v, 14, Color(1, 1, 1, 0.5))
 		if meta.ending_seen:
-			GodUI.text(self, Vector2(576, 610), tr("Dad came home!"), 16, GodUI.GOLD, true, 4)
+			GodUI.text(self, Vector2(576, 610), tr("Dad is avenged!"), 16, GodUI.GOLD, true, 4)
 		_draw_stats()
 		_draw_scrapbook()
 
@@ -115,7 +115,7 @@ func _draw_stats() -> void:
 		GodUI.para(self, Vector2(r.get_center().x, r.position.y + 90), tr("No runs yet. Dad's old pump is waiting."), 15, r.size.x - 40, Color(GodUI.CREAM, 0.7))
 		return
 	var rows := [
-		[tr("Runs"), str(meta.runs)], [tr("Best day"), "%d / %d" % [meta.best_day, GodData.FINAL_DAY]],
+		[tr("Runs"), str(meta.runs)], [tr("Best market share"), "%d%%" % int(meta.best_share)],
 		[tr("Days at the pump"), str(lt.get("days", 0))], [tr("Cars fueled"), str(meta.total_cars)],
 		[tr("Topped off · Perfect"), "%d · %d" % [lt.get("supers", 0), lt.get("perfects", 0)]],
 		[tr("Overfilled · Unserved"), "%d · %d" % [lt.get("overfilled", 0), lt.get("unserved", 0)]],
@@ -132,18 +132,18 @@ func _draw_stats() -> void:
 		y += 23.0
 
 
-## The scrapbook, on newsprint: days survived per run, the last headline, Dad's postcards.
+## The scrapbook, on newsprint: the market share each run ended at, and what was last overheard.
 func _draw_scrapbook() -> void:
 	var r := BOOK
 	draw_rect(Rect2(r.position + Vector2(5, 6), r.size), Color(0, 0, 0, 0.35))
 	draw_rect(r, GodUI.PAPER)
 	var ink := GodUI.PAPER_INK
 	var serif := GodUI.serif()
-	var days: Array = meta.history.map(func(h: Dictionary) -> int: return h.days)
-	GodChart.bars(self, RUNS_CHART, days, tr("Days survived, run by run"), ink, GodUI.RED_INK, serif, float(GodData.FINAL_DAY), _hover_run)
+	var shares: Array = meta.history.map(func(h: Dictionary) -> int: return int(h.get("share", 0.0)))
+	GodChart.bars(self, RUNS_CHART, shares, tr("Market share at the end, run by run"), ink, GodUI.RED_INK, serif, 100.0, _hover_run)
 	if _hover_run >= 0 and _hover_run < meta.history.size():
 		var h: Dictionary = meta.history[_hover_run]
-		var tip := "Run %d: day %d%s, $%d" % [meta.runs - meta.history.size() + _hover_run + 1, h.days, " (Dad came home)" if h.won else "", int(h.loot)]
+		var tip := "Run %d: %d%%, day %d%s, $%d" % [meta.runs - meta.history.size() + _hover_run + 1, int(h.get("share", 0.0)), h.days, " (100%!)" if h.won else "", int(h.loot)]
 		var tw := serif.get_string_size(tip, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 12
 		var tr := Rect2(clampf(RUNS_CHART.position.x + (_hover_run + 0.5) * RUNS_CHART.size.x / meta.history.size() - tw * 0.5, r.position.x, r.end.x - tw), RUNS_CHART.position.y - 6, tw, 20)
 		draw_rect(tr, ink)
@@ -155,16 +155,3 @@ func _draw_scrapbook() -> void:
 		heard = "%s: %s" % [tr(Visitors.speaker_name(parts[0])), tr(parts[1])]
 	GodUI.text_in(self, GodUI.serif(true), Vector2(r.position.x + 16, r.position.y + 150), tr("OVERHEARD AT THE GAZ BAR"), 11, Color(ink, 0.7))
 	GodUI.para_in(self, GodUI.serif(false, true), Vector2(r.position.x + 16, r.position.y + 170), heard, 14, r.size.x - 32, ink, 1.15)
-	GodUI.text_in(self, GodUI.serif(true), Vector2(r.position.x + 16, r.position.y + 214), tr("POSTCARDS FROM \"UN PÊCHEUR\""), 11, Color(ink, 0.7))
-	for i in Visitors.POSTCARDS.size():
-		var pc: Array = Visitors.POSTCARDS[i]
-		var slot := Rect2(r.position.x + 16 + i * 86, r.position.y + 224, 78, 52)
-		if pc[0] in meta.postcards:
-			draw_rect(slot.grow(2), Color(0.98, 0.97, 0.93))
-			var tex := GodUI.sprite(pc[2])
-			if tex:
-				draw_texture_rect(tex, slot.grow(-3), false)
-		else:
-			draw_rect(slot, Color(ink, 0.07))
-			draw_rect(slot, Color(ink, 0.3), false, 1.0)
-			GodUI.text_in(self, serif, slot.get_center() + Vector2(0, 5), tr("day %d") % pc[0], 12, Color(ink, 0.45), true)

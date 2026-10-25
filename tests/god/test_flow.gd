@@ -67,18 +67,35 @@ func test_bankrupt_ends_the_run_and_banks_xp() -> void:
 	assert_eq(g.state, "garage")
 
 
-func test_day_50_brings_dad_and_the_ending() -> void:
-	g.run.day = GodData.FINAL_DAY
-	g.start_day()
-	var dads := g.day.cars.filter(func(c: ProtoCar) -> bool: return c.type_id == "papa")
-	assert_eq(dads.size(), 1)
+func test_100_percent_market_share_plays_the_ending() -> void:
+	g.run.share = 97.0
+	g.run.reputation = 100.0
+	var car := g.day.park_customer(20.0, Vector2(500, 380))
+	car.amount = 20.0
+	g.day._settle(car)  # a top-off: enough reputation to beat Gaétan's push tonight
 	g.day.end_round()
+	assert_true(g.run.won)
 	g._after_report()
 	assert_eq(g.state, "cinematic")
 	assert_true(g.meta.ending_seen)
 	g.cinematic.skip()
 	g.cinematic.advance()
 	assert_eq(g.state, "run_over")
+
+
+func test_0_percent_ends_the_run() -> void:
+	g.run.share = 2.0
+	g.run.reputation = 0.0
+	g.day.end_round()
+	g._after_report()
+	assert_eq(g.state, "run_over")
+	assert_true(g.run.lost_to_gaetan)
+
+
+func test_the_morning_takes_the_runs_market_share() -> void:
+	g.run.share = 73.0
+	g.start_day()
+	assert_almost_eq(g.day.market_share, 73.0, 0.001)
 
 
 func test_buying_in_the_night_shop_changes_tomorrow() -> void:

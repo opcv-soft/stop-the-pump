@@ -1,15 +1,18 @@
 extends SceneTree
 ## A screenshot of a GOD PUMP day in progress, for the Committee to look at the layout without playing:
 ##
-##     godot --path . -s tools/demo/snapshot.gd -- <out.png> [seconds]
+##     godot --path . -s tools/demo/snapshot.gd -- <out.png> [seconds] [day | report]
 ##
-## Opens a day (two drones, the twin stream, cars waiting), lets it run `seconds` (default 6) with the
-## stream on a car, then saves the frame. Needs a window (not --headless): the frame must be drawn.
+## day (default): opens a day (two drones, the twin stream, cars waiting), lets it run `seconds` with the
+## stream on a car, then saves the frame. report: plays a real run's first day for `seconds`, closes it
+## and saves the day report. Needs a window (not --headless): the frame must be drawn.
 
 var day: GodPump
 var out := "user://snapshot.png"
 var seconds := 6.0
 var f := 0
+var mode := "day"
+var game: GodGame
 
 
 func _initialize() -> void:
@@ -18,7 +21,17 @@ func _initialize() -> void:
 		out = args[0]
 	if args.size() > 1:
 		seconds = float(args[1])
+	if args.size() > 2:
+		mode = args[2]
 	DisplayServer.window_set_size(Vector2i(1152, 648))
+	if mode == "report":
+		game = load("res://scenes/god/god_game.tscn").instantiate()
+		game.meta_path = ""
+		game.sound_on = false
+		game.autostart = true
+		game.cash_in_time = 0.0
+		root.add_child(game)
+		return
 	day = load("res://scenes/god/day/god_pump.tscn").instantiate()
 	day.sound_on = false
 	root.add_child(day)
@@ -37,6 +50,8 @@ func _open() -> void:
 
 func _process(_dt: float) -> bool:
 	f += 1
+	if mode == "report":
+		return _report_frame()
 	if f == 2:
 		_open()
 	if f < 3:
@@ -51,6 +66,26 @@ func _process(_dt: float) -> bool:
 			day._settle(target)
 		return false
 	if f == int(seconds * 30.0) + 3:
+		root.get_viewport().get_texture().get_image().save_png(out)
+		print("saved ", out)
+		return true
+	return false
+
+
+func _report_frame() -> bool:
+	if not game.day or not game.run:
+		return false
+	if f < int(seconds * 30.0):
+		var target: ProtoCar = game.day.nearest_customer(Vector2(576, 380), 2000.0)
+		if target:
+			game.day.aim(target.position)
+		game.day.set_pouring(f % 90 < 70)
+		return false
+	if f == int(seconds * 30.0):
+		game.day.visit = Visitors.beat_for(3)
+		game.day.chat_log.assign(["Papa: How's my pump, kid? Don't look at my hands.", "Bertrand: Thirty years, he topped off to the cent.", "Papa: To the CENT."])
+		game.day.end_round()
+	if f == int(seconds * 30.0) + 10:
 		root.get_viewport().get_texture().get_image().save_png(out)
 		print("saved ", out)
 		return true

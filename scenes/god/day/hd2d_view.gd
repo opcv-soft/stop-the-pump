@@ -267,6 +267,24 @@ func _build_surroundings() -> void:
 	for t in [Vector2(1075, 645), Vector2(-20, 640), Vector2(330, 110)]:
 		_upright(game.tex("tree"), to3(t, 1.12), true)
 	_build_everyday()
+	_build_rival()
+
+
+## Chez Gaétan across the road (round 10 B): an asphalt apron, two pumps under a canopy, his kiosk
+## (the prop_rival sprite) behind. Cars that pick him park by a pump, wait, and drive on full.
+func _build_rival() -> void:
+	var asphalt := _wall_mat(Color(0.2, 0.19, 0.19))
+	_flat(Vector2(220, 64) * K, to3(Vector2(GodPump.RIVAL_AT.x, 12), 0.005), asphalt)
+	var white := _wall_mat(Color(0.92, 0.92, 0.88))
+	var red := _wall_mat(Color(0.75, 0.16, 0.14))
+	var roof_h := 1.5
+	_box(Vector3(200 * K, 0.12, 50 * K), to3(Vector2(GodPump.RIVAL_AT.x, 4), roof_h), white)  # the canopy
+	_box(Vector3(200 * K, 0.06, 50 * K + 0.02), to3(Vector2(GodPump.RIVAL_AT.x, 4), roof_h - 0.08), red)  # its red band
+	for x in [-90.0, 90.0]:
+		_box(Vector3(0.1, roof_h, 0.1), to3(Vector2(GodPump.RIVAL_AT.x + x, 4), roof_h * 0.5), white)
+	for p in GodPump.RIVAL_PUMPS:
+		_box(Vector3(0.32, 0.7, 0.22), to3(p + Vector2(0, -16), 0.35), red)
+		_box(Vector3(0.22, 0.18, 0.23), to3(p + Vector2(0, -16), 0.56), white)  # its dial
 
 
 ## Dust motes drifting through the morning light.

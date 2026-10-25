@@ -182,8 +182,15 @@ const PERKS := [
 	{"id": "nest_egg", "name": "Bas de laine", "helps": "start each run with $40 more", "price": 1000, "tiers": 3, "fx": {"start_cash": 40.0}},
 ]
 
-## The day the story ends: Dad drives in.
-const FINAL_DAY := 50
+## Round 10 batch B: the rival across the road. Every run starts 50/50 with Gaétan; win at 100% market
+## share, lose at 0%. Reputation comes from your fills; each night Gaétan's specials take some back, and
+## the market share moves toward your reputation by at most SHARE_STEP points (people switch slowly).
+const START_SHARE := 50.0
+const START_REPUTATION := 50.0
+const REPUTATION := {ScoreTiers.SUPER_PERFECT: 2.0, ScoreTiers.PERFECT: 1.25, ScoreTiers.GOOD: 0.6, ScoreTiers.OK: 0.0,
+	ScoreTiers.MISS: -0.75, ScoreTiers.UNSERVED: -0.5}
+const GAETAN_PUSH := 0.5
+const SHARE_STEP := 8.0
 ## A game hour lasts this many real seconds (7 h to 13 h = 27 s; to 23 h = 72 s).
 const HOUR_SECONDS := 4.5
 const OPEN_HOUR := 7.0

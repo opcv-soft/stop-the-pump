@@ -94,3 +94,16 @@ Feature: A GOD PUMP day  (#37, docs/GOD_PUMP_PLAN.md)
   Scenario: XP is litres × combo points × accuracy
     Given I put 30 L in cars with combo points 6 at 90% accuracy
     Then the day earns 30 × 6 × 0.9 = 162 XP
+
+  # --- Round 10, batch B: the rival across the road --------------------------------------------
+
+  Scenario: The avenue is shared with Gaétan
+    Given cars drive along the avenue both ways
+    Then a car that wants gas shows a low fuel gauge
+    And it picks my gaz bar or Gaétan's by my market share
+    When it picks Gaétan
+    Then it pulls into his station across the road, waits by a pump and drives on with a full gauge
+
+  Scenario: Reputation from the day's fills
+    When cars are graded
+    Then the day counts reputation: Topped off +2, Perfect +1.25, Good +0.6, OK 0, Overfilled -0.75, Unserved -0.5

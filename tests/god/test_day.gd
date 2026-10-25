@@ -367,11 +367,10 @@ func test_a_visitor_drives_in_chats_and_leaves() -> void:
 	assert_eq(game.visitor_car.phase, ProtoCar.Phase.LEAVING)
 
 
-func test_the_postcards_come_with_the_mail_carrier() -> void:
-	for d in [10, 20, 30, 40]:
-		assert_eq(Visitors.beat_for(d).get("postcard", 0), d)
-		assert_eq(Visitors.beat_for(d).who, "facteur")
-	assert_true(Visitors.beat_for(3).is_empty(), "not every day")
+func test_papa_visits_and_the_postcards_are_gone() -> void:
+	assert_eq(Visitors.beat_for(3).who, "papa")
+	assert_true(Visitors.POSTCARDS.is_empty(), "round 10 B: Dad is alive")
+	assert_true(Visitors.beat_for(4).is_empty(), "not every day")
 
 
 
@@ -584,3 +583,68 @@ func test_the_visitors_chat_goes_to_the_report() -> void:
 	var chat: Array = game.day_report().chat
 	assert_gt(chat.size(), 1)
 	assert_true(String(chat[0]).begins_with("Gaétan:"))
+
+
+# --- Round 10, batch B: the rival across the road ------------------------------------------------
+
+func _road_cars(share: float, n: int) -> Array:
+	game.market_share = share
+	game.customer_chance = 1.0
+	var out := []
+	for i in n:
+		out.append(game.spawn_road_car())
+	return out
+
+
+func test_at_100_percent_every_car_wanting_gas_picks_me() -> void:
+	_open()
+	var road := _road_cars(100.0, 40)
+	assert_true(road.all(func(c: ProtoCar) -> bool: return not c.to_rival))
+	assert_gt(road.filter(func(c: ProtoCar) -> bool: return c.wants_in).size(), 30)
+
+
+func test_at_0_percent_every_car_wanting_gas_goes_to_gaetan() -> void:
+	_open()
+	var road := _road_cars(0.0, 40)
+	assert_true(road.all(func(c: ProtoCar) -> bool: return not c.wants_in))
+	assert_gt(road.filter(func(c: ProtoCar) -> bool: return c.to_rival).size(), 30)
+	assert_eq(game.day_report().rival_cars, road.filter(func(c: ProtoCar) -> bool: return c.to_rival).size())
+
+
+func test_cars_wanting_gas_show_a_low_gauge() -> void:
+	_open()
+	var road := _road_cars(50.0, 20)
+	var wanting := road.filter(func(c: ProtoCar) -> bool: return c.customer or c.to_rival)
+	assert_true(wanting.all(func(c: ProtoCar) -> bool: return c.low_fuel))
+
+
+func test_a_car_at_gaetans_waits_by_a_pump_and_drives_on_full() -> void:
+	_open()
+	game.market_share = 0.0
+	game.customer_chance = 1.0
+	var car: ProtoCar = null
+	while not car or not car.to_rival:
+		car = game.spawn_road_car()
+	var went_in := false
+	for i in 400:
+		game.step(0.05)
+		if car.phase == ProtoCar.Phase.RIVAL:
+			went_in = true
+		if car.rival_full and car.phase == ProtoCar.Phase.ROAD:
+			break
+	assert_true(went_in, "it pulled into his station")
+	assert_true(car.rival_full, "and came out topped up")
+	assert_false(car.low_fuel)
+	assert_eq(car.phase, ProtoCar.Phase.ROAD)
+
+
+func test_the_day_counts_reputation_by_grade() -> void:
+	_open()
+	var a := _parked("sedan", Vector2(400, 380), 20.0)
+	a.amount = 20.0  # topped off
+	game._settle(a)
+	var b := _parked("sedan", Vector2(600, 380), 20.0)
+	b.amount = 21.0  # overfilled
+	game._settle(b)
+	var expected: float = GodData.REPUTATION[ScoreTiers.SUPER_PERFECT] + GodData.REPUTATION[b.tier]
+	assert_almost_eq(game.day_report().rep, expected, 0.001)

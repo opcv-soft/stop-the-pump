@@ -1,9 +1,20 @@
 class_name DayReportScreen
 extends Control
-## End of a day (designer's ask): accuracy, loot, cars fueled, Super / Perfect / Good / OK /
-## Overfilled / Unserved, XP, and progress toward the next car type. ENTER or the button goes on.
+## End of a day. Round 10 (playtests 9 and 10): the fight with Gaétan on top (market share and
+## reputation, with Dad's reaction), then three columns: the day (accuracy, cars, combo, XP, grades), the
+## books (a P&L at wholesale cost and a balance sheet) and what was overheard (the visitor's chat, read
+## here instead of over the pour). ENTER or the button goes on.
 
 signal done
+
+## Dad's line after a night: by how the market share moved (up, flat, down). Picked by the day.
+const DAD_LINES := {
+	"up": ["That's my kid!", "Gaétan's sweating. I can see it from here.", "To the cent. TO THE CENT.",
+		"Ti-Guy says the whole rang is talking about you."],
+	"flat": ["Hold the line, kid.", "Gaétan isn't going anywhere. Neither are we.", "Steady hands. That's all it takes."],
+	"down": ["Half the village at Gaétan's. Câlisse.", "My hands shook too. Shake it off.",
+		"Tomorrow, kid. Tomorrow we take them back."],
+}
 
 var report := {}
 var run: RunState
@@ -16,7 +27,7 @@ func _init() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_btn = GodUI.button("THE NIGHT  »")
-	_btn.position = Vector2(466, 548)
+	_btn.position = Vector2(466, 572)
 	_btn.pressed.connect(func() -> void: done.emit())
 	add_child(_btn)
 
@@ -43,76 +54,127 @@ func _unhandled_input(e: InputEvent) -> void:
 		done.emit()
 
 
+## What Dad says tonight.
+func dad_line() -> String:
+	var night: Dictionary = run.last_night if run else {}
+	var moved: float = night.get("share_to", 50.0) - night.get("share_from", 50.0)
+	var mood := "up" if moved > 0.5 else ("down" if moved < -0.5 else "flat")
+	var pool: Array = DAD_LINES[mood]
+	return pool[report.get("day", 1) % pool.size()]
+
+
 func _draw() -> void:
 	if report.is_empty():
 		return
 	GodUI.dim(self, size, 0.6)
-	var chat: Array = report.get("chat", [])
-	_btn.position = Vector2(466 - (136 if not chat.is_empty() else 0), 548)
-	if not chat.is_empty():  # the report moves left to make room for what was overheard
-		draw_set_transform(Vector2(-136, 0))
-	var r := Rect2(286, 52, 580, 480)
-	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), r)
+	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), Rect2(28, 20, 1096, 540))
 	var day: int = report.get("day", 1)
-	GodUI.text(self, Vector2(576, 104), tr("FERMÉ  ·  DAY %d / %d") % [day, GodData.FINAL_DAY], 34, GodUI.GOLD, true)
+	GodUI.text(self, Vector2(576, 60), tr("FERMÉ  ·  DAY %d") % day, 30, GodUI.GOLD, true)
 	if report.get("out_of_gas", false):
-		GodUI.text(self, Vector2(576, 134), tr("out of gas before closing!"), 17, GodUI.RED, true)
-	var rows := [
-		[tr("Accuracy"), "%d%%" % int(report.get("accuracy", 0.0) * 100.0)],
-		[tr("Loot"), "$%.2f" % report.get("loot", 0.0)],
-		[tr("Cars fueled"), str(report.get("cars", 0))],
-		[tr("Best combo"), "x%d" % report.get("best_combo", 1)],
-		[tr("XP"), "+%d" % report.get("xp", 0)],
-	]
-	var y := 178.0
-	for row in rows:
-		GodUI.text(self, Vector2(330, y), row[0], 20, GodUI.CREAM)
-		GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(row[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x, y), row[1], 22, GodUI.GOLD)
-		y += 34.0
-	# Round 10: how the XP was earned, litres × combo points × accuracy.
+		GodUI.text(self, Vector2(576, 84), tr("out of gas before closing!"), 15, GodUI.RED, true)
+	_draw_fight()
+	_draw_day(Rect2(48, 200, 330, 340))
+	_draw_books(Rect2(400, 200, 340, 340))
+	_draw_chat(Rect2(762, 200, 344, 340))
+
+
+## The market share bar (you in gold, Gaétan in green), the reputation, and Dad.
+func _draw_fight() -> void:
+	var night: Dictionary = run.last_night if run else {}
+	var share: float = night.get("share_to", run.share if run else 50.0)
+	var moved: float = share - night.get("share_from", share)
+	var bar := Rect2(150, 104, 852, 26)
+	draw_rect(bar.grow(3), Color(0, 0, 0, 0.9))
+	draw_rect(bar, Color(0.3, 0.62, 0.35))  # Gaétan's
+	draw_rect(Rect2(bar.position, Vector2(bar.size.x * share / 100.0, bar.size.y)), GodUI.GOLD)
+	GodUI.text(self, Vector2(bar.position.x - 12 - GodUI.font().get_string_size(tr("YOU"), HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x, bar.end.y - 6), tr("YOU"), 18, GodUI.GOLD)
+	GodUI.text(self, Vector2(bar.end.x + 12, bar.end.y - 6), "GAÉTAN", 18, Color(0.45, 0.85, 0.5))
+	var label := "%d%%  (%s%d)" % [int(round(share)), "+" if moved >= 0.0 else "", int(round(moved))]
+	GodUI.text(self, Vector2(bar.position.x + 10, bar.end.y - 6), label, 17, GodUI.INK)
+	var theirs := "%d%%" % int(round(100.0 - share))
+	GodUI.text(self, Vector2(bar.end.x - 10 - GodUI.font().get_string_size(theirs, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x, bar.end.y - 6), theirs, 17, GodUI.INK)
+	var rep: float = night.get("rep_to", run.reputation if run else 50.0)
+	var rep_moved: float = rep - night.get("rep_from", rep)
+	GodUI.text(self, Vector2(576, 152), tr("MARKET SHARE  ·  reputation %d (%s%.1f)  ·  %d cars went to Gaétan today") % [int(round(rep)), "+" if rep_moved >= 0.0 else "", rep_moved, report.get("rival_cars", 0)], 14, Color(GodUI.CREAM, 0.75), true)
+	GodUI.text(self, Vector2(576, 180), "Papa: \"%s\"" % tr(dad_line()), 17, GodUI.CREAM, true)
+
+
+func _row(r: Rect2, y: float, label: String, value: String, col := GodUI.CREAM, size := 15) -> void:
+	GodUI.text(self, Vector2(r.position.x, y), label, size, Color(GodUI.CREAM, 0.85))
+	GodUI.text(self, Vector2(r.end.x - GodUI.font().get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x, y), value, size, col)
+
+
+func _draw_day(r: Rect2) -> void:
+	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("THE DAY"), 18, GodUI.GOLD, true)
+	var y := r.position.y + 46
+	_row(r, y, tr("Accuracy"), "%d%%" % int(report.get("accuracy", 0.0) * 100.0), GodUI.GOLD)
+	y += 26
+	_row(r, y, tr("Cars fueled"), str(report.get("cars", 0)), GodUI.GOLD)
+	y += 26
+	_row(r, y, tr("Best combo"), "x%d" % report.get("best_combo", 1), GodUI.GOLD)
+	y += 26
+	_row(r, y, tr("XP"), "+%d" % report.get("xp", 0), GodUI.GOLD)
+	y += 20
 	var sum := tr("%.0f L x (1 + %.1f combo) x %d%%") % [report.get("litres", 0.0), report.get("avg_combo", 0.0), int(report.get("accuracy", 0.0) * 100.0)]
-	GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, y - 14), sum, 14, Color(GodUI.CREAM, 0.7))
+	GodUI.text(self, Vector2(r.end.x - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, y), sum, 12, Color(GodUI.CREAM, 0.6))
 	var tiers: Dictionary = report.get("tiers", {})
 	var grades := [[ScoreTiers.SUPER_PERFECT, "SUPER"], [ScoreTiers.PERFECT, "PERFECT"], [ScoreTiers.GOOD, "GOOD"],
 		[ScoreTiers.OK, "OK"], [ScoreTiers.MISS, "OVERFILLED"], [ScoreTiers.UNSERVED, "UNSERVED"]]
 	for i in grades.size():
-		var x := 331.0 + i * 98.0
+		var x := r.position.x + 27.0 + i * 55.0
 		var col: Color = GodPump.TIER_COLORS[grades[i][0]]
-		GodUI.text(self, Vector2(x, 372), str(tiers.get(grades[i][0], 0)), 30, col, true)
-		GodUI.text(self, Vector2(x, 396), tr(grades[i][1]), 13, Color(col, 0.8), true)
-	# Progress to the next car type (cars filled across all runs, this one included).
-	var have: int = meta.total_cars + run.totals.cars if meta and run else 0
-	var nxt := {}
-	for id in GodData.CAR_ORDER:
-		if have < GodData.CAR_TYPES[id].unlock:
-			nxt = {"name": GodData.CAR_TYPES[id].name, "need": GodData.CAR_TYPES[id].unlock}
-			break
-	if nxt.is_empty():
-		GodUI.text(self, Vector2(576, 452), tr("Every car type unlocked!"), 17, GodUI.GREEN, true)
-	else:
-		GodUI.text(self, Vector2(576, 440), tr("Next car type: %s  (%d / %d cars)") % [nxt.name, have, nxt.need], 17, GodUI.CREAM, true)
-		var bar := Rect2(376, 452, 400, 12)
-		draw_rect(bar, Color(0, 0, 0, 0.5))
-		draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(float(have) / nxt.need, 0.0, 1.0), bar.size.y)), GodUI.GOLD)
-	GodUI.text(self, Vector2(576, 500), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 16, Color(GodUI.CREAM, 0.7), true)
-	draw_set_transform(Vector2.ZERO)
-	if not chat.is_empty():
-		_draw_chat(chat)
+		GodUI.text(self, Vector2(x, y + 50), str(tiers.get(grades[i][0], 0)), 24, col, true)
+		GodUI.text(self, Vector2(x, y + 68), tr(grades[i][1]), 9, Color(col, 0.8), true)
+	GodUI.text(self, Vector2(r.get_center().x, r.end.y - 12), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 14, Color(GodUI.CREAM, 0.7), true)
+
+
+## The day's P&L (gas at what the truck charged) and tonight's balance sheet.
+func _draw_books(r: Rect2) -> void:
+	var b := run.books(report) if run else {}
+	if b.is_empty():
+		return
+	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("P&L"), 18, GodUI.GOLD, true)
+	var y := r.position.y + 40
+	for row in [[tr("Sales"), b.sales], [tr("Tips"), b.tips], [tr("Gas sold, at cost"), -b.gas_sold],
+			[tr("Spilled gas"), -b.spills], [tr("Drone gas"), -b.drones], [tr("Fines"), -b.fines]]:
+		if absf(row[1]) < 0.5 and row[0] in [tr("Drone gas"), tr("Fines")]:
+			continue
+		_row(r, y, row[0], _money(row[1]), GodUI.CREAM if row[1] >= 0.0 else GodUI.RED, 14)
+		y += 20
+	draw_line(Vector2(r.position.x, y - 12), Vector2(r.end.x, y - 12), Color(GodUI.GOLD_DIM, 0.8), 1.0)
+	_row(r, y + 2, tr("Net profit"), _money(b.net), GodUI.GREEN if b.net >= 0.0 else GodUI.RED, 16)
+	y += 40
+	GodUI.text(self, Vector2(r.get_center().x, y), tr("BALANCE SHEET"), 18, GodUI.GOLD, true)
+	y += 26
+	for row in [[tr("Cash"), b.cash], [tr("Gas in the tank, at cost"), b.gas_in_tank], [tr("Equipment, at cost"), b.equipment]]:
+		_row(r, y, row[0], _money(row[1]), GodUI.CREAM, 14)
+		y += 20
+	if b.loan > 0.0:
+		_row(r, y, tr("Cousin's loan"), _money(-b.loan), GodUI.RED, 14)
+		y += 20
+	draw_line(Vector2(r.position.x, y - 12), Vector2(r.end.x, y - 12), Color(GodUI.GOLD_DIM, 0.8), 1.0)
+	_row(r, y + 2, tr("Equity"), _money(b.equity), GodUI.GOLD, 16)
+
+
+static func _money(v: float) -> String:
+	return ("-$%.0f" % absf(v)) if v < -0.5 else "$%.0f" % v
 
 
 ## Playtest 10: the visitor's chat, read after closing instead of over the pour, to keep the story going.
-func _draw_chat(chat: Array) -> void:
-	var r := Rect2(746, 52, 380, 480)
-	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), r)
-	GodUI.text(self, Vector2(r.get_center().x, 96), tr("OVERHEARD TODAY"), 22, GodUI.GOLD, true)
-	var y := 132.0
+func _draw_chat(r: Rect2) -> void:
+	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("OVERHEARD TODAY"), 18, GodUI.GOLD, true)
+	var chat: Array = report.get("chat", [])
+	if chat.is_empty():
+		GodUI.text(self, Vector2(r.get_center().x, r.position.y + 60), tr("Nobody came by to chat."), 14, Color(GodUI.CREAM, 0.5), true)
+		return
+	var y := r.position.y + 46
 	for line in chat:
 		var parts := String(line).split(": ", true, 1)
 		if parts.size() == 2:
-			GodUI.text(self, Vector2(r.position.x + 24, y), parts[0], 15, GodUI.GOLD)
-			y += 20.0
-			y += GodUI.para(self, Vector2(r.get_center().x, y), parts[1], 15, r.size.x - 48, GodUI.CREAM) + 10.0
+			GodUI.text(self, Vector2(r.position.x, y), parts[0], 14, GodUI.GOLD)
+			y += 18
+			y += GodUI.para_in(self, GodUI.font(), Vector2(r.position.x + 12, y), parts[1], 14, r.size.x - 16, GodUI.CREAM) + 6
 		else:
-			y += GodUI.para(self, Vector2(r.get_center().x, y), line, 15, r.size.x - 48, GodUI.CREAM) + 10.0
-		if y > r.end.y - 30:
+			y += GodUI.para_in(self, GodUI.font(), Vector2(r.position.x, y), line, 14, r.size.x - 10, GodUI.CREAM) + 6
+		if y > r.end.y - 20:
 			break

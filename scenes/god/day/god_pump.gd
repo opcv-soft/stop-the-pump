@@ -17,6 +17,10 @@ const LOT := Rect2(120, 170, 912, 420)
 const ENTRANCE := Vector2(300, ROAD_Y)
 const EXIT := Vector2(900, 180)
 ## Round 9: where a visitor parks to chat (by the store), when it arrives, and how long a line shows.
+## Round 10 batch B: Chez Gaétan, across the road (his kiosk stands at RIVAL_AT, his pumps in front).
+const RIVAL_AT := Vector2(470, -40)
+const RIVAL_TURN_X := 470.0
+const RIVAL_PUMPS := [Vector2(425, 14), Vector2(515, 14)]
 const VISITOR_SPOT := Vector2(150, 200)  # the lot's corner by the store, out of the way (playtest 9)
 const VISITOR_AT := 3.0
 const CHAT_LINE := 3.2
@@ -63,9 +67,15 @@ const STACKS := ["blue", "red", "green", "cream", "purple", "white", "orange"]
 @export var customer_chance := 0.5
 @export var max_in_lot := 5
 @export var traffic_gap := Vector2(0.5, 1.4)
+## Round 10 B: cars both ways now want gas, split with Gaétan. At 50% you get round 9's traffic
+## (only eastbound cars, 55% of them, used to pull in).
+const WANTS_MULT := 1.1
 @export var orders: Array[float] = [10.0, 15.0, 20.0, 25.0, 30.0]
 ## Tests switch these off.
 var auto_traffic := true
+## Round 10 batch B: the share of the cars wanting gas that pick you (0–100). GodGame sets it each morning.
+var market_share := GodData.START_SHARE
+var rival_cars := 0
 var sound_on := true
 
 ## GOD PUMP (docs/GOD_PUMP_PLAN.md): GodGame runs the day through start_day() and listens for day_over;
@@ -614,14 +624,27 @@ func spawn_road_car() -> ProtoCar:
 	car.heading = 0.0 if east else PI
 	car.pattern = ProtoCar.PATTERNS[rng.randi() % ProtoCar.PATTERNS.size()]
 	car.target = orders[rng.randi() % orders.size()]
-	if east and rng.randf() < customer_chance:
-		car.set_type(_pick_type(), rng)  # it pulls in: a customer, or one of the troublemakers
-		car.wants_in = true
+	if rng.randf() < customer_chance * WANTS_MULT:  # it wants gas: a low gauge, then you or Gaétan
+		car.set_type(_pick_type(), rng)  # a customer, or one of the troublemakers
+		car.low_fuel = car.customer
+		if rng.randf() * 100.0 < market_share:
+			car.wants_in = true
+		else:
+			car.to_rival = true
+			car.customer = false
+			rival_cars += 1
 	else:
 		car.customer = false
 	car.patience = 24.0 * mods.patience_mult
 	cars_spawned += 1
 	return car
+
+
+## Where a car parks at Gaétan's: by one of his two pumps.
+func rival_spot(car: ProtoCar) -> Vector2:
+	var free: Array = RIVAL_PUMPS.filter(func(p: Vector2) -> bool: return not cars.any(func(c: ProtoCar) -> bool: return c != car and c.phase == ProtoCar.Phase.RIVAL and c.position.distance_to(p) < 30.0))
+	var spot: Vector2 = free[0] if not free.is_empty() else RIVAL_PUMPS[rng.randi() % RIVAL_PUMPS.size()]
+	return spot + Vector2(rng.randf_range(-6, 6), rng.randf_range(-4, 4))
 
 
 ## Sabot de Denver: the thief is clamped where it stands, and everything it stole goes back in the tank.
@@ -891,7 +914,7 @@ var day_stats := {}
 func reset_day_stats() -> void:
 	day_stats = {"tiers": {ScoreTiers.SUPER_PERFECT: 0, ScoreTiers.PERFECT: 0, ScoreTiers.GOOD: 0,
 		ScoreTiers.OK: 0, ScoreTiers.MISS: 0, ScoreTiers.UNSERVED: 0}, "cars": 0, "accuracy_sum": 0.0, "xp": 0,
-		"litres": 0.0, "combo_points": 0}
+		"litres": 0.0, "combo_points": 0, "rep": 0.0}
 
 
 ## Counts one car for the day. `combo_paid`: the combo multiplier a hand-poured Good-or-better fill was
@@ -900,6 +923,7 @@ func _count(car: ProtoCar, t: String, combo_paid := 0) -> void:
 	if day_stats.is_empty():
 		reset_day_stats()
 	day_stats.tiers[t] += 1
+	day_stats.rep += GodData.REPUTATION.get(t, 0.0) * GodData.CAR_TYPES.get(car.type_id, {}).get("rep_mult", 1.0)
 	if t == ScoreTiers.UNSERVED:
 		return  # left without its fill: not a car fueled, not a pour to judge, no XP
 	day_stats.cars += 1
@@ -1030,6 +1054,7 @@ func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> v
 		_floaters.append({"text": "SOIRÉE DU HOCKEY!", "pos": Vector2(WIDTH * 0.5, 150), "life": 3.0, "color": Color(0.95, 0.3, 0.3), "size": 34})
 		say(QUIPS.hockey)
 	_best_combo = 1
+	rival_cars = 0
 	fines = 0.0
 	stolen = 0.0
 	applause = 0
@@ -1055,7 +1080,7 @@ func day_report() -> Dictionary:
 		"stolen": stolen, "out_of_gas": tank <= 0.0001, "hockey": hockey_night,
 		"tube_gas": tube_gas, "tube_grabs": tube_grabs, "litres": day_stats.litres,
 		"combo_points": day_stats.combo_points, "avg_combo": avg_combo(), "drone_gas": drone_gas,
-		"chat": chat_log.duplicate()}
+		"chat": chat_log.duplicate(), "rep": day_stats.rep, "rival_cars": rival_cars}
 
 
 ## A car type for a new car, weighted; troublemakers ramp in over the first days.
@@ -1441,6 +1466,11 @@ func _draw() -> void:
 		draw_circle(Vector2(-p.r * 0.15, -p.r * 0.2), p.r * 0.7, Color(GAS, 0.8 * a))
 		draw_circle(Vector2(-p.r * 0.35, -p.r * 0.35), p.r * 0.22, Color(1, 1, 0.85, 0.7 * a))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# Chez Gaétan, across the road (round 10 B): his apron and two pumps.
+	draw_rect(Rect2(RIVAL_AT.x - 110, -20, 220, 64), Color(0.2, 0.19, 0.19))
+	for p in RIVAL_PUMPS:
+		draw_rect(Rect2(p + Vector2(-8, -26), Vector2(16, 12)), Color(0.75, 0.16, 0.14))
+	GodUI.text(self, Vector2(RIVAL_AT.x, -26), "CHEZ GAÉTAN", 14, Color(0.95, 0.9, 0.8), true, 4)
 	for m in coins_on_lot():  # drawn before the cars (child nodes), so the cars stay in front
 		draw_circle(m.pos + Vector2(0, 3), 7.0, Color(0, 0, 0, 0.25))
 		draw_coin(self, m.pos + Vector2(0, -m.z), m.value, absf(cos(m.rot)), 8.0)
@@ -1466,6 +1496,7 @@ func _draw_overlay() -> void:
 		for car in cars:
 			if car.customer and car.accepts_fuel():
 				car.draw_meter_at(o, car_top(car) + Vector2(0, -46))
+	_draw_road_gauges(o)
 	_draw_badges(o)
 	if not hd:
 		_draw_tube_man_2d(o)
@@ -1545,6 +1576,21 @@ func _draw_drones(o: Node2D) -> void:
 
 
 ## Troublemakers wear a badge (a mask, a lightning bolt, a broom, dizzy stars); Dad wears his name.
+## Round 10 batch B: a small fuel gauge over each car on the avenue that wants gas (low, red), and over
+## Gaétan's customers driving away (full, green). That's all you see of his business.
+func _draw_road_gauges(o: Node2D) -> void:
+	for car in cars:
+		var low := car.low_fuel and car.phase in [ProtoCar.Phase.ROAD, ProtoCar.Phase.RIVAL]
+		var full := car.rival_full and car.phase in [ProtoCar.Phase.ROAD, ProtoCar.Phase.RIVAL]
+		if not low and not full:
+			continue
+		var at := car_top(car) + Vector2(-14, -26)
+		o.draw_rect(Rect2(at, Vector2(28, 8)), Color(0, 0, 0, 0.85))
+		var k := 0.15 if low else 1.0
+		o.draw_rect(Rect2(at + Vector2(2, 2), Vector2(24 * k, 4)), Color(0.95, 0.2, 0.15) if low else Color(0.35, 0.95, 0.4))
+		GodUI.text(o, at + Vector2(-9, 8), "E" if low else "F", 11, Color(0.95, 0.3, 0.25) if low else Color(0.45, 1.0, 0.5), false, 3)
+
+
 func _draw_badges(o: Node2D) -> void:
 	for car in cars:
 		if car.clamped and car.phase == ProtoCar.Phase.WANDER:  # the yellow boot on its wheel

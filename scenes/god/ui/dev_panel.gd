@@ -24,7 +24,9 @@ func build(g: GodGame) -> void:
 		[["-100", func() -> void: _cash(-100.0)], ["+100", func() -> void: _cash(100.0)], ["+1000", func() -> void: _cash(1000.0)]])
 	_row("Gas in the tank", func() -> String: return "$%.0f / $%.0f" % [game.run.tank, game.run.tank_capacity()] if game.run else "-",
 		[["EMPTY", func() -> void: _tank(0.0)], ["1 DAY", func() -> void: _tank(game.run.gas_per_day() if game.run else 0.0)], ["FILL", func() -> void: _tank(INF)]])
-	_row("Day", func() -> String: return "%d / %d" % [game.run.day, GodData.FINAL_DAY] if game.run else "-",
+	_row("Market share", func() -> String: return "%d%%  (reputation %d)" % [int(game.run.share), int(game.run.reputation)] if game.run else "-",
+		[["-10", func() -> void: _share(-10.0)], ["+10", func() -> void: _share(10.0)], ["99%", func() -> void: _share(99.0 - (game.run.share if game.run else 0.0))]])
+	_row("Day", func() -> String: return str(game.run.day) if game.run else "-",
 		[["-1", func() -> void: _day(-1)], ["+1", func() -> void: _day(1)], ["+10", func() -> void: _day(10)]])
 	_row("XP (garage)", func() -> String: return str(game.meta.xp),
 		[["+5000", func() -> void: _xp(5000)], ["+50000", func() -> void: _xp(50000)]])
@@ -83,7 +85,15 @@ func _tank(v: float) -> void:
 
 func _day(d: int) -> void:
 	if game.run:
-		game.run.day = clampi(game.run.day + d, 1, GodData.FINAL_DAY)
+		game.run.day = maxi(game.run.day + d, 1)
+
+
+## Round 10 B: move the market share (and the reputation with it) to try the ending or the loss.
+func _share(d: float) -> void:
+	if game.run:
+		game.run.share = clampf(game.run.share + d, 1.0, 99.0)
+		game.run.reputation = clampf(game.run.reputation + d, 0.0, 100.0)
+		game.day.market_share = game.run.share
 
 
 func _xp(d: int) -> void:

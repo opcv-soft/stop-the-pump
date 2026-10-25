@@ -29,9 +29,10 @@ const LINK_CELLS := {
 	"loyalty": Vector2i(2, 1), "drone_hangar": Vector2i(-5, -2), "chip_truck": Vector2i(-1, -2),
 	"price_board": Vector2i(1, 2), "forward_contract": Vector2i(1, 3), "clamp_1": Vector2i(-3, 1), "clamp_2": Vector2i(-4, 2),
 }
-const FILL := {"hours": Color(0.2, 0.24, 0.42), "marketing": Color(0.42, 0.22, 0.38), "attractions": Color(0.2, 0.38, 0.36),
-	"nozzle": Color(0.5, 0.14, 0.11), "tank": Color(0.35, 0.3, 0.12), "service": Color(0.2, 0.36, 0.22), "vibe": Color(0.47, 0.33, 0.13),
-	"truck": Color(0.45, 0.18, 0.16), "link": Color(0.3, 0.22, 0.42), "multi": Color(0.62, 0.36, 0.08), "spill": Color(0.16, 0.36, 0.5)}
+## Round 10 C: a bright, distinct colour per branch (playtest 9: "distinct colours for skill-tree branches").
+const FILL := {"hours": Color(0.27, 0.42, 0.95), "marketing": Color(0.9, 0.3, 0.72), "attractions": Color(0.1, 0.72, 0.7),
+	"nozzle": Color(0.91, 0.26, 0.23), "tank": Color(0.93, 0.74, 0.16), "service": Color(0.3, 0.78, 0.36), "vibe": Color(1.0, 0.55, 0.15),
+	"truck": Color(0.6, 0.38, 0.25), "link": Color(0.6, 0.42, 0.95), "multi": Color(1.0, 0.42, 0.1), "spill": Color(0.2, 0.62, 1.0)}
 const NODE := 46.0
 
 var area := Rect2(250, 96, 880, 470)

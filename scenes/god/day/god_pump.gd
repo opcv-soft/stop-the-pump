@@ -208,7 +208,16 @@ var _glug: AudioStreamPlayer
 var _tex := {}
 ## Which view draws the lot (I cycles them): "hd" (HD-2D: pixel art in a lit 3D scene, the try after
 ## god-pump playtest 5), "pixel" (the three-quarter pixel view) or "flat" (top-down greybox).
-@export var view := "hd"
+@export var view := "cartoon"
+## Round 10 C: the cartoon view maps the world a little smaller and lower, so Gaétan's station across the
+## road fits under the HUD and the lot clears the tray.
+const CARTOON_XF := Transform2D(Vector2(0.85, 0), Vector2(0, 0.85), Vector2(86, 85))
+const CARTOON_K := 0.85
+## Each sprite stack's paint in the cartoon view (visitors and sedans).
+const STACK_PAINTS := {"blue": Color(0.24, 0.55, 1.0), "red": Color(1.0, 0.36, 0.33), "green": Color(0.49, 0.87, 0.36),
+	"cream": Color(1.0, 0.93, 0.7), "purple": Color(0.68, 0.45, 0.95), "white": Color(0.95, 0.95, 0.97),
+	"orange": Color(1.0, 0.6, 0.18), "papa": Color(1.0, 0.55, 0.15)}
+var _prop_t := {}  # upgrade id -> seconds since its prop popped in (cartoon view)
 ## True while the three-quarter pixel view is up; `hd` while the HD-2D view is.
 var iso := false
 var hd := false
@@ -336,7 +345,7 @@ func set_view(v: String) -> void:
 
 
 func cycle_view() -> void:
-	set_view({"hd": "pixel", "pixel": "flat", "flat": "hd"}[view])
+	set_view({"cartoon": "hd", "hd": "pixel", "pixel": "flat", "flat": "cartoon"}[view])
 
 
 ## Where a car's roof is on screen, in the current view.
@@ -346,6 +355,8 @@ func car_top(car: ProtoCar) -> Vector2:
 		return _hd_view.screen(car.position, 0.5 + lift * HD2DView.K)
 	if iso:
 		return scr(car.position) - Vector2(0, 16 + lift * 0.8)
+	if view == "cartoon":
+		return scr(car.position) - Vector2(0, 14 + lift)
 	return car.position - Vector2(0, 16 + lift)
 
 
@@ -355,6 +366,8 @@ func regular_head(i: int) -> Variant:
 		return _hd_view.regular_head(i)
 	if iso and _iso_view:
 		return _iso_view.seat_screen(i)
+	if view == "cartoon":
+		return scr(regulars[i].pos) + Vector2(0, -42)
 	return null
 
 
@@ -398,6 +411,8 @@ func owns_upgrade(id: String) -> bool:
 func scr(w: Vector2) -> Vector2:
 	if hd and _hd_view:
 		return _hd_view.screen(w)
+	if view == "cartoon":
+		return CARTOON_XF * w
 	return (iso_xf * w) * 2.0 if iso else w
 
 
@@ -405,6 +420,8 @@ func scr(w: Vector2) -> Vector2:
 func to_world(sp: Vector2) -> Vector2:
 	if hd and _hd_view:
 		return _hd_view.ground_at(sp)
+	if view == "cartoon":
+		return CARTOON_XF.affine_inverse() * sp
 	return iso_xf.affine_inverse() * (sp / 2.0) if iso else sp
 
 
@@ -495,6 +512,8 @@ func step(dt: float) -> void:
 		if _cash_in <= 0.0:
 			_finish_day()
 	_step_fx(dt)
+	for id in _prop_t:
+		_prop_t[id] += dt
 	queue_redraw()
 	_overlay.queue_redraw()
 	if iso and _iso_view:
@@ -858,6 +877,7 @@ func _new_car(at: Vector2) -> ProtoCar:
 	car.color = CAR_COLORS[look]
 	car.sprite = _tex.get(CAR_SPRITES[look % CAR_SPRITES.size()])
 	car.stack = STACKS[look % STACKS.size()]
+	car.look = look
 	car.visible = view == "flat"
 	car.spill_grace = 0.25 + float(mods.get("overfill_grace", 0.0))
 	add_child(car)
@@ -1509,6 +1529,9 @@ func _play(id: String) -> void:
 
 ## The table: dark ground, the road along the top, the lot, the gold puddles.
 func _draw() -> void:
+	if view == "cartoon":
+		_draw_cartoon()
+		return
 	if view != "flat":
 		return  # a scene view draws the world
 	draw_rect(Rect2(-20, -20, WIDTH + 40, HEIGHT + 40), Color(0.16, 0.13, 0.10))
@@ -1557,6 +1580,97 @@ func _draw() -> void:
 		draw_coin(self, m.pos + Vector2(0, -m.z), m.value, absf(cos(m.rot)), 8.0)
 
 
+## Round 10 C: the world in the cartoon look (CartoonArt), under the overlay: grass, the avenue, Chez
+## Gaétan, the lot, puddles and coins, the gaz bar, then everything standing on the ground sorted by depth
+## (cars, the regulars, the upgrades' props), so nearer things cover further ones.
+func _draw_cartoon() -> void:
+	draw_rect(Rect2(-20, -20, WIDTH + 40, HEIGHT + 40), Color(0.56, 0.82, 0.42))
+	for b in [Rect2(10, 560, 180, 60), Rect2(420, 600, 280, 50), Rect2(1040, 200, 100, 180), Rect2(20, 300, 80, 140), Rect2(820, 4, 220, 36)]:
+		draw_set_transform(b.get_center(), 0.0, b.size / 100.0)
+		draw_circle(Vector2.ZERO, 50.0, Color(0.48, 0.75, 0.34))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var rt := scr(Vector2(0, ROAD_Y - 34)).y
+	var rb := scr(Vector2(0, ROAD_Y + 34)).y
+	draw_rect(Rect2(-20, rt - 8, WIDTH + 40, 8), Color(0.94, 0.89, 0.77))
+	draw_rect(Rect2(-20, rb, WIDTH + 40, 8), Color(0.94, 0.89, 0.77))
+	draw_rect(Rect2(-20, rt, WIDTH + 40, rb - rt), Color(0.27, 0.29, 0.35))
+	var x := -20.0
+	while x < WIDTH:
+		draw_rect(Rect2(x, (rt + rb) * 0.5 - 3, 40, 6), Color(1.0, 0.82, 0.25))
+		x += 90.0
+	var pumps := RIVAL_PUMPS.map(func(p: Vector2) -> Vector2: return scr(p))
+	CartoonArt.rival(self, scr(Vector2(RIVAL_AT.x, 0)), pumps, CARTOON_K)
+	var on_lot: Array[ProtoCar] = []
+	for car in cars:  # the avenue and Gaétan's first: the store and the lot stand in front of them
+		if car.phase in [ProtoCar.Phase.ROAD, ProtoCar.Phase.RIVAL] or (car.phase == ProtoCar.Phase.LEAVING and car.position.y < ROAD_Y + 30):
+			_cartoon_car(car)
+		elif car.phase != ProtoCar.Phase.GRABBED:
+			on_lot.append(car)
+	var lot := Rect2(scr(LOT.position), LOT.size * CARTOON_K)
+	draw_rect(Rect2(scr(Vector2(ENTRANCE.x - 40, ROAD_Y + 30)), Vector2(80, LOT.position.y - ROAD_Y) * CARTOON_K), Color(0.36, 0.38, 0.45))
+	draw_rect(Rect2(scr(Vector2(EXIT.x - 40, ROAD_Y + 30)), Vector2(80, LOT.position.y - ROAD_Y) * CARTOON_K), Color(0.36, 0.38, 0.45))
+	CartoonArt.box(self, lot, Color(0.36, 0.38, 0.45), 22.0, 5.0)
+	for i in 9:
+		var lx := LOT.position.x + 70 + i * 98
+		draw_line(scr(Vector2(lx, LOT.end.y - 70)), scr(Vector2(lx, LOT.end.y - 12)), Color(0.96, 0.95, 0.9, 0.8), 5.0, true)
+	for p in puddles:
+		var a := clampf(p.life / 3.0, 0.0, 1.0)
+		var c := scr(p.pos)
+		draw_set_transform(c, 0.0, Vector2(1.0, 0.5))
+		draw_circle(Vector2.ZERO, p.r + 3.0, Color(CartoonArt.INK, a))
+		draw_circle(Vector2.ZERO, p.r, Color(GAS, a))
+		draw_circle(Vector2(-p.r * 0.3, -p.r * 0.3), p.r * 0.35, Color(1.0, 0.97, 0.7, a))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for m in coins_on_lot():
+		draw_circle(scr(m.pos) + Vector2(0, 4), 8.0, Color(0, 0, 0, 0.2))
+		CartoonArt.coin(self, scr(m.pos) + Vector2(0, -m.z), COIN_COLORS[m.value], absf(cos(m.rot)), 8.0)
+	var store := Rect2(scr(Vector2(16, 100)), Vector2(262, 66) * CARTOON_K)
+	CartoonArt.store(self, store, is_open(), neon_flash, _t)
+	# Everything standing on the ground, back to front.
+	var things := []
+	for car in on_lot:
+		things.append({"y": car.position.y, "car": car})
+	for r in regulars:
+		if RegularsCrew.pose(r) != "":
+			things.append({"y": r.pos.y, "who": r})
+	things.append({"y": RegularsCrew.BENCH.y - 1.0, "bench": true})
+	for id in HD2DView.PROPS.keys() + HD2DView.LOT_PROPS.keys():
+		if owns_upgrade(id):
+			var spot: Vector2 = (HD2DView.PROPS[id] if HD2DView.PROPS.has(id) else HD2DView.LOT_PROPS[id])[1]
+			things.append({"y": spot.y, "prop": id, "at": spot})
+	things.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.y < b.y)
+	for th in things:
+		if th.has("car"):
+			_cartoon_car(th.car)
+		elif th.has("who"):
+			var r: Dictionary = th.who
+			var hop := 7.0 * absf(sin(r.cheer * 12.0)) if r.cheer > 0.0 else 0.0
+			CartoonArt.person(self, scr(r.pos) + Vector2(0, -hop), r.name, RegularsCrew.pose(r), _t + r.bob, r.flip)
+		elif th.has("bench"):
+			var bp := scr(RegularsCrew.BENCH + Vector2(80, 4))
+			CartoonArt.box(self, Rect2(bp + Vector2(-80, -6), Vector2(160, 10)), Color(0.71, 0.4, 0.23), 4.0, 3.0)
+		else:
+			_prop_t[th.prop] = _prop_t.get(th.prop, 0.0)
+			CartoonArt.prop(self, th.prop, scr(th.at), _t, clampf(_prop_t[th.prop] / 0.9, 0.0, 1.0))
+	if int(mods.get("tube_man", 0)) > 0 or perks.get("tube_man", 0) > 0:
+		var holding := cars.any(func(c: ProtoCar) -> bool: return c.phase == ProtoCar.Phase.GRABBED)
+		var base := scr(TUBE_AT)
+		var head := base + Vector2(sin(_t * 5.0) * 16.0 * (0.0 if holding else 1.0), -150)
+		CartoonArt.tube_man(self, base, head, Color(1.0, 0.3, 0.25), 1.0 if holding else 0.0, _t)
+	for car in cars:  # held up high by the tube man
+		if car.phase == ProtoCar.Phase.GRABBED:
+			_cartoon_car(car)
+
+
+## One car in the cartoon look, with its animation (lift, spin, swelling as it fills).
+func _cartoon_car(car: ProtoCar) -> void:
+	var anim := car.anim_offsets()
+	var col: Color = CartoonArt.CARS[car.type_id].get("paint", STACK_PAINTS.get(car.stack, CartoonArt.PAINTS[car.look % CartoonArt.PAINTS.size()])) if CartoonArt.CARS.has(car.type_id) else STACK_PAINTS.get(car.stack, CartoonArt.PAINTS[car.look % CartoonArt.PAINTS.size()])
+	if car.visitor:
+		col = STACK_PAINTS.get(car.stack, col)
+	CartoonArt.car(self, scr(car.position), car.heading + anim.spin, car.type_id, col, anim.squash, anim.lift, _t, CARTOON_K)
+
+
 ## Tiles a 32 px texture over `r` at 2x.
 func _tile(id: String, r: Rect2) -> void:
 	draw_set_transform(r.position, 0.0, Vector2(2, 2))
@@ -1576,12 +1690,15 @@ func _draw_overlay() -> void:
 	if view != "flat":  # gauges float over the cars
 		for car in cars:
 			if car.customer and car.accepts_fuel():
-				car.draw_meter_at(o, car_top(car) + Vector2(0, -46))
+				if view == "cartoon":
+					CartoonArt.gauge(o, car_top(car) + Vector2(0, -30), car.fill(), car.target)
+				else:
+					car.draw_meter_at(o, car_top(car) + Vector2(0, -46))
 	_draw_road_gauges(o)
 	_draw_badges(o)
 	_draw_vacuum(o)
 	_draw_dog(o)
-	if not hd:
+	if not hd and view != "cartoon":
 		_draw_tube_man_2d(o)
 	_draw_drones(o)
 	draw_shadow_ring(o)
@@ -1592,7 +1709,9 @@ func _draw_overlay() -> void:
 			for i in range(1, 11):
 				var k := i / 10.0
 				var p := tip.lerp(land, k) + Vector2(sin(_t * 30.0 + i) * 2.0 * k, 0)
-				o.draw_line(prev, p, GAS, 6.0 - k * 2.0, true)
+				if view == "cartoon":  # a chunky outlined stream
+					o.draw_line(prev, p, CartoonArt.INK, 12.0 - k * 3.0, true)
+				o.draw_line(prev, p, GAS, (8.0 if view == "cartoon" else 6.0) - k * 2.0, true)
 				prev = p
 			for i in 4:
 				var k := fmod(_t * 3.0 + i * 0.25, 1.0)
@@ -1609,7 +1728,7 @@ func _draw_overlay() -> void:
 	var font := ThemeDB.fallback_font
 	for f in _floaters:
 		var w := font.get_string_size(f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, f.size).x
-		o.draw_string_outline(font, f.pos - Vector2(w * 0.5, 0), f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, f.size, 6, Color(0, 0, 0, 0.8))
+		o.draw_string_outline(font, f.pos - Vector2(w * 0.5, 0), f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, f.size, 9 if view == "cartoon" else 6, Color(CartoonArt.INK, clampf(f.life * 2.0, 0.0, 1.0)) if view == "cartoon" else Color(0, 0, 0, 0.8))
 		o.draw_string(font, f.pos - Vector2(w * 0.5, 0), f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, f.size, Color(f.color, clampf(f.life * 2.0, 0.0, 1.0)))
 	_draw_spits(o)
 	_draw_hud(o, font)
@@ -1651,6 +1770,9 @@ func _draw_drones(o: Node2D) -> void:
 			var land: Vector2 = car_top(d.car) if view != "flat" else d.car.position
 			o.draw_line(air + Vector2(0, 26), land, GAS, 3.0, true)
 			o.draw_circle(land, 4.0 + sin(_t * 25.0), Color(GAS, 0.6))
+		if view == "cartoon":
+			CartoonArt.drone(o, air, _t + i, d.state == "pouring")
+			continue
 		var tex: Texture2D = _tex.get("drone_%d" % (int(_t * 20.0) % 2))
 		if tex:
 			o.draw_set_transform(air, 0.0, Vector2(2, 2))
@@ -1682,43 +1804,8 @@ func _draw_vacuum(o: Node2D) -> void:
 			o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		target = target.lerp(puddle + Vector2(0, -22), k * 0.75)
 	var sway := Vector2(sin(_t * 5.0) * 18.0, sin(_t * 7.3) * 6.0) * (1.0 - k)
-	var mid := base.lerp(target, 0.5) + Vector2(cos(_t * 4.0) * 22.0, 0) * (1.0 - k) + Vector2(0, -20)
 	var head := target + sway
-	var ink := Color(0.11, 0.1, 0.17)
-	var blue := Color(0.3, 0.62, 1.0)
-	o.draw_rect(Rect2(base + Vector2(-20, -12), Vector2(40, 18)), ink)  # his blower, a little tank
-	o.draw_rect(Rect2(base + Vector2(-17, -9), Vector2(34, 12)), Color(0.82, 0.84, 0.9))
-	var n := 14
-	var pts: Array[Vector2] = []
-	for i in n + 1:
-		var u := float(i) / n
-		pts.append(base.lerp(mid, u).lerp(mid.lerp(head, u), u))
-	for pass_i in 2:  # an outline pass, then the blue
-		for i in n + 1:
-			var u := float(i) / n
-			var w := 13.0
-			if slurp:  # gold gulps travelling down the tube
-				for g in 3:
-					var at := fmod(_t * 1.8 + g / 3.0, 1.0)
-					w += 7.0 * exp(-pow((1.0 - u - at) * 9.0, 2.0)) * k
-			o.draw_circle(pts[i], w + (3.0 if pass_i == 0 else 0.0), ink if pass_i == 0 else blue)
-	if slurp:
-		for g in 3:
-			var at := fmod(_t * 1.8 + g / 3.0, 1.0)
-			var idx := clampi(int((1.0 - at) * n), 0, n)
-			o.draw_circle(pts[idx], 6.0 * k, Color(GAS, 0.9))
-	for side in [-1.0, 1.0]:  # flailing arms
-		var shoulder := pts[n - 3]
-		var hand := shoulder + Vector2(side * 30.0, -10.0 + sin(_t * 9.0 + side) * 16.0 * (1.0 - k) + 18.0 * k)
-		o.draw_line(shoulder, hand, ink, 11.0, true)
-		o.draw_line(shoulder, hand, blue, 6.0, true)
-	o.draw_circle(head, 19.0, ink)
-	o.draw_circle(head, 16.0, blue.lightened(0.15))
-	for side in [-1.0, 1.0]:
-		o.draw_circle(head + Vector2(side * 6.0, -5.0), 4.5, Color.WHITE)
-		o.draw_circle(head + Vector2(side * 6.0 + 1.0, -4.0), 2.2, ink)
-	var mouth := 3.0 + 7.0 * k + (sin(_t * 30.0) * 1.5 if slurp else 0.0)
-	o.draw_circle(head + Vector2(0, 7), mouth, ink)  # an O when he sucks
+	CartoonArt.tube_man(o, base, head, Color(0.3, 0.62, 1.0), k, _t, slurp, k)
 	if slurp and k > 0.3:  # the gas going in
 		var from := scr(vacuum_slurp.pos)
 		for i in 6:
@@ -1800,6 +1887,10 @@ func draw_shadow_ring(o: Node2D) -> void:
 
 ## A giant hand holding a pump nozzle, hovering above where the stream lands.
 func _draw_nozzle(o: Node2D, tip: Vector2) -> void:
+	if view == "cartoon":
+		CartoonArt.nozzle(o, tip, pouring, _kick)
+		nozzle_bling.draw(o, tip - NOZZLE_TIP, 2.0, tex)
+		return
 	var id := "nozzle_squeeze" if pouring else "nozzle_idle"  # the hand squeezes the lever to pour
 	if _tex.has(id):
 		o.draw_set_transform(tip - NOZZLE_TIP, 0.0, Vector2(2, 2))
@@ -1819,6 +1910,19 @@ func _draw_nozzle(o: Node2D, tip: Vector2) -> void:
 ## The vintage pump (bottom left) with its dial on the round's gas, shaking while it pumps, and the
 ## hose sagging from its side to the nozzle in your hand.
 func _draw_pump(o: Node2D, tip: Vector2) -> void:
+	if view == "cartoon":
+		var outlet := PUMP_AT + Vector2(70, 80)
+		var sag := (outlet + tip) * 0.5 + Vector2(0, 150)
+		var prev := outlet
+		for i in range(1, 25):
+			var k := i / 24.0
+			var p := outlet.lerp(sag, k).lerp(sag.lerp(tip + Vector2(-96, 0).rotated(1.15), k), k)  # into the grip's end
+			o.draw_line(prev, p, CartoonArt.INK, 13.0, true)
+			o.draw_line(prev, p, Color(0.29, 0.3, 0.36), 5.0, true)
+			prev = p
+		var alarm := int(mods.get("tank_alarm", 0)) > 0 and tank < LOW_GAS and fmod(_t, 0.5) < 0.3
+		CartoonArt.old_pump(o, PUMP_AT + Vector2(36, 44), tank / tank_size, sin(_t * 60.0) * (1.5 if pouring else 0.0), alarm)
+		return
 	var tex: Texture2D = _tex.get("pump_hud")
 	var shake := Vector2(sin(_t * 60.0), 0) * (1.5 if pouring else 0.0)
 	var at := PUMP_AT + shake
@@ -1846,21 +1950,16 @@ func _draw_pump(o: Node2D, tip: Vector2) -> void:
 
 ## One coin seen from above, `squash` for its spin: a coloured disc with a bright rim and a shine.
 ## $1 blue, $5 green, $20 red, $50 purple. Static so the pixel view can draw them too.
-static func draw_coin(o: CanvasItem, at: Vector2, v: int, squash := 1.0, r := 9.0, a := 1.0) -> void:
-	var col: Color = COIN_COLORS[v]
-	o.draw_set_transform(at, 0.0, Vector2(maxf(squash, 0.2), 1.0))
-	o.draw_circle(Vector2(0, r * 0.18), r, Color(col.darkened(0.55), a))  # its edge
-	o.draw_circle(Vector2.ZERO, r, Color(col.lightened(0.35), a))  # the rim
-	o.draw_circle(Vector2.ZERO, r * 0.78, Color(col, a))
-	o.draw_arc(Vector2.ZERO, r * 0.55, 0, TAU, 16, Color(col.lightened(0.45), 0.8 * a), maxf(r * 0.12, 1.0), true)
-	o.draw_circle(Vector2(-r * 0.3, -r * 0.35), r * 0.2, Color(1, 1, 1, 0.7 * a))  # shine
-	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+static func draw_coin(o: CanvasItem, at: Vector2, v: int, squash := 1.0, r := 9.0, _a := 1.0) -> void:
+	CartoonArt.coin(o, at, COIN_COLORS[v], squash, r)
 
 
 ## A coin lying flat in a stack, seen at an angle.
 func _draw_stacked_coin(o: Node2D, at: Vector2, v: int, a := 1.0) -> void:
 	var col: Color = COIN_COLORS[v]
 	o.draw_set_transform(at, 0.0, Vector2(1.0, 0.42))
+	o.draw_circle(Vector2(0, 6), 16.5, Color(CartoonArt.INK, a))
+	o.draw_circle(Vector2.ZERO, 16.5, Color(CartoonArt.INK, a))
 	o.draw_circle(Vector2(0, 6), 14.0, Color(col.darkened(0.45), a))
 	o.draw_circle(Vector2.ZERO, 14.0, Color(col.lightened(0.3), a))
 	o.draw_circle(Vector2.ZERO, 11.0, Color(col, a))
@@ -1987,7 +2086,12 @@ func _draw_hud(o: Node2D, font: Font) -> void:
 	_draw_tray(o)
 	_draw_quip(o, font)
 	var combo_text := tr("x%d COMBO") % combo.multiplier
-	o.draw_string(font, Vector2(WIDTH - 150, 30), combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.9))
+	if view == "cartoon":  # an orange pill, hotter as the chain grows
+		var hot := clampf((combo.multiplier - 1) / 4.0, 0.0, 1.0)
+		CartoonArt.box(o, Rect2(WIDTH - 168, 10, 156, 40), Color(1.0, 0.55, 0.24).lerp(Color(1.0, 0.25, 0.2), hot), 20.0, 4.0)
+		CartoonArt.label(o, Vector2(WIDTH - 90, 38), combo_text, 22, Color.WHITE)
+	else:
+		o.draw_string(font, Vector2(WIDTH - 150, 30), combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.9))
 	if round_wasted > 0.05:
 		o.draw_string(font, Vector2(WIDTH - 150, 56), "wasted $%.2f" % round_wasted, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(GAS, 0.9))
 	if round_over and not managed:

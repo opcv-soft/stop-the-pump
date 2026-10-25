@@ -52,12 +52,12 @@
 - **The end-of-day books:** a P&L (sales, tips, other income; fuel at wholesale, spills, drone gas, fines,
   stolen gas; net) and a balance sheet (cash, gas in the tank at cost, equipment at cost, loans, equity).
 
-## Batch C: the cartoon look — look test drawn 2026-10-25 (docs/art/look_test_cartoon.svg / .png), awaiting the designer's approval
+## Batch C: the cartoon look — look test approved 2026-10-25; pass 1 (the day) built; pass 2 (menus, icons) to do
 - Look test: one mock frame (the lot, Gaétan's across the road, chunky cars, the coins and stacks, the HUD)
   in stylized 2D cartoon: chunky cars with thick outlines, exaggerated effects, shiny loot, a clean
   high-contrast UI, a distinct colour for each coin value, perk and tree branch. The designer approves it.
 - Then redraw everything in that style (replaces HD-2D).
-- How it's made: hand-written SVG (Godot imports SVG), rendered with headless Chrome for review. Every car is one
+- How it's made: the look test was hand-written SVG; the game draws the look in code (scripts/components/cartoon_art.gd), no textures. Every car is one
   symbol whose body takes any colour, with a 4 px dark outline, one shade and one shine.
 - Noted while drawing: the strip across the road is too thin for Gaétan's station under the HUD; the redraw
   moves the avenue down a little to give his station room.

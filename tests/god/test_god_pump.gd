@@ -283,14 +283,23 @@ func test_hd2d_view_mirrors_every_car_in_3d() -> void:
 	assert_eq(game._hd_view._cars.size(), 2)
 
 
-func test_views_cycle_hd_pixel_flat() -> void:
-	game.set_view("hd")
+func test_views_cycle_cartoon_hd_pixel_flat() -> void:
+	game.set_view("cartoon")
+	game.cycle_view()
+	assert_eq(game.view, "hd")
 	game.cycle_view()
 	assert_eq(game.view, "pixel")
 	game.cycle_view()
 	assert_eq(game.view, "flat")
 	game.cycle_view()
-	assert_eq(game.view, "hd")
+	assert_eq(game.view, "cartoon")
+
+
+func test_the_cartoon_view_maps_the_mouse_back_to_the_ground() -> void:
+	game.set_view("cartoon")
+	var w := Vector2(500, 380)
+	assert_almost_eq(game.to_world(game.scr(w)).distance_to(w), 0.0, 0.01)
+	assert_gt(game.scr(GodPump.RIVAL_AT + Vector2(0, 40)).y, 46.0, "Gaétan's station sits below the HUD")
 
 
 

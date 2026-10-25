@@ -26,7 +26,8 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs 
 
 ## Tooling
 - Godot 4.7. Main scene: `scenes/god/god_game.tscn` (GodGame: the flow from title to credits). The day: `scenes/god/day/god_pump.gd` (GodPump). Rules: `scripts/god/` (GodData = everything ownable as data, RunState, MetaState, GodMods). Screens: `scenes/god/ui/`.
-- Pixel art: claude-pxl, cloned in `~/Tools/claude-pxl` (MIT). Build each file with `node ~/Tools/claude-pxl/bin/pxl.js build <file> --out assets/art/pixel/out`, then `godot --headless --import`. Files in `assets/art/pixel/`:
+- Cartoon art (round 10, the look now): drawn in code by `scripts/components/cartoon_art.gd` (cars per type in `CARS`, people in `PEOPLE`, upgrade props in `PROPS`); the look test is `docs/art/look_test_cartoon.png`.
+- Pixel art (the older views and the menus' icons): claude-pxl, cloned in `~/Tools/claude-pxl` (MIT). Build each file with `node ~/Tools/claude-pxl/bin/pxl.js build <file> --out assets/art/pixel/out`, then `godot --headless --import`. Files in `assets/art/pixel/`:
   - `god_pump.px.js`: cars (stacks from `carSlices`), the nozzle, the old props.
   - `station.px.js`: the gas tank, the fuel truck, the wood paneling.
   - `lot.px.js`: the tube man, perk, link and everyday props, Chez Gaétan.
@@ -52,7 +53,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs 
 - The meta save lives in `user://godpump_meta.cfg` (delete it to start over).
 
 ## Designer tools (in game)
-- **I:** cycle the views: HD-2D (default), three-quarter pixel, flat top-down.
+- **I:** cycle the views: cartoon (default, round 10), HD-2D, three-quarter pixel, flat top-down.
 - **F1 dev mode:** a configurator panel (pauses a day): cash, gas in the tank, day, XP, cars filled (car-type unlocks), game speed, NEXT NIGHT, END THE DAY, RESET SAVE (two clicks).
 - **F3:** end the day now. **F4:** +$100 (day or night). **F6:** +15000 XP (for the garage).
 - **Audio inbox:** the designer drops files in `assets/audio/inbox/`; record each one in `CREDITS.md`.

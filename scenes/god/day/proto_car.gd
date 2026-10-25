@@ -37,6 +37,8 @@ var color := Color(0.45, 0.55, 0.7)
 var sprite: Texture2D
 ## Which sprite stack the isometric view draws (#36): stack_<name>_0..7.
 var stack := "blue"
+## Its look number (the cartoon view picks a paint from it).
+var look := 0
 var tiers: ScoreTiers
 var anim_t := 0.0
 ## Car type (GodData.CAR_TYPES): its role and rules.

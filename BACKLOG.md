@@ -14,7 +14,8 @@
 - [x] `[standard]` **Round 10 batch A (v0.45.0, built): the nozzle ring and a working Double jet, chips in poker stacks, the day bar, the regulars step aside, drones burn gas, XP = litres × combo × accuracy** (#37)
 - [x] Playtest v0.45 (playtest 10): ring much better, focus better, XP good; coins back on the lot, MULTI-JET branch, drone-touched cars don't tip, XP = L × (1 + avg combo) × accuracy, chat beside the report (done, not yet played)
 - [x] `[innovation]` **Round 10 batch B (built): Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
-- [ ] `[art]` **Round 10 batch C: the 2D cartoon look test (drawn: docs/art/look_test_cartoon.png, awaiting approval), then the redraw**
+- [x] `[art]` **Round 10 batch C, pass 1: the look test approved; the day redrawn in the cartoon look (scripts/components/cartoon_art.gd)**
+- [ ] `[art]` **Round 10 batch C, pass 2: the menu screens (night, report, title, garage, cards, truck) and the icons in the cartoon look**
 - [ ] `[standard]` **Round 10 batch D: car codex, in-run unlocks by XP, bumper car, in a rush, the tank, trio elétrico** (after the look is approved, so the new cars are drawn once)
 - [x] `[standard]` **Round 10 batch E (built): the spill branch (a second tube man returns spills), the herding dog robot**
 - [ ] Playtest v0.46: Gaétan and the market share (does the fight feel winnable, is the report readable), coins on the lot, MULTI-JET and the dog, DÉGÂTS, the drone tip rule, the new XP

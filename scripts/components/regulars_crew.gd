@@ -1,7 +1,7 @@
 class_name RegularsCrew
 extends RefCounted
 ## The regulars (round 8): Ti-Guy, Mme Gagnon, Bertrand and Le Grand. They don't just sit: each one
-## spends a while on the bench, then gets up to watch you pour from the edge of the lot, goes inside
+## spends a while on the bench, then gets up to watch you pour from beside the store, goes inside
 ## for a coffee and comes back out with it, or (Le Grand) steps out for a smoke. Two at most are away
 ## from the bench at once. Wherever they are they react: arms up for a top-off, applause for a Perfect.
 ## GodPump owns the crew and steps it; the views draw `list` (world positions and poses).
@@ -12,7 +12,8 @@ const FULL_NAMES := {"tiguy": "Ti-Guy", "gagnon": "Mme Gagnon", "bertrand": "Ber
 const BENCH := Vector2(60, 186)
 const SEAT_GAP := 38.0
 const DOOR := Vector2(216, 176)
-const WATCH := [Vector2(352, 166), Vector2(404, 158), Vector2(468, 162), Vector2(522, 166)]
+## Where they stand to watch: the store's side of the lot, never in the play area (playtest 9).
+const WATCH := [Vector2(-30, 232), Vector2(10, 246), Vector2(52, 238), Vector2(94, 252)]
 const SMOKE := Vector2(-20, 202)
 const SPEED := 34.0
 const MAX_AWAY := 2

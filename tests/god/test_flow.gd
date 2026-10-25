@@ -11,6 +11,7 @@ func before_each() -> void:
 	g.meta_path = ""
 	g.sound_on = false
 	g.autostart = true
+	g.cash_in_time = 0.0  # the report opens at once (no register animation)
 	add_child_autofree(g)
 	g.day.view = "flat"
 	g.day.set_view("flat")

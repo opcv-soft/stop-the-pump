@@ -2,6 +2,14 @@
 
 One entry per hypothesis. Newest first.
 
+## 2026-10-25 — Round 9, played  (#37)
+Hypothesis: Visitors who drive in and chat, wheel clamps, French and English, and a Windows installer make the run livelier and reach more players.
+Variable: v0.44.0
+Sessions: 1 (self: 1)
+Observed: The regulars' speech bubbles pull attention off the pour ("they prevent focusing on the game"). The Double jet upgrade "does not work". Cars are drawn under the money. It's unclear what each car type does. Wants XP from volume × combo × accuracy ("meta-progress by playing more or playing better"), a time-of-day bar, drones that cost gas, a P&L and balance sheet, poker-chip coins in stacks. Big asks: a rival station across the road with market share and reputation (new lore: Dad's hands got shaky, Gaétan opened across the road; win back 100% and Dad dies happy), new car types (bumper car, in a rush, the tank, trio elétrico) with a codex, a spill-recovery branch, a herding dog robot, and a switch to chunky 2D cartoon art. Visitors may stay, in the background. Not yet answered: the clamps, French, Windows.
+Biggest weakness: focus. The screen competes with the pour (speech bubbles, money over the cars, an invisible reach for the nozzle).
+Decision: Round 10 in five batches (docs/ROUND_10_PLAN.md). Batch A goes first: the nozzle ring, chips and stacks, the day bar, the regulars step aside, drone gas, the new XP.
+
 ## 2026-10-21 — Round 8, played  (#37)
 Hypothesis: A deeper tree, a living lot and a newspaper that tells the story make the loop worth many more runs.
 Variable: v0.43.0

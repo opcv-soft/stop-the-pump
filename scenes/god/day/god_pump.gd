@@ -17,7 +17,7 @@ const LOT := Rect2(120, 170, 912, 420)
 const ENTRANCE := Vector2(300, ROAD_Y)
 const EXIT := Vector2(900, 180)
 ## Round 9: where a visitor parks to chat (by the store), when it arrives, and how long a line shows.
-const VISITOR_SPOT := Vector2(420, 222)
+const VISITOR_SPOT := Vector2(150, 200)  # the lot's corner by the store, out of the way (playtest 9)
 const VISITOR_AT := 3.0
 const CHAT_LINE := 3.2
 ## The tube man (Bonhomme gonflable, round 8) dances here, by the road left of the entrance.
@@ -26,13 +26,14 @@ const TUBE_EVERY := 8.0
 const TUBE_REACH := 240.0
 const CASH_AT := Vector2(70, 26)
 ## Where tips and sales land on screen: the tip jar, and the pile of bills beside it.
-const JAR_AT := Vector2(1104, 588)
-const JAR_RECT := Rect2(1080, 574, 48, 56)
-const PILE_AT := Vector2(1010, 612)
+## Round 10 (playtest 9): poker chips by value, stacked in a tray bottom right, off the lot.
+const CHIP_VALUES := [50, 20, 5, 1]
+const CHIP_COLORS := {1: Color(0.2, 0.5, 0.95), 5: Color(0.2, 0.75, 0.3), 20: Color(0.9, 0.18, 0.2), 50: Color(0.62, 0.3, 0.9)}
+const TRAY_AT := Vector2(872, 632)  # the tray's left end, on the grass below the lot
+const REGISTER_AT := Vector2(1092, 600)
 const NOZZLE_RAISE := Vector2(-20, -96)  # the nozzle hovers up-left of where its stream lands
 const CAR_COLORS := [Color(0.45, 0.55, 0.7), Color(0.7, 0.42, 0.36), Color(0.5, 0.62, 0.45),
 	Color(0.72, 0.66, 0.48), Color(0.55, 0.48, 0.66), Color(0.8, 0.8, 0.78), Color(0.82, 0.42, 0.17)]
-const COINS := {ScoreTiers.SUPER_PERFECT: 12, ScoreTiers.PERFECT: 8, ScoreTiers.GOOD: 5, ScoreTiers.OK: 3, ScoreTiers.MISS: 1, ScoreTiers.UNSERVED: 0}
 const TIER_COLORS := {
 	ScoreTiers.SUPER_PERFECT: Color(1.0, 0.85, 0.3), ScoreTiers.PERFECT: Color(0.35, 0.9, 0.45),
 	ScoreTiers.GOOD: Color(0.6, 0.8, 1.0), ScoreTiers.OK: Color(0.95, 0.85, 0.4), ScoreTiers.MISS: Color(0.95, 0.35, 0.3),
@@ -115,6 +116,9 @@ var stolen := 0.0
 var applause := 0
 const DRONE_FLOW := 2.2
 const DRONE_SPEED := 260.0
+## Round 10: each drone burns this much gas ($/s) from the tank while it flies or pours.
+const DRONE_BURN := 0.3
+var drone_gas := 0.0
 
 var rng := RandomNumberGenerator.new()
 var tiers := ScoreTiers.new()
@@ -139,8 +143,11 @@ var round_tips := 0.0
 ## counter during the round; the summary adds it all up.
 var tip_jar := 0.0
 var round_sales := 0.0
-var jar_shown := 0.0
-var bills_shown := 0.0
+## Chips landed in the tray today, by value. They slide into the register at closing.
+var stacks := {1: 0, 5: 0, 20: 0, 50: 0}
+## Closing: seconds left while the stacks go into the register; the report waits for it.
+@export var cash_in_time := 1.3
+var _cash_in := 0.0
 ## The GAZ BAR neon flashes like a pinball machine on Good or better (seconds left, and the grade).
 var neon_flash := 0.0
 var neon_tier := ""
@@ -173,7 +180,8 @@ const QUIPS := {
 
 var _aim := Vector2(WIDTH * 0.5, 380)
 var _nozzle := _aim
-var _stream_car: ProtoCar
+## The cars inside the nozzle ring taking gas now (one, or more with Double jet).
+var stream_cars: Array[ProtoCar] = []
 var _next_car := 0.0
 ## Cash dropped by cars (#36): bills for the sale, coins for the tip. They fall out of the car,
 ## bounce, lie on the lot for a beat, then get pulled into the cash counter.
@@ -424,9 +432,8 @@ func aim(p: Vector2) -> void:
 
 
 func set_pouring(on: bool) -> void:
-	if pouring and not on and _stream_car:
-		_settle(_stream_car)
-		_stream_car = null
+	if pouring and not on:
+		_release_streams()
 	if on and not pouring and not round_over:
 		_kick = 1.0  # the hand squeezes: a little jolt
 	pouring = on and not round_over
@@ -469,6 +476,10 @@ func step(dt: float) -> void:
 		if int(mods.get("tank_alarm", 0)) > 0 and tank < LOW_GAS and not _alarm_said:
 			_alarm_said = true  # Jauge d'alarme: the regulars notice before you run dry
 			say(QUIPS.low_gas)
+	if _cash_in > 0.0:
+		_cash_in -= dt
+		if _cash_in <= 0.0:
+			_finish_day()
 	_step_fx(dt)
 	queue_redraw()
 	_overlay.queue_redraw()
@@ -479,36 +490,33 @@ func step(dt: float) -> void:
 func _pour(dt: float) -> void:
 	if not pouring:
 		return
-	var car := car_at(_aim)
-	if not car and mods.auto_aim > 0.0:  # auto-aim: the stream bends toward a car nearby
-		car = nearest_customer(_aim, mods.auto_aim + ProtoCar.SIZE.x * 0.55)
-	if car and car.role in ["thief", "electric"]:
-		_react(car)
-		car = null
-	if car != _stream_car:
-		if _stream_car:
-			_settle(_stream_car)  # the stream slid off: a car 80% full or more settles now
-		_stream_car = car
-	var dollars := minf(flow_rate * dt * (car.fill_speed if car else 1.0), tank)
-	if not car or car.amount >= car.target:
-		dollars *= mods.spill_mult  # gas saver: less runs onto the ground
-	tank -= dollars
-	round_poured += dollars
-	if car:
+	for c in cars:  # pouring on the thief scares it; on the electric car, a fine
+		if c.role in ["thief", "electric"] and c.accepts_fuel() and _aim.distance_to(c.position) <= ring_radius():
+			_react(c)
+	var targets := cars_in_ring()
+	if targets.is_empty() and mods.auto_aim > 0.0:  # auto-aim: the stream bends toward a car nearby
+		var near := nearest_customer(_aim, mods.auto_aim + ProtoCar.SIZE.x * 0.55)
+		if near:
+			targets = [near]
+	targets = targets.slice(0, streams())
+	for c in stream_cars:
+		if not c in targets:
+			_settle(c)  # the ring slid off: a car 80% full or more settles now
+	stream_cars = targets
+	if targets.is_empty():  # no car in the ring: it all runs onto the ground
+		var spilt: float = minf(flow_rate * dt, tank) * mods.spill_mult  # gas saver: less runs onto the ground
+		tank -= spilt
+		round_poured += spilt
+		_waste(spilt, _aim)
+	for car in targets:  # each car in the ring gets a full stream (Double jet: twice the gas per second)
+		var dollars := minf(flow_rate * dt * car.fill_speed, tank)
+		if car.amount >= car.target:
+			dollars *= mods.spill_mult
+		tank -= dollars
+		round_poured += dollars
 		var overflow := car.receive(dollars)
 		if overflow > 0.0:  # the tank is full: it runs down the side of the car
 			_waste(overflow, car.position + Vector2(rng.randf_range(-24, 24), rng.randf_range(12, 22)))
-		if int(mods.twin_stream) > 0:  # twin stream: a second car nearby fills too
-			var other := nearest_customer(car.position, 120.0, car)
-			if other:
-				var d2 := minf(flow_rate * dt * other.fill_speed, tank)
-				tank -= d2
-				round_poured += d2
-				var o2 := other.receive(d2)
-				if o2 > 0.0:
-					_waste(o2, other.position + Vector2(0, 18))
-	else:
-		_waste(dollars, _aim)
 	if tank <= 0.0001:
 		tank = 0.0
 		_floaters.append({"text": "PLUS DE GAZ!", "pos": Vector2(WIDTH * 0.5, 260), "life": 2.5, "color": Color(1, 0.4, 0.3), "size": 40})
@@ -517,6 +525,33 @@ func _pour(dt: float) -> void:
 	if rng.randf() < 0.6:
 		_bits.append({"pos": scr(_aim), "vel": Vector2(rng.randf_range(-60, 60), rng.randf_range(-90, -30)),
 			"life": 0.35, "color": GAS, "size": 2.5})
+
+
+## How far the nozzle reaches from where it points (the ring on the ground). A wider nozzle grows it.
+func ring_radius() -> float:
+	return ProtoCar.SIZE.x * 0.55 + float(mods.get("stream_radius", 0.0))
+
+
+## How many cars the nozzle fills at once: one, plus Double jet.
+func streams() -> int:
+	return 1 + int(mods.get("twin_stream", 0))
+
+
+## The customers inside the ring still taking gas, nearest first.
+func cars_in_ring() -> Array[ProtoCar]:
+	var inside: Array[ProtoCar] = []
+	for car in cars:
+		if car.customer and car.accepts_fuel() and _aim.distance_to(car.position) <= ring_radius():
+			inside.append(car)
+	inside.sort_custom(func(a: ProtoCar, b: ProtoCar) -> bool: return _aim.distance_to(a.position) < _aim.distance_to(b.position))
+	return inside
+
+
+## Letting go: every car the nozzle was filling settles.
+func _release_streams() -> void:
+	for c in stream_cars:
+		_settle(c)
+	stream_cars.clear()
 
 
 func car_at(p: Vector2) -> ProtoCar:
@@ -799,10 +834,11 @@ func _settle(car: ProtoCar) -> void:
 	if t == ScoreTiers.MISS and _saves_left > 0:
 		_saves_left -= 1  # Saint Christophe: an overfill forgiven
 		breaks = false
+	var paid_mult := 0
 	if not car.by_drone and (breaks or combo.tiers.extends_combo(t)):
-		combo.register(t)
+		paid_mult = combo.register(t)
 	_best_combo = maxi(_best_combo, combo.multiplier)
-	_count(car, t)
+	_count(car, t, paid_mult if combo.tiers.extends_combo(t) else 0)
 	car.tip = tip_for(car.fill(), car.spilled) * _tip_mult(car)
 	if t in [ScoreTiers.SUPER_PERFECT, ScoreTiers.PERFECT]:
 		car.tip += mods.perfect_bonus + mods.applause_bonus
@@ -849,10 +885,13 @@ var day_stats := {}
 
 func reset_day_stats() -> void:
 	day_stats = {"tiers": {ScoreTiers.SUPER_PERFECT: 0, ScoreTiers.PERFECT: 0, ScoreTiers.GOOD: 0,
-		ScoreTiers.OK: 0, ScoreTiers.MISS: 0, ScoreTiers.UNSERVED: 0}, "cars": 0, "accuracy_sum": 0.0, "xp": 0}
+		ScoreTiers.OK: 0, ScoreTiers.MISS: 0, ScoreTiers.UNSERVED: 0}, "cars": 0, "accuracy_sum": 0.0, "xp": 0,
+		"litres": 0.0, "combo_points": 0}
 
 
-func _count(car: ProtoCar, t: String) -> void:
+## Counts one car for the day. `combo_paid`: the combo multiplier a hand-poured Good-or-better fill was
+## paid at (0 otherwise), summed into the day's combo points.
+func _count(car: ProtoCar, t: String, combo_paid := 0) -> void:
 	if day_stats.is_empty():
 		reset_day_stats()
 	day_stats.tiers[t] += 1
@@ -860,32 +899,34 @@ func _count(car: ProtoCar, t: String) -> void:
 		return  # left without its fill: not a car fueled, not a pour to judge, no XP
 	day_stats.cars += 1
 	day_stats.accuracy_sum += car.accuracy()
-	day_stats.xp += xp_for(t)
+	day_stats.litres += minf(car.amount, car.target) / economy.price_per_liter
+	day_stats.combo_points += combo_paid
+	day_stats.xp = xp_formula(day_stats.litres, day_stats.combo_points, day_accuracy())
 
 
-## XP for one car: 1 for filling it, plus the combo multiplier on Good or better, plus 5 for a top-off.
-func xp_for(t: String) -> int:
-	var xp := 1
-	if t in [ScoreTiers.SUPER_PERFECT, ScoreTiers.PERFECT, ScoreTiers.GOOD]:
-		xp += combo.multiplier
-	if t == ScoreTiers.SUPER_PERFECT:
-		xp += 5
-	return xp
+## Round 10 (playtest 9): a day's XP is the litres put in cars × the combo points × the accuracy, so you
+## progress by playing more or by playing better.
+static func xp_formula(litres: float, combo_points: int, accuracy: float) -> int:
+	return int(round(litres * combo_points * accuracy))
 
 
 func day_accuracy() -> float:
 	return day_stats.accuracy_sum / day_stats.cars if not day_stats.is_empty() and day_stats.cars > 0 else 0.0
 
 
-## One of the regulars says something (a random one, from `pool`).
-func say(pool: Array) -> void:
+## The regulars react to something (`pool` was what they used to say). Playtest 9: no more speech
+## bubbles over the pour; one of them hops instead.
+func say(_pool: Array) -> void:
 	if regulars.is_empty() or chatting():
-		return  # a visitor has the floor
-	quip_text = pool[rng.randi() % pool.size()]
+		return  # they're busy with a visitor
 	var out_here := range(regulars.size()).filter(func(i: int) -> bool: return regulars[i].state != "inside")
 	quip_who = out_here[rng.randi() % out_here.size()] if not out_here.is_empty() else 0
-	quip_t = 2.2
-	regulars[quip_who].cheer = 0.9
+	regulars[quip_who].cheer = maxf(regulars[quip_who].cheer, 0.9)
+
+
+## How far through today's opening hours the clock is (0 at opening, 1 at closing): the day bar.
+func day_progress() -> float:
+	return clampf(round_t / round_seconds, 0.0, 1.0)
 
 
 ## The time on the store's clock: 7 h at opening, the closing hour at the end (13 h, later with the
@@ -899,9 +940,9 @@ func is_open() -> bool:
 
 
 func end_round() -> void:
-	if _stream_car:
-		_settle(_stream_car)
-		_stream_car = null
+	if _cash_in > 0.0:
+		return  # already closing
+	_release_streams()
 	pouring = false
 	if _glug:
 		_glug.stop()
@@ -920,8 +961,26 @@ func end_round() -> void:
 			if partial > 0.0:
 				drop_cash(car.position, partial, 0.0)
 			car.leave(self)
+	_cash_in = cash_in_time
+	if _cash_in <= 0.0:
+		_finish_day()
+
+
+## The stacks are in the register: the day is over for GodGame.
+func _finish_day() -> void:
+	_cash_in = 0.0
+	for v in stacks:
+		stacks[v] = 0
+	money.clear()
+	shown_cash = cash
+	_play("cash")
 	if managed:
 		day_over.emit(day_report())
+
+
+## Where the closing stands: 0 while open, rising to 1 as the stacks reach the register.
+func cash_in_progress() -> float:
+	return 1.0 - _cash_in / cash_in_time if _cash_in > 0.0 and cash_in_time > 0.0 else 0.0
 
 
 ## Opens a day for GodGame: today's mods, the gas in the station's tank, the day number and the car
@@ -981,7 +1040,8 @@ func day_report() -> Dictionary:
 		"tank_left": tank, "xp": day_stats.xp, "cars": day_stats.cars, "tiers": day_stats.tiers.duplicate(),
 		"accuracy": day_accuracy(), "best_combo": _best_combo, "wasted": round_wasted, "fines": fines,
 		"stolen": stolen, "out_of_gas": tank <= 0.0001, "hockey": hockey_night,
-		"tube_gas": tube_gas, "tube_grabs": tube_grabs}
+		"tube_gas": tube_gas, "tube_grabs": tube_grabs, "litres": day_stats.litres,
+		"combo_points": day_stats.combo_points, "drone_gas": drone_gas}
 
 
 ## A car type for a new car, weighted; troublemakers ramp in over the first days.
@@ -1015,8 +1075,10 @@ func next_round() -> void:
 	round_tips = 0.0
 	tip_jar = 0.0
 	round_sales = 0.0
-	jar_shown = 0.0
-	bills_shown = 0.0
+	for v in stacks:
+		stacks[v] = 0
+	_cash_in = 0.0
+	drone_gas = 0.0
 	puddles.clear()  # the lot is hosed down between rounds
 	sign_flip = 1.0  # FERMÉ -> OUVERT
 	_spill_quipped = 0.0
@@ -1057,7 +1119,7 @@ func _burst(car: ProtoCar, t: String) -> void:
 			_bits.append({"pos": scr(car.position), "vel": Vector2(rng.randf_range(-120, 120), rng.randf_range(-260, -80)),
 				"life": 0.7, "color": GAS, "size": 4.0})
 		_spill(car.position + Vector2(rng.randf_range(-20, 20), 20), 0.8)
-	drop_cash(car.position, car.paid - car.tip, car.tip, COINS[t])
+	drop_cash(car.position, car.paid - car.tip, car.tip)
 	# Say exactly what was achieved: how full, what grade, what the tip was.
 	var top := scr(car.position) + Vector2(0, -64)
 	_floaters.append({"text": "%d%%" % int(car.fill() * 100.0), "pos": top, "life": 1.4, "color": col, "size": 34})
@@ -1071,26 +1133,34 @@ func _burst(car: ProtoCar, t: String) -> void:
 	_play("pop")
 
 
-const MONEY_REST := 3.45  # cash lies on the lot a while before it's collected (god-pump playtest 5)
-const MONEY_FLY := 0.55
+const CHIP_POP := 0.35  # a chip hops out of the car...
+const MONEY_FLY := 0.55  # ...then flies straight to its stack: nothing rests on the lot (playtest 9)
 
 
-## The car drops its cash: one bill per ~$5 of sale, gold coins for the tip (more for better grades).
-func drop_cash(from: Vector2, sale: float, tip: float, tip_coins := 4) -> void:
-	var bills := clampi(ceili(sale / 5.0), 1, 8) if sale > 0.0 else 0
-	for i in bills:
-		_drop("bill", from, sale / bills, i)
-	if tip >= 0.01:
-		for i in tip_coins:
-			_drop("coin", from, tip / tip_coins, bills + i)
+## The chips for an amount, biggest first: $27 is a red $20, a green $5 and two blue $1.
+static func chips_for(dollars: float) -> Array:
+	var left := int(round(dollars))
+	var out := []
+	for v in CHIP_VALUES:
+		while left >= v:
+			out.append(v)
+			left -= v
+	return out
 
 
-func _drop(kind: String, from: Vector2, value: float, i: int) -> void:
-	var bill := kind == "bill"
-	money.append({"kind": kind, "value": value, "pos": from, "z": 8.0,
-		"vel": Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(40, 120 if bill else 160),
-		"vz": rng.randf_range(160, 240) if bill else rng.randf_range(220, 320),
-		"rot": rng.randf() * TAU, "spin": rng.randf_range(-6, 6), "state": "drop", "t": -i * 0.03, "from": from})
+## The car pays: its sale and tip hop out as chips and fly to the tray. (`tip_coins` is kept for callers.)
+func drop_cash(from: Vector2, sale: float, tip: float, _tip_coins := 4) -> void:
+	var chips := chips_for(sale + tip)
+	var at := scr(from) + Vector2(0, -24)
+	for i in chips.size():
+		money.append({"kind": "chip", "value": chips[i], "pos": at, "from": at, "state": "pop", "t": -i * 0.05,
+			"vel": Vector2(rng.randf_range(-70, 70), rng.randf_range(-260, -180)), "rot": rng.randf() * TAU})
+
+
+## Where the top of a stack is in the tray now.
+func stack_top(v: int) -> Vector2:
+	var i := CHIP_VALUES.size() - 1 - CHIP_VALUES.find(v)  # $1 at the left, $50 at the right
+	return TRAY_AT + Vector2(22 + i * 40, -6 - mini(stacks[v], 24) * 3)
 
 
 func _step_money(dt: float) -> void:
@@ -1098,56 +1168,42 @@ func _step_money(dt: float) -> void:
 		m.t += dt
 		if m.t < 0.0:
 			continue
+		m.rot += dt * 9.0
 		match m.state:
-			"drop":
-				var bill: bool = m.kind == "bill"
+			"pop":
+				m.vel.y += 900.0 * dt
 				m.pos += m.vel * dt
-				m.vel *= 1.0 - (3.0 if bill else 1.6) * dt
-				m.vz -= (380.0 if bill else 900.0) * dt  # bills float down, coins drop
-				m.z += m.vz * dt
-				m.rot += m.spin * dt * (1.0 if bill else 2.5)
-				if m.z <= 0.0:
-					m.z = 0.0
-					if not bill and m.vz < -80.0:
-						m.vz = -m.vz * 0.45  # coins bounce
-						_play("counter_%d" % (rng.randi() % 3 + 1))
-					else:
-						m.state = "rest"
-						m.t = 0.0
-			"rest":
-				if m.t >= MONEY_REST:
-					m.target = JAR_AT if m.kind == "coin" else PILE_AT  # tips to the jar, sales to the pile
+				if m.t >= CHIP_POP:
 					m.state = "fly"
 					m.t = 0.0
-					m.from = scr(m.pos)  # from here on it travels on the screen
-					m.screen = true
+					m.from = m.pos
 			"fly":
 				var k: float = clampf(m.t / MONEY_FLY, 0.0, 1.0)
 				var j := k * k  # pulled in, faster and faster
-				var to: Vector2 = m.target
+				var to := stack_top(m.value)
 				var mid: Vector2 = (m.from + to) * 0.5 + Vector2(0, -90)
 				m.pos = m.from.lerp(mid, j).lerp(mid.lerp(to, j), j)
-				m.z = 0.0
 				if k >= 1.0:
+					stacks[m.value] += 1
 					shown_cash += m.value
-					if m.kind == "coin":
-						jar_shown += m.value
-					else:
-						bills_shown += m.value
-						if _sfx.has("cash") and not _sfx.cash.playing:
-							_play("cash")  # the register
 					money.erase(m)
 					_play("counter_%d" % (rng.randi() % 3 + 1))
 	if money.is_empty():
 		shown_cash = cash
-		jar_shown = tip_jar
-		bills_shown = round_sales
+
+
+## What the chips in the tray are worth.
+func stacks_value() -> int:
+	var total := 0
+	for v in stacks:
+		total += v * stacks[v]
+	return total
 
 
 ## A customer left waiting too long drives off unserved (they pay for what they got).
 func _step_patience(dt: float) -> void:
 	for car in cars:
-		if not car.customer or car.phase != ProtoCar.Phase.WANDER or car == _stream_car:
+		if not car.customer or car.phase != ProtoCar.Phase.WANDER or car in stream_cars:
 			continue
 		car.waited += dt
 		if car.waited > car.patience:
@@ -1238,7 +1294,7 @@ func _step_drones(dt: float) -> void:
 			d.car = null
 		if not car:
 			for c in cars:
-				if c.customer and c.accepts_fuel() and not c.drone_target and c != _stream_car and c.amount < c.target * 0.8:
+				if c.customer and c.accepts_fuel() and not c.drone_target and not c in stream_cars and c.amount < c.target * 0.8:
 					car = c
 					c.drone_target = true
 					d.car = c
@@ -1246,6 +1302,10 @@ func _step_drones(dt: float) -> void:
 					break
 			if not car:
 				continue
+		var burn := minf(DRONE_BURN * dt, tank)  # a drone in the air burns gas, flying or pouring
+		tank -= burn
+		round_poured += burn
+		drone_gas += burn
 		var gap: Vector2 = car.position - d.pos
 		if gap.length() > 8.0:
 			d.pos += gap.normalized() * minf(DRONE_SPEED * dt, gap.length())
@@ -1359,9 +1419,11 @@ func _tile(id: String, r: Rect2) -> void:
 ## Above the cars: the stream, the god nozzle, coins in flight, bursts, words and the HUD.
 func _draw_overlay() -> void:
 	var o := _overlay
-	var land := scr(_aim)
-	if view != "flat" and pouring and _stream_car:  # the stream lands on the car's roof
-		land = car_top(_stream_car)
+	var lands: Array[Vector2] = []  # one stream per car in the ring, landing on its roof
+	for c in stream_cars:
+		lands.append(car_top(c) if view != "flat" else c.position)
+	if lands.is_empty():
+		lands.append(scr(_aim))
 	var tip := scr(_nozzle) + NOZZLE_RAISE + Vector2(-4, 6) * _kick
 	if view != "flat":  # gauges float over the cars
 		for car in cars:
@@ -1374,16 +1436,17 @@ func _draw_overlay() -> void:
 	draw_shadow_ring(o)
 	_draw_pump(o, tip)
 	if pouring:
-		var prev := tip
-		for i in range(1, 11):
-			var k := i / 10.0
-			var p := tip.lerp(land, k) + Vector2(sin(_t * 30.0 + i) * 2.0 * k, 0)
-			o.draw_line(prev, p, GAS, 6.0 - k * 2.0, true)
-			prev = p
-		for i in 4:
-			var k := fmod(_t * 3.0 + i * 0.25, 1.0)
-			o.draw_circle(tip.lerp(land, k) + Vector2(sin(_t * 20.0 + i * 2.0) * 3.0, 0), 3.0, GAS.lightened(0.2))
-		o.draw_circle(land, 7.0 + sin(_t * 25.0) * 1.5, Color(GAS, 0.6))
+		for land in lands:
+			var prev := tip
+			for i in range(1, 11):
+				var k := i / 10.0
+				var p := tip.lerp(land, k) + Vector2(sin(_t * 30.0 + i) * 2.0 * k, 0)
+				o.draw_line(prev, p, GAS, 6.0 - k * 2.0, true)
+				prev = p
+			for i in 4:
+				var k := fmod(_t * 3.0 + i * 0.25, 1.0)
+				o.draw_circle(tip.lerp(land, k) + Vector2(sin(_t * 20.0 + i * 2.0) * 3.0, 0), 3.0, GAS.lightened(0.2))
+			o.draw_circle(land, 7.0 + sin(_t * 25.0) * 1.5, Color(GAS, 0.6))
 	_draw_nozzle(o, tip)
 	for b in _bits:
 		if b.get("sparkle", false) and _tex.has("sparkle"):
@@ -1392,8 +1455,6 @@ func _draw_overlay() -> void:
 			o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			continue
 		o.draw_circle(b.pos, b.size, Color(b.color, clampf(b.life * 2.0, 0.0, 1.0)))
-	for m in money:
-		_draw_money(o, m)
 	var font := ThemeDB.fallback_font
 	for f in _floaters:
 		var w := font.get_string_size(f.text, HORIZONTAL_ALIGNMENT_LEFT, -1, f.size).x
@@ -1468,13 +1529,20 @@ func _draw_badges(o: Node2D) -> void:
 			o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+## The nozzle ring (playtest 9): the area the nozzle covers, lying on the ground. Faint when empty (the
+## gas would spill), gold around one car, bright and pulsing around two or more (Double jet).
 func draw_shadow_ring(o: Node2D) -> void:
-	if view != "flat":  # the landing spot lies flat on the ground
-		o.draw_set_transform(scr(_aim), 0.0, Vector2(1.0, 0.5))
-		o.draw_arc(Vector2.ZERO, 16.0, 0, TAU, 24, Color(1, 1, 1, 0.35), 2.0, true)
-		o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		return
-	o.draw_arc(_aim, 14.0, 0, TAU, 24, Color(1, 1, 1, 0.35), 2.0, true)
+	var inside := cars_in_ring().size()
+	var col := Color(1, 1, 1, 0.4)
+	if inside >= 2 and streams() >= 2:
+		col = Color(0.55, 1.0, 0.45, 0.75 + 0.2 * sin(_t * 12.0))
+	elif inside >= 1:
+		col = Color(1.0, 0.85, 0.3, 0.8)
+	var pts := PackedVector2Array()
+	for i in 33:
+		pts.append(scr(_aim + Vector2.from_angle(i / 32.0 * TAU) * ring_radius()))
+	o.draw_colored_polygon(pts.slice(0, 32), Color(col, col.a * 0.12))
+	o.draw_polyline(pts, col, 3.0 if inside > 0 else 2.0, true)
 
 
 ## A giant hand holding a pump nozzle, hovering above where the stream lands.
@@ -1493,37 +1561,6 @@ func _draw_nozzle(o: Node2D, tip: Vector2) -> void:
 	o.draw_circle(hand + Vector2(-38, 2), 22.0, Color(0.93, 0.62, 0.45))  # the hand
 	o.draw_circle(hand + Vector2(-20, -10), 10.0, Color(0.93, 0.62, 0.45))
 	o.draw_circle(tip, 5.0, Color(0.1, 0.1, 0.1))
-
-
-## A green bill or a gold coin, with its shadow on the ground while it falls.
-func _draw_money(o: Node2D, m: Dictionary) -> void:
-	if m.t < 0.0 and m.state == "drop":
-		return
-	var lift := Vector2(0, -m.z)
-	var at: Vector2 = m.pos if m.get("screen", false) else scr(m.pos)
-	o.draw_circle(at + Vector2(0, 3), 5.0 if m.kind == "coin" else 7.0, Color(0, 0, 0, 0.25))
-	if m.kind == "bill" and _tex.has("bill"):
-		o.draw_set_transform(at + lift, m.rot, Vector2(2.0, 2.0 * (0.7 + 0.3 * sin(m.rot * 2.0))))  # flutters
-		o.draw_texture(_tex["bill"], -_tex["bill"].get_size() * 0.5)
-		o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	elif m.kind == "coin" and _tex.has("coin_0"):
-		var frame := int(fposmod(m.rot, TAU) / TAU * 4.0) % 4  # spinning
-		var tex: Texture2D = _tex["coin_%d" % frame]
-		o.draw_set_transform(at + lift, 0.0, Vector2(2, 2))
-		o.draw_texture(tex, -tex.get_size() * 0.5)
-		o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	elif m.kind == "bill":
-		o.draw_set_transform(at + lift, m.rot, Vector2(1.0, 0.75 + 0.25 * sin(m.rot * 2.0)))  # flutters
-		o.draw_rect(Rect2(-10, -5, 20, 10), Color(0.36, 0.62, 0.36))
-		o.draw_rect(Rect2(-8, -3, 16, 6), Color(0.52, 0.78, 0.5), false, 1.0)
-		o.draw_circle(Vector2.ZERO, 2.2, Color(0.25, 0.45, 0.25))
-		o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	else:
-		var squash := absf(cos(m.rot))  # spins edge-on and back
-		o.draw_set_transform(at + lift, 0.0, Vector2(maxf(squash, 0.25), 1.0))
-		o.draw_circle(Vector2.ZERO, 6.0, Color(0.85, 0.62, 0.15))
-		o.draw_circle(Vector2(-1, -1), 4.5, Color(1.0, 0.84, 0.3))
-		o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## The vintage pump (bottom left) with its dial on the round's gas, shaking while it pumps, and the
@@ -1554,68 +1591,101 @@ func _draw_pump(o: Node2D, tip: Vector2) -> void:
 	o.draw_circle(c, 2.5, Color(0.1, 0.1, 0.1))
 
 
-## Tips in the jar (coins pile up inside), sales as a heap of bills beside it. No running counter:
-## the round's summary adds it up (#36).
-func _draw_till(o: Node2D, font: Font) -> void:
-	var bills: Texture2D = _tex.get("bill")
-	var n := mini(int(bills_shown / 5.0 + 0.5), 48)
-	for i in n:
-		var p := PILE_AT + Vector2(((i * 37) % 5 - 2) * 9, -(i / 5) * 5 + ((i * 13) % 3) * 2)
-		if bills:
-			o.draw_set_transform(p, ((i * 53) % 7 - 3) * 0.12, Vector2(2, 2))
-			o.draw_texture(bills, -bills.get_size() * 0.5)
+## One poker chip seen from above, `squash` for its spin. $1 blue, $5 green, $20 red, $50 purple.
+func _draw_chip(o: Node2D, at: Vector2, v: int, squash := 1.0, r := 12.0) -> void:
+	var col: Color = CHIP_COLORS[v]
+	o.draw_set_transform(at, 0.0, Vector2(maxf(squash, 0.2), 1.0))
+	o.draw_circle(Vector2(0, 2), r, col.darkened(0.45))
+	o.draw_circle(Vector2.ZERO, r, col)
+	for i in 6:  # the white edge spots
+		var a := i / 6.0 * TAU
+		o.draw_line(Vector2.from_angle(a) * r * 0.72, Vector2.from_angle(a) * r * 0.98, Color.WHITE, r * 0.32)
+	o.draw_arc(Vector2.ZERO, r * 0.58, 0, TAU, 16, Color(1, 1, 1, 0.7), 1.2, true)
+	o.draw_circle(Vector2(-r * 0.25, -r * 0.3), r * 0.18, Color(1, 1, 1, 0.55))  # shine
 	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var jar: Texture2D = _tex.get("tip_jar")
-	if jar:
-		o.draw_texture_rect(jar, JAR_RECT, false)
-	var level := clampf(jar_shown / 25.0, 0.0, 1.0)
-	var inner := Rect2(JAR_RECT.position + Vector2(10, 10), Vector2(28, 42))
-	var rows := int(level * 9.0 + 0.999) if jar_shown > 0.0 else 0
-	for row in rows:
-		for col in 4:
-			var cp := Vector2(inner.position.x + 4 + col * 7 + (row % 2) * 3, inner.end.y - 3 - row * 4.5)
-			o.draw_circle(cp, 3.5, Color(0.85, 0.62, 0.15))
-			o.draw_circle(cp + Vector2(-1, -1), 2.2, Color(1.0, 0.84, 0.3))
-	if jar:  # the label stays in front of the coins
-		o.draw_texture_rect_region(jar, Rect2(JAR_RECT.position + Vector2(8, 26), Vector2(32, 14)), Rect2(4, 13, 16, 7))
-	var tips := "$%.2f" % jar_shown
-	var tw := font.get_string_size(tips, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
-	o.draw_string_outline(font, Vector2(JAR_RECT.get_center().x - tw * 0.5, JAR_RECT.position.y - 6), tips, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 5, Color(0, 0, 0, 0.8))
-	o.draw_string(font, Vector2(JAR_RECT.get_center().x - tw * 0.5, JAR_RECT.position.y - 6), tips, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1.0, 0.85, 0.3))
 
 
-## What the regulars say, in a bubble over the one who said it; and today's visitor's lines, over its
-## car, with its name tag (round 9).
+## A chip lying flat in a stack: a coloured disc with its edge stripes, seen at an angle.
+func _draw_stacked_chip(o: Node2D, at: Vector2, v: int, a := 1.0) -> void:
+	var col: Color = CHIP_COLORS[v]
+	o.draw_set_transform(at, 0.0, Vector2(1.0, 0.42))
+	o.draw_circle(Vector2(0, 6), 14.0, Color(col.darkened(0.4), a))
+	for i in 4:  # stripes on the side
+		o.draw_rect(Rect2(-12 + i * 7, 2, 3, 8), Color(1, 1, 1, 0.75 * a))
+	o.draw_circle(Vector2.ZERO, 14.0, Color(col, a))
+	o.draw_arc(Vector2.ZERO, 9.0, 0, TAU, 16, Color(1, 1, 1, 0.6 * a), 1.5, true)
+	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## The chips in the air, and the tray: four poker stacks ($1, $5, $20, $50) beside the cash register.
+## At closing the stacks slide into the register.
+func _draw_tray(o: Node2D) -> void:
+	var font := GodUI.font()
+	var tray := StyleBoxFlat.new()
+	tray.bg_color = Color(0.12, 0.1, 0.09, 0.85)
+	tray.set_corner_radius_all(8)
+	tray.set_border_width_all(2)
+	tray.border_color = Color(0.0, 0.0, 0.0, 0.9)
+	o.draw_style_box(tray, Rect2(TRAY_AT + Vector2(0, -10), Vector2(168, 22)))
+	var k := smoothstep(0.35, 1.0, cash_in_progress())
+	for v in [1, 5, 20, 50]:
+		var n: int = stacks[v]
+		var base := stack_top(v) + Vector2(0, mini(n, 24) * 3)
+		var at := base.lerp(REGISTER_AT + Vector2(-6, -6), k)
+		for i in mini(n, 24):
+			_draw_stacked_chip(o, at + Vector2(0, -i * 3), v, 1.0 - k * 0.6)
+		if n > 0 and k <= 0.0:
+			GodUI.text(o, at + Vector2(0, -mini(n, 24) * 3 - 14), "%d" % n, 13, Color.WHITE, true, 4)
+	_draw_register(o, font)
+	for m in money:
+		if m.t >= 0.0:
+			_draw_chip(o, m.pos, m.value, absf(cos(m.rot)))
+
+
+## A chunky cash register; its display shows the bank (what's in the tray isn't in yet).
+func _draw_register(o: Node2D, _font: Font) -> void:
+	var at := REGISTER_AT
+	var body := StyleBoxFlat.new()
+	body.bg_color = Color(0.78, 0.2, 0.18)
+	body.set_corner_radius_all(6)
+	body.set_border_width_all(3)
+	body.border_color = Color(0.05, 0.04, 0.04)
+	o.draw_style_box(body, Rect2(at + Vector2(-34, -20), Vector2(68, 44)))
+	o.draw_rect(Rect2(at + Vector2(-38, 18), Vector2(76, 12)), Color(0.55, 0.12, 0.1))  # the drawer
+	o.draw_rect(Rect2(at + Vector2(-38, 18), Vector2(76, 12)), Color(0.05, 0.04, 0.04), false, 2.0)
+	var screen := Rect2(at + Vector2(-28, -40), Vector2(56, 20))
+	o.draw_rect(screen, Color(0.08, 0.12, 0.08))
+	o.draw_rect(screen, Color(0.05, 0.04, 0.04), false, 2.0)
+	var bank := shown_cash - (stacks_value() if _cash_in <= 0.0 or cash_in_progress() < 0.95 else 0)
+	GodUI.text(o, screen.get_center() + Vector2(0, 6), "$%d" % int(bank), 15, Color(0.5, 1.0, 0.5), true, 0)
+
+
+## Today's visitor chatting with the regulars (round 9), kept in the background (playtest 9): small,
+## faded bubbles with no words to read. The lines themselves go to the menu's scrapbook.
 func _draw_quip(o: Node2D, font: Font) -> void:
 	if visitor_car and is_instance_valid(visitor_car) and visitor_car.phase != ProtoCar.Phase.GONE:
-		var top := car_top(visitor_car)
-		var tag := tr(Visitors.speaker_name(visit.who)).to_upper()
-		var tw := font.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-		o.draw_string_outline(font, top + Vector2(-tw * 0.5, -6), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 5, Color(0, 0, 0, 0.8))
-		o.draw_string(font, top + Vector2(-tw * 0.5, -6), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.6, 0.9, 1.0))
 		if not chat_line.is_empty() and _chat.get("t", 0.0) > 0.0:
-			_bubble(o, font, top + Vector2(0, -14), chat_line.text, minf(_chat.t * 3.0, 1.0))
+			_murmur(o, font, car_top(visitor_car) + Vector2(0, -10), _chat.get("i", 0), minf(_chat.t * 3.0, 1.0))
 	if quip_t <= 0.0 or quip_text == "":
 		return
 	var where: Variant = regular_head(quip_who)
-	if where == null:
-		return
-	_bubble(o, font, where, quip_text, minf(quip_t * 3.0, 1.0))
+	if where != null:
+		_murmur(o, font, where, _chat.get("i", 0) + 1, minf(quip_t * 3.0, 1.0))
 
 
-## A speech bubble whose tail points at `head`.
-func _bubble(o: Node2D, font: Font, head: Vector2, text: String, a: float) -> void:
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 18
-	var box := Rect2(head + Vector2(-16, -46), Vector2(w, 26))
-	box.position.x = clampf(box.position.x, 6, WIDTH - w - 6)
+const MURMURS := ["...", "ha ha", "!", "?!", "hm hm"]
+
+
+## A small faded speech bubble with no words: someone chatting, not something to read.
+func _murmur(o: Node2D, font: Font, head: Vector2, i: int, a: float) -> void:
+	var text: String = MURMURS[i % MURMURS.size()]
+	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 12
+	var box := Rect2(head + Vector2(-w * 0.5, -30), Vector2(w, 17))
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.98, 0.96, 0.9, a)
-	sb.set_corner_radius_all(10)
-	sb.set_border_width_all(2)
-	sb.border_color = Color(0.1, 0.09, 0.08, a)
+	sb.bg_color = Color(0.98, 0.96, 0.9, 0.55 * a)
+	sb.set_corner_radius_all(8)
 	o.draw_style_box(sb, box)
-	o.draw_colored_polygon(PackedVector2Array([head + Vector2(-4, -21), head + Vector2(8, -21), head + Vector2(0, -10)]), sb.bg_color)
-	o.draw_string(font, box.position + Vector2(9, 18), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.1, 0.09, 0.08, a))
+	o.draw_string(font, box.position + Vector2(6, 13), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.1, 0.09, 0.08, 0.6 * a))
 
 
 var _vignette: GradientTexture2D
@@ -1638,15 +1708,35 @@ func _draw_vignette(o: Node2D) -> void:
 	o.draw_texture_rect(_vignette, Rect2(0, 0, WIDTH, HEIGHT), false)
 
 
+## The day bar (playtest 9): opening hour at the left end, closing hour at the right, filling as the day goes.
+func _draw_day_bar(o: Node2D) -> void:
+	var bar := Rect2(376, 14, 400, 18)
+	var close_h: float = mods.get("close_hour", CLOSE_HOUR)
+	GodUI.text(o, Vector2(bar.position.x - 140, bar.end.y), tr("DAY %d") % round_num, 22, Color.WHITE, false, 6)
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.05, 0.05, 0.08, 0.8)
+	back.set_corner_radius_all(9)
+	back.set_border_width_all(2)
+	back.border_color = Color(0, 0, 0, 0.9)
+	o.draw_style_box(back, bar.grow(2))
+	var k := day_progress()
+	if k > 0.0:
+		var fill := StyleBoxFlat.new()
+		fill.bg_color = Color(1.0, 0.72, 0.2).lerp(Color(0.95, 0.35, 0.25), k)  # morning gold to evening red
+		fill.set_corner_radius_all(9)
+		o.draw_style_box(fill, Rect2(bar.position, Vector2(maxf(bar.size.x * k, 18.0), bar.size.y)))
+	var sun := bar.position + Vector2(bar.size.x * k, bar.size.y * 0.5)
+	o.draw_circle(sun, 11.0, Color(0, 0, 0, 0.9))
+	o.draw_circle(sun, 9.0, Color(1.0, 0.9, 0.35))
+	GodUI.text(o, Vector2(bar.position.x - 10 - 34, bar.end.y - 1), "%d h" % int(OPEN_HOUR), 16, Color.WHITE, false, 5)
+	GodUI.text(o, Vector2(bar.end.x + 10, bar.end.y - 1), "%d h" % int(close_h), 16, Color.WHITE, false, 5)
+
+
 func _draw_hud(o: Node2D, font: Font) -> void:
 	if hd:
 		_draw_vignette(o)
-	var h := hour_now()
-	var clock := tr("DAY %d     %d h %02d") % [round_num, int(h), int(fmod(h, 1.0) * 60.0) / 15 * 15]
-	var cw := font.get_string_size(clock, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
-	o.draw_string_outline(font, Vector2((WIDTH - cw) * 0.5, 30), clock, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, 8, Color(0, 0, 0, 0.8))
-	o.draw_string(font, Vector2((WIDTH - cw) * 0.5, 30), clock, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color.WHITE)
-	_draw_till(o, font)
+	_draw_day_bar(o)
+	_draw_tray(o)
 	_draw_quip(o, font)
 	var combo_text := tr("x%d COMBO") % combo.multiplier
 	o.draw_string(font, Vector2(WIDTH - 150, 30), combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.9))

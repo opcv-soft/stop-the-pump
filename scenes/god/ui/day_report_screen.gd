@@ -65,6 +65,9 @@ func _draw() -> void:
 		GodUI.text(self, Vector2(330, y), row[0], 20, GodUI.CREAM)
 		GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(row[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x, y), row[1], 22, GodUI.GOLD)
 		y += 34.0
+	# Round 10: how the XP was earned, litres × combo points × accuracy.
+	var sum := tr("%.0f L x %d combo x %d%%") % [report.get("litres", 0.0), report.get("combo_points", 0), int(report.get("accuracy", 0.0) * 100.0)]
+	GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, y - 14), sum, 14, Color(GodUI.CREAM, 0.7))
 	var tiers: Dictionary = report.get("tiers", {})
 	var grades := [[ScoreTiers.SUPER_PERFECT, "SUPER"], [ScoreTiers.PERFECT, "PERFECT"], [ScoreTiers.GOOD, "GOOD"],
 		[ScoreTiers.OK, "OK"], [ScoreTiers.MISS, "OVERFILLED"], [ScoreTiers.UNSERVED, "UNSERVED"]]

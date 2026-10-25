@@ -139,40 +139,41 @@ const CAR_TYPES := {
 const CAR_ORDER := ["sedan", "pickup", "cadillac", "bazou", "racer", "sweeper", "thief", "clumsy", "electric"]
 
 # --- Papa's Garage: bought with XP, kept forever ------------------------------------------------
+# Round 10: prices ×15 for the new XP (litres × combo points × accuracy earns ~15× more per hour).
 const NOZZLES := [
 	{"id": "classique", "name": "Le Classique", "helps": "Dad's old nozzle. Honest.", "price": 0, "fx": {}},
-	{"id": "douche", "name": "La Douche", "helps": "a wide shower head: stream +20, flow -20%", "price": 400, "fx": {"stream_radius": 20.0, "flow_mult": 0.8}},
-	{"id": "laser", "name": "Le Laser", "helps": "flow +40%, top-off tips +50%", "price": 900, "fx": {"flow_mult": 1.4, "topoff_bonus": 1.0}},
-	{"id": "lente", "name": "La Lente", "helps": "flow -30%, tips +30%: for the precise", "price": 700, "fx": {"flow_mult": 0.7, "tip_mult": 1.3}},
-	{"id": "gros_calibre", "name": "Le Gros Calibre", "helps": "flow ×2. Good luck.", "price": 1500, "fx": {"flow_mult": 2.0}},
-	{"id": "doree", "name": "La Dorée", "helps": "10% golden fills (tip ×3), flow +10%", "price": 3000, "fx": {"golden_chance": 0.1, "flow_mult": 1.1}},
+	{"id": "douche", "name": "La Douche", "helps": "a wide shower head: stream +20, flow -20%", "price": 6000, "fx": {"stream_radius": 20.0, "flow_mult": 0.8}},
+	{"id": "laser", "name": "Le Laser", "helps": "flow +40%, top-off tips +50%", "price": 13500, "fx": {"flow_mult": 1.4, "topoff_bonus": 1.0}},
+	{"id": "lente", "name": "La Lente", "helps": "flow -30%, tips +30%: for the precise", "price": 10500, "fx": {"flow_mult": 0.7, "tip_mult": 1.3}},
+	{"id": "gros_calibre", "name": "Le Gros Calibre", "helps": "flow ×2. Good luck.", "price": 22500, "fx": {"flow_mult": 2.0}},
+	{"id": "doree", "name": "La Dorée", "helps": "10% golden fills (tip ×3), flow +10%", "price": 45000, "fx": {"golden_chance": 0.1, "flow_mult": 1.1}},
 ]
 const BLING := [
-	{"id": "fuzzy_dice", "name": "Dés en minou", "helps": "luck +10", "price": 150, "fx": {"luck": 10.0}},
-	{"id": "flame_decal", "name": "Flammes", "helps": "max combo +1", "price": 300, "fx": {"combo_max": 1}},
-	{"id": "chrome_tip", "name": "Embout chromé", "helps": "flow +10%", "price": 250, "fx": {"flow_mult": 1.1}},
-	{"id": "hula", "name": "Danseuse hula", "helps": "the first car of each day tips double", "price": 350, "fx": {"first_car_tip_mult": 2.0}},
-	{"id": "pine", "name": "Sapin parfumé", "helps": "cars wait 20% longer", "price": 200, "fx": {"patience_mult": 1.2}},
-	{"id": "medal", "name": "Médaille de saint Christophe", "helps": "once a day, an overfill doesn't break the combo", "price": 500, "fx": {"overfill_saves": 1}},
-	{"id": "rabbit", "name": "Patte de lapin", "helps": "every 10th car's gas goes back in the tank", "price": 800, "fx": {"refund_every": 10}},
-	{"id": "bobblehead", "name": "Bobblehead", "helps": "+5% tip per combo level", "price": 600, "fx": {}},
-	{"id": "coupons", "name": "Livret de coupons", "helps": "shop upgrades 10% cheaper", "price": 450, "fx": {"upgrade_discount": 0.10}},
-	{"id": "receipt", "name": "Vieux reçu", "helps": "start each run with $50 more", "price": 300, "fx": {"start_cash": 50.0}},
+	{"id": "fuzzy_dice", "name": "Dés en minou", "helps": "luck +10", "price": 2250, "fx": {"luck": 10.0}},
+	{"id": "flame_decal", "name": "Flammes", "helps": "max combo +1", "price": 4500, "fx": {"combo_max": 1}},
+	{"id": "chrome_tip", "name": "Embout chromé", "helps": "flow +10%", "price": 3750, "fx": {"flow_mult": 1.1}},
+	{"id": "hula", "name": "Danseuse hula", "helps": "the first car of each day tips double", "price": 5250, "fx": {"first_car_tip_mult": 2.0}},
+	{"id": "pine", "name": "Sapin parfumé", "helps": "cars wait 20% longer", "price": 3000, "fx": {"patience_mult": 1.2}},
+	{"id": "medal", "name": "Médaille de saint Christophe", "helps": "once a day, an overfill doesn't break the combo", "price": 7500, "fx": {"overfill_saves": 1}},
+	{"id": "rabbit", "name": "Patte de lapin", "helps": "every 10th car's gas goes back in the tank", "price": 12000, "fx": {"refund_every": 10}},
+	{"id": "bobblehead", "name": "Bobblehead", "helps": "+5% tip per combo level", "price": 9000, "fx": {}},
+	{"id": "coupons", "name": "Livret de coupons", "helps": "shop upgrades 10% cheaper", "price": 6750, "fx": {"upgrade_discount": 0.10}},
+	{"id": "receipt", "name": "Vieux reçu", "helps": "start each run with $50 more", "price": 4500, "fx": {"start_cash": 50.0}},
 ]
 ## Perks have tiers; each tier costs more (price × tier).
 const PERKS := [
-	{"id": "truck_friend", "name": "Ami du camionneur", "helps": "the first delivery of each run costs 25% less", "price": 300, "tiers": 2, "fx": {"first_delivery_discount": 0.25}},
-	{"id": "lucky", "name": "Bonne étoile", "helps": "luck +5", "price": 250, "tiers": 4, "fx": {"luck": 5.0}},
-	{"id": "big_cards", "name": "Plus de choix", "helps": "4 cards per delivery", "price": 1200, "tiers": 1, "fx": {"cards_offered": 1}},
-	{"id": "reroll", "name": "Rebrasser", "helps": "1 reroll per delivery", "price": 600, "tiers": 2, "fx": {"rerolls": 1}},
-	{"id": "morning_rush", "name": "Rush du matin", "helps": "+1 car waiting when you open", "price": 400, "tiers": 3, "fx": {"queue": 1}},
-	{"id": "jackpot", "name": "Jackpot", "helps": "3% of fills tip ×4", "price": 700, "tiers": 2, "fx": {"jackpot_chance": 0.03}},
-	{"id": "slot", "name": "Place pour bling", "helps": "one more bling slot", "price": 500, "tiers": 2, "fx": {"bling_slots": 1}},
-	{"id": "head_start", "name": "Longueur d'avance", "helps": "start each run with a drone nozzle", "price": 2000, "tiers": 1, "fx": {"drones": 1}},
-	{"id": "contract", "name": "Contrat du fournisseur", "helps": "gas prices rise 20% slower", "price": 450, "tiers": 3, "fx": {"price_rise_mult": 0.8}},
-	{"id": "premium", "name": "Super sans plomb", "helps": "premium gas: every sale pays 10% more", "price": 450, "tiers": 3, "fx": {"sale_mult": 1.1}},
-	{"id": "tube_man", "name": "Bonhomme gonflable", "helps": "siphons passing cars' gas into your tank; tier 2 drops them on your lot", "price": 600, "tiers": 2, "fx": {"tube_man": 1}},
-	{"id": "nest_egg", "name": "Bas de laine", "helps": "start each run with $40 more", "price": 200, "tiers": 3, "fx": {"start_cash": 40.0}},
+	{"id": "truck_friend", "name": "Ami du camionneur", "helps": "the first delivery of each run costs 25% less", "price": 4500, "tiers": 2, "fx": {"first_delivery_discount": 0.25}},
+	{"id": "lucky", "name": "Bonne étoile", "helps": "luck +5", "price": 3750, "tiers": 4, "fx": {"luck": 5.0}},
+	{"id": "big_cards", "name": "Plus de choix", "helps": "4 cards per delivery", "price": 18000, "tiers": 1, "fx": {"cards_offered": 1}},
+	{"id": "reroll", "name": "Rebrasser", "helps": "1 reroll per delivery", "price": 9000, "tiers": 2, "fx": {"rerolls": 1}},
+	{"id": "morning_rush", "name": "Rush du matin", "helps": "+1 car waiting when you open", "price": 6000, "tiers": 3, "fx": {"queue": 1}},
+	{"id": "jackpot", "name": "Jackpot", "helps": "3% of fills tip ×4", "price": 10500, "tiers": 2, "fx": {"jackpot_chance": 0.03}},
+	{"id": "slot", "name": "Place pour bling", "helps": "one more bling slot", "price": 7500, "tiers": 2, "fx": {"bling_slots": 1}},
+	{"id": "head_start", "name": "Longueur d'avance", "helps": "start each run with a drone nozzle", "price": 30000, "tiers": 1, "fx": {"drones": 1}},
+	{"id": "contract", "name": "Contrat du fournisseur", "helps": "gas prices rise 20% slower", "price": 6750, "tiers": 3, "fx": {"price_rise_mult": 0.8}},
+	{"id": "premium", "name": "Super sans plomb", "helps": "premium gas: every sale pays 10% more", "price": 6750, "tiers": 3, "fx": {"sale_mult": 1.1}},
+	{"id": "tube_man", "name": "Bonhomme gonflable", "helps": "siphons passing cars' gas into your tank; tier 2 drops them on your lot", "price": 9000, "tiers": 2, "fx": {"tube_man": 1}},
+	{"id": "nest_egg", "name": "Bas de laine", "helps": "start each run with $40 more", "price": 3000, "tiers": 3, "fx": {"start_cash": 40.0}},
 ]
 
 ## The day the story ends: Dad drives in.

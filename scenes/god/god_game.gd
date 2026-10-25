@@ -6,7 +6,7 @@ extends Node
 ##   TITLE → (first time: INTRO → NAMING) → DAY → REPORT → NIGHT (shop, truck → TRUCK → CARDS) → DAY ...
 ##   → bankrupt: RUN_OVER → GARAGE → new run   ·   day 50: REPORT → ENDING → RUN_OVER → GARAGE
 ## Designer keys: F1 opens the dev configurator (DevPanel), F3 ends the day, F4 gives $100, F6 gives
-## 1000 XP.
+## 15000 XP.
 
 const DAY_SCENE := preload("res://scenes/god/day/god_pump.tscn")
 
@@ -14,6 +14,8 @@ const DAY_SCENE := preload("res://scenes/god/day/god_pump.tscn")
 @export var sound_on := true
 ## Tests start straight into a run without the title.
 @export var autostart := false
+## Seconds the stacks take to slide into the register before the report opens (tests and the demo: 0).
+@export var cash_in_time := 1.3
 
 var meta: MetaState
 var run: RunState
@@ -39,6 +41,7 @@ func _ready() -> void:
 	day = DAY_SCENE.instantiate()
 	day.managed = true
 	day.sound_on = sound_on
+	day.cash_in_time = cash_in_time
 	add_child(day)
 	day.day_over.connect(_on_day_over)
 	day.round_over = true  # closed until a run opens
@@ -390,5 +393,5 @@ func _unhandled_input(e: InputEvent) -> void:
 				run.cash += 100.0
 				night.refresh()
 		KEY_F6:
-			meta.xp += 1000
+			meta.xp += 15000
 			meta.save()

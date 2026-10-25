@@ -27,7 +27,7 @@ func build(g: GodGame) -> void:
 	_row("Day", func() -> String: return "%d / %d" % [game.run.day, GodData.FINAL_DAY] if game.run else "-",
 		[["-1", func() -> void: _day(-1)], ["+1", func() -> void: _day(1)], ["+10", func() -> void: _day(10)]])
 	_row("XP (garage)", func() -> String: return str(game.meta.xp),
-		[["+1000", func() -> void: _xp(1000)], ["+10000", func() -> void: _xp(10000)]])
+		[["+15000", func() -> void: _xp(15000)], ["+150000", func() -> void: _xp(150000)]])
 	_row("Cars filled (unlocks)", func() -> String:
 		var n := game.meta.next_unlock()
 		return "%d%s" % [game.meta.total_cars, "  (next: %s at %d)" % [n.name, n.need] if not n.is_empty() else "  (all)"],

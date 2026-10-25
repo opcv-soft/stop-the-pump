@@ -4,8 +4,8 @@
 > fuel-truck bill, cards, car types and Papa's Garage, is **docs/GOD_PUMP_PLAN.md**. Sections below that
 > describe the key-per-pump game are history.
 
-> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.44.0: round 9, awaiting playtest)
-> **Last updated:** 2026-10-20
+> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.45.0: round 10 batch A, awaiting playtest; plan in docs/ROUND_10_PLAN.md)
+> **Last updated:** 2026-10-25
 > This file is the Committee's memory. Read it before every Godot or Blender action. Update it after every approved decision.
 
 ## 1. Pitch
@@ -225,3 +225,10 @@ Failure is cheap early: a miss costs a little money and teaches the rule.
 | 2026-10-21 | Wheel clamps, two tiers as two-parent upgrades between CAMION and PISTOLET (not SERVICE: not adjacent on the tree): Sabot de Denver clamps thieves (the stolen gas comes back), Sabot de Denver II clamps customers about to give up (they stop and wait longer) | Playtest 8 | Round 9 (#37) |
 | 2026-10-21 | French and English: every on-screen string goes through locale/strings.csv (English keys); a switch on the title screen; French by default on a French computer; saved. The regulars' quips stay in Québécois in both | Playtest 8 | Round 9 (#37) |
 | 2026-10-21 | Windows: an NSIS installer (Program Files, Start-menu and desktop shortcuts, uninstaller), unsigned, published as a GitHub Release | Playtest 8 | Round 9 (#37) |
+| 2026-10-25 | The nozzle ring: a ring on the ground shows the nozzle's reach. No car inside: it spills; one car: it fills; with Double jet, two cars inside fill at once, each at full speed. Every car leaving the stream is graded and paid (the second Double-jet car never was) | Playtest 9: "the upgrade that fills two cars at once does not work"; a visible reach | Round 10 A (#37) |
+| 2026-10-25 | Poker chips instead of bills and coins: $1 blue, $5 green, $20 red, $50 purple. They pop out of the car and fly straight into four stacks in a tray bottom right; nothing rests on the lot. At closing the stacks slide into the cash register, then the report opens | Playtest 9: cars were drawn under the money | Round 10 A (#37) |
+| 2026-10-25 | The day bar: a progress bar across the top, opening hour to closing hour | Playtest 9 | Round 10 A (#37) |
+| 2026-10-25 | The regulars no longer speak; they keep to the store's side (walk, hop, cheer, applaud). Visitors still drive in and chat, parked in the lot's corner by the store, with small faded wordless bubbles; their lines go to the scrapbook | Playtest 9: "they prevent focusing on the game"; designer: visitors stay, in the background | Round 10 A (#37) |
+| 2026-10-25 | Drones burn $0.30 of gas a second from the tank while they fly or pour | Playtest 9 | Round 10 A (#37) |
+| 2026-10-25 | XP per day = litres put in cars × combo points (the combo multipliers paid on hand-poured Good-or-better fills) × accuracy; the report shows the sum. Garage prices ×15 (campaign median first day 50: 3.0 h) | Playtest 9: "meta-progress by playing more or playing better" | Round 10 A (#37) |
+| 2026-10-25 | Market share is per run: 50/50 with Gaétan at the start, win at 100%, lose broke or at 0%; XP and the Garage carry over. The cartoon art starts with a look test | Designer, 2026-10-25 | Round 10 B, C (#37) |

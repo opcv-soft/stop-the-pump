@@ -33,6 +33,7 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(META))
 	g = load("res://scenes/god/god_game.tscn").instantiate()
 	g.meta_path = META
+	g.cash_in_time = 0.0  # keeps the timeline's cuts where they were
 	root.add_child(g)
 
 

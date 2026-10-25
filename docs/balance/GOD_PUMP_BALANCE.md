@@ -1,4 +1,4 @@
-# GOD PUMP balance (2026-10-21, #37)
+# GOD PUMP balance (2026-10-25, #37)
 
 `tools/sim/god_bot.gd` plays the real game headless: GodPump's own simulation and RunState's rules.
 The bot chases moving cars at 900 px/s and reacts in 0.25 s. It lets go aiming for an even split of
@@ -30,6 +30,18 @@ Tried along the way (price rise per delivery, fresh save):
 - **26%:** 0 of 30, median day 34.
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
+
+## Round 10 retune: the new XP (2026-10-25)
+XP is now **litres put in cars × combo points × accuracy** per day (playtest 9). Same bot, same 10 fresh runs:
+- Before: 648 XP a run, **1,152 XP per hour**.
+- After: 10,664 XP a run, **18,100 XP per hour** (×15.7). Days survived barely moved (drones burning $0.30/s of gas costs little).
+- So every Garage price is **×15** (nozzles, bling, perk tiers). The dev keys follow: F6 and the F1 panel give 15,000 XP.
+
+    campaign: 12 players from a fresh save
+    first day 50: 12 of 12 players; median 3.0 h (earliest 2.2 h, latest 4.3 h)
+
+Watch: litres and combo points both grow with a day's size, so XP grows with its square. Long late days
+pay far more than short early ones; the campaign still lands on target, but the spread widened.
 
 ## Round 8 retune (2026-10-21)
 Round 8 added three things that change the numbers:

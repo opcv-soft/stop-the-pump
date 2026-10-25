@@ -139,7 +139,7 @@ func test_the_shop_sells_nodes_in_order() -> void:
 func test_garage_purchases_apply_and_are_saved() -> void:
 	var m := MetaState.new()
 	m.path = SAVE
-	m.xp = 5000
+	m.xp = 75000  # round 10: Garage prices ×15
 	assert_true(m.buy_nozzle("laser"))
 	assert_true(m.buy_bling("receipt"))
 	assert_true(m.buy_perk("nest_egg"))

@@ -67,17 +67,6 @@ func test_without_auto_aim_the_same_pour_misses() -> void:
 	assert_almost_eq(car.amount, 0.0, 0.001)
 
 
-func test_twin_stream_fills_two_cars() -> void:
-	_open({"twin_stream": 1})
-	var a := _parked("sedan", Vector2(500, 380))
-	var b := _parked("sedan", Vector2(580, 380))
-	game.aim(a.position)
-	game.set_pouring(true)
-	game.step(1.0)
-	assert_gt(a.amount, 3.0)
-	assert_gt(b.amount, 3.0)
-
-
 func test_a_drone_fills_and_settles_a_car() -> void:
 	_open({"drones": 1})
 	var car := _parked()
@@ -194,6 +183,9 @@ func test_the_day_report_and_the_signal() -> void:
 	car.amount = 20.0
 	game._settle(car)
 	game.end_round()
+	assert_signal_not_emitted(game, "day_over", "the stacks go into the register first")
+	for i in 40:
+		game.step(0.05)
 	assert_signal_emitted(game, "day_over")
 	var r: Dictionary = game.day_report()
 	for key in ["loot", "tank_left", "xp", "cars", "tiers", "accuracy", "best_combo"]:
@@ -423,3 +415,129 @@ func test_an_impatient_customer_gets_clamped_instead_of_leaving() -> void:
 	assert_true(car.clamped)
 	assert_true(car.accepts_fuel(), "still on the lot")
 	assert_eq(game.day_stats.tiers[ScoreTiers.UNSERVED], 0)
+
+
+# --- Round 10, batch A (playtest 9: focus) -------------------------------------------------------
+
+func test_the_ring_spills_with_no_car_and_fills_one_car() -> void:
+	_open()
+	var car := _parked("sedan", Vector2(500, 380))
+	game.aim(Vector2(800, 450))
+	game.set_pouring(true)
+	game.step(0.5)
+	assert_true(game.cars_in_ring().is_empty())
+	assert_gt(game.round_wasted, 1.0, "no car in the ring: it spills")
+	game.aim(car.position + Vector2(game.ring_radius() * 0.8, 0))
+	game.step(0.5)
+	assert_eq(game.cars_in_ring(), [car])
+	assert_gt(car.amount, 1.5, "a car inside the ring fills, even off-centre")
+
+
+func test_double_jet_fills_both_cars_in_the_ring_at_full_speed_and_pays_both() -> void:
+	_open({"twin_stream": 1})
+	var a := _parked("sedan", Vector2(500, 380), 30.0)
+	var b := _parked("sedan", Vector2(500 + game.ring_radius() * 0.9, 380), 30.0)
+	game.aim(Vector2(500 + game.ring_radius() * 0.45, 380))
+	game.set_pouring(true)
+	game.step(1.0)
+	assert_almost_eq(a.amount, game.flow_rate, 0.01)
+	assert_almost_eq(b.amount, game.flow_rate, 0.01)
+	a.amount = 29.9
+	b.amount = 29.9
+	game.set_pouring(false)
+	assert_ne(a.tier, "", "the first car is graded")
+	assert_ne(b.tier, "", "the second car is graded too (the playtest-9 bug)")
+	assert_gt(b.paid, 0.0)
+
+
+func test_without_double_jet_only_the_nearest_car_in_the_ring_fills() -> void:
+	_open()
+	var a := _parked("sedan", Vector2(500, 380), 30.0)
+	var b := _parked("sedan", Vector2(500 + game.ring_radius() * 0.9, 380), 30.0)
+	game.aim(Vector2(500 + game.ring_radius() * 0.3, 380))
+	game.set_pouring(true)
+	game.step(1.0)
+	assert_gt(a.amount, 3.0)
+	assert_almost_eq(b.amount, 0.0, 0.001)
+
+
+func test_coins_are_poker_chips_by_value() -> void:
+	assert_eq(GodPump.chips_for(27.0), [20, 5, 1, 1])
+	assert_eq(GodPump.chips_for(76.4), [50, 20, 5, 1])
+	assert_eq(GodPump.chips_for(0.4), [])
+
+
+func test_paid_coins_fly_to_the_stacks_and_never_rest_on_the_lot() -> void:
+	_open()
+	var car := _parked("sedan", Vector2(500, 380), 25.0)
+	car.amount = 25.0
+	game._settle(car)
+	assert_false(game.money.is_empty())
+	for i in 40:
+		game.step(0.05)
+		for m in game.money:
+			assert_ne(m.state, "rest")
+	assert_true(game.money.is_empty(), "all in the tray after 2 s")
+	var total := 0
+	for v in game.stacks:
+		total += v * game.stacks[v]
+	assert_eq(total, int(round(car.paid)))
+
+
+func test_the_day_bar_runs_from_opening_to_closing() -> void:
+	_open({"close_hour": 19.0})
+	assert_almost_eq(game.day_progress(), 0.0, 0.001)
+	game.round_t = game.round_seconds * 0.25
+	assert_almost_eq(game.day_progress(), 0.25, 0.001)
+	assert_almost_eq(game.hour_now(), 10.0, 0.01)
+
+
+func test_the_regulars_never_speak_but_still_cheer() -> void:
+	_open()
+	var car := _parked()
+	car.amount = 20.0
+	game._settle(car)
+	assert_eq(game.quip_text, "", "no speech bubbles")
+	assert_true(game.regulars.all(func(r: Dictionary) -> bool: return r.cheer > 0.0))
+
+
+func test_the_regulars_keep_to_the_store_side() -> void:
+	for p in RegularsCrew.WATCH:
+		assert_lt(p.x, GodPump.LOT.position.x + 40.0, "off the lot's play area")
+	assert_lt(GodPump.VISITOR_SPOT.x, GodPump.LOT.position.x + 60.0, "visitors park in the corner by the store")
+
+
+func test_a_flying_drone_burns_gas() -> void:
+	_open({"drones": 1})
+	var car := _parked("sedan", Vector2(1000, 560))
+	game.drones[0].pos = Vector2(200, 200)
+	var before := game.tank
+	game.step(1.0)
+	assert_eq(game.drones[0].state, "flying")
+	assert_almost_eq(before - game.tank, GodPump.DRONE_BURN, 0.001)
+	assert_almost_eq(game.day_report().drone_gas, GodPump.DRONE_BURN, 0.001)
+	assert_almost_eq(car.amount, 0.0, 0.001)
+
+
+func test_xp_is_litres_times_combo_points_times_accuracy() -> void:
+	assert_eq(GodPump.xp_formula(30.0, 6, 0.9), 162)
+	_open()
+	for i in 3:  # three Perfects in a row: combo paid x1, x2, x3 = 6 combo points
+		var car := _parked("sedan", Vector2(300 + i * 150, 380), 20.0)
+		car.amount = 19.6
+		game._settle(car)
+	var litres := 3 * 19.6 / game.economy.price_per_liter
+	assert_almost_eq(game.day_stats.litres, litres, 0.01)
+	assert_eq(game.day_stats.combo_points, 6)
+	assert_eq(game.day_report().xp, GodPump.xp_formula(litres, 6, game.day_accuracy()))
+
+
+func test_drone_fills_add_litres_but_no_combo_points() -> void:
+	_open()
+	var car := _parked()
+	car.amount = 19.6
+	car.by_drone = true
+	game._settle(car)
+	assert_gt(game.day_stats.litres, 0.0)
+	assert_eq(game.day_stats.combo_points, 0)
+	assert_eq(game.day_report().xp, 0)

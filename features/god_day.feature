@@ -48,7 +48,49 @@ Feature: A GOD PUMP day  (#37, docs/GOD_PUMP_PLAN.md)
   Scenario: The regulars live on the lot  (round 8)
     Given the gaz bar is open
     Then Ti-Guy, Mme Gagnon, Bertrand and Le Grand spend time on the bench
-    And get up to watch me pour from the edge of the lot, go inside for a coffee and come back out with it,
+    And get up to watch me pour from beside the store (playtest 9: off the play area), go inside for a coffee and come back out with it,
       or (Le Grand) step out for a smoke
     And two at most are away from the bench at once
     And wherever they are, they throw their arms up for a top-off and applaud a Perfect
+
+  # --- Round 10, batch A (playtest 9: focus) ---------------------------------------------------
+
+  Scenario: The nozzle ring shows the reach
+    Given the nozzle is aimed at the lot
+    Then a ring on the ground shows the area the nozzle covers
+    And with no car in the ring the gas spills
+    And with one car in the ring that car fills
+
+  Scenario: Double jet fills two cars in the ring, each at full speed
+    Given Double jet and two cars inside the ring
+    When I pour for one second
+    Then both cars get a full second of flow
+    And when I release, both cars are graded and paid
+
+  Scenario: Cars stay in front of the money
+    When a car pays
+    Then coins pop out of it and fly straight into the tray
+    And no money rests on the lot
+
+  Scenario: Coins in poker stacks
+    When a car pays $27
+    Then the tray gets one red $20, one green $5 and two blue $1 coins
+    And at closing the stacks slide into the cash register before the report opens
+
+  Scenario: The day bar
+    Then a bar across the top runs from the opening hour to the closing hour
+
+  Scenario: The regulars step aside
+    Then the regulars never speak in bubbles
+    And they keep to the store's side of the lot
+    And they still cheer a top-off and applaud a Perfect
+    And a visitor parks in the corner by the store and chats without words
+
+  Scenario: Drones burn gas
+    Given a drone nozzle
+    When it flies for a second
+    Then the tank loses the drone's gas
+
+  Scenario: XP is litres × combo points × accuracy
+    Given I put 30 L in cars with combo points 6 at 90% accuracy
+    Then the day earns 30 × 6 × 0.9 = 162 XP

@@ -98,7 +98,7 @@ Delivery: $%.0f,Delivery: $%.0f,Livraison : %.0f $
 NAME YOUR GAZ BAR,NAME YOUR GAZ BAR,NOMME TON GAZ BAR
 It goes up on the sign.,It goes up on the sign.,Ça va sur l'enseigne.
 ENTER to open,ENTER to open,ENTRÉE pour ouvrir
-DAY %d     %d h %02d,DAY %d     %d h %02d,JOUR %d     %d h %02d
+DAY %d,DAY %d,JOUR %d
 x%d COMBO,x%d COMBO,COMBO x%d
 RESUME  (ESC),RESUME  (ESC),REPRENDRE  (ÉCHAP)
 BACK TO THE TITLE,BACK TO THE TITLE,RETOUR AU MENU
@@ -277,3 +277,4 @@ The driver gets out. Sunburnt. Smells like a lake.,The driver gets out. Sunburnt
 He looks at the lot. The regulars. The jar.,He looks at the lot. The regulars. The jar.,Y regarde le terrain. Les habitués. Le pot.
 """T'es un vrai gaz bar boy.""","""T'es un vrai gaz bar boy.""",« T'es un vrai gaz bar boy. »
 Thanks for playing.,Thanks for playing.,Merci d'avoir joué.
+"%.0f L x %d combo x %d%%","%.0f L x %d combo x %d%%","%.0f L x %d combo x %d %%"

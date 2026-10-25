@@ -166,28 +166,22 @@ func test_round_end_sends_cars_away_paying_what_they_got() -> void:
 	assert_almost_eq(game.round_earned, 8.0, 0.01)
 
 
-func test_a_filled_car_drops_bills_for_the_sale_and_coins_for_the_tip() -> void:
+func test_a_filled_car_pays_in_chips_worth_its_sale_and_tip() -> void:
 	var car := _car(20.0)
 	_pour_on(car, 5.0)  # $20: topped off
 	game.set_pouring(false)
-	var bills := game.money.filter(func(m: Dictionary) -> bool: return m.kind == "bill")
-	var coins := game.money.filter(func(m: Dictionary) -> bool: return m.kind == "coin")
-	assert_gt(bills.size(), 0)
-	assert_gt(coins.size(), 0)
-	var sale := 0.0
-	for b in bills:
-		sale += b.value
-	assert_almost_eq(sale, 20.0, 0.01)
+	var worth := 0
+	for m in game.money:
+		assert_eq(m.kind, "chip")
+		worth += m.value
+	assert_eq(worth, int(round(car.paid)))
 
 
-func test_dropped_cash_lands_in_the_counter() -> void:
+func test_paid_chips_land_in_the_stacks() -> void:
 	var car := _car(20.0)
 	_pour_on(car, 5.0)
 	game.set_pouring(false)
-	for i in 60:
-		game.step(0.05)
-	assert_false(game.money.is_empty(), "still lying on the lot after 3 s")
-	for i in 60:
+	for i in 40:
 		game.step(0.05)
 	assert_true(game.money.is_empty())
 	assert_almost_eq(game.shown_cash, game.cash, 0.01)
@@ -267,7 +261,8 @@ func test_the_regulars_hang_out_and_react() -> void:
 	var car := _car(10.0)
 	car.amount = 10.0
 	game._settle(car)
-	assert_ne(game.quip_text, "", "someone has something to say about a top-off")
+	assert_eq(game.quip_text, "", "playtest 9: the regulars don't talk over the pour")
+	assert_gt(game.regulars[0].cheer, 0.0, "they cheer instead")
 
 
 func test_hd2d_view_maps_the_mouse_back_to_the_ground() -> void:

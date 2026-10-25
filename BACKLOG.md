@@ -18,7 +18,12 @@
 - [ ] `[art]` **Round 10 batch C, pass 2: the menu screens (night, report, title, garage, cards, truck) and the icons in the cartoon look**
 - [x] `[standard]` **Round 10 batch D (built): car codex, in-run unlocks by XP, bumper car, in a rush, the tanker, trio elétrico**
 - [x] `[standard]` **Round 10 batch E (built): the spill branch (a second tube man returns spills), the herding dog robot**
-- [ ] Playtest v0.47: the cartoon look in play, the four new cars and the codex, the car ladder's pace, chaining for XP, the balance sheet, the vacuum's slurp, Gaétan and the market share (does 100% feel reachable)
+- [x] Playtest v0.47 (playtest 12): report works; too easy; ladder too slow; chaining irrelevant; three upgrade layers confusing; closing and unlocks need reveals (docs/ROUND_11_PLAN.md)
+- [x] `[standard]` **Round 11A (built): full truck unless dry, drone + player fix, closing pays visibly, OUVERT/FERMÉ sign, CASH and TANK labels, the books without negatives**
+- [ ] `[innovation]` **Round 11B: Papa's Garage in the run (night tab, paid with XP), the nozzle ladder, cards as rule-changers, no meta**
+- [ ] `[tech]` **Round 11 balance: faster car ladder, harder to win**
+- [ ] `[innovation]` **Round 11C: combo juice, the chain's value on screen, a first-day tutorial**
+- [ ] `[juice]` **Round 11D: pack-opening closing and report, new-car card reveal**
 - [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)
 - [x] `[art]` **Scene view for the god pump: isometric tried, three-quarter top-down kept; dépanneur, neon, regulars, vintage pump, tip jar** (#36, v0.32.0, kept)

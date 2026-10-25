@@ -404,3 +404,13 @@ Next: %s at %d XP.,Next: %s at %d XP.,Prochaine : %s à %d XP.
 unlocked,unlocked,débloquée
 at %d XP,at %d XP,à %d XP
 Click or press ESC to close,Click or press ESC to close,Clique ou appuie sur ÉCHAP pour fermer
+CASH,CASH,CAISSE
+TODAY +$%d,TODAY +$%d,AUJOURD'HUI +%d $
+TANK,TANK,RÉSERVOIR
+REVENUE,REVENUE,PRODUITS
+Total revenue,Total revenue,Total des produits
+COSTS,COSTS,CHARGES
+Total costs,Total costs,Total des charges
+Net loss,Net loss,Perte nette
+Owed to the truck,Owed to the truck,Dû au camion
+Accumulated deficit,Accumulated deficit,Déficit accumulé

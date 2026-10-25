@@ -142,9 +142,9 @@ func delivery_cost() -> float:
 ## The truck fills the tank, or, if the cash is short, brings as much gas as the cash buys (at least
 ## MIN_DELIVERY). A delivery of half a tank or more offers cards to pick from.
 func call_truck() -> bool:
-	var cost := delivery_cost()
-	if cost <= 0.0 or cash < minf(cost, MIN_DELIVERY):
+	if not can_call_truck():
 		return false
+	var cost := delivery_cost()
 	var pay := minf(cost, cash)
 	var share := pay / cost
 	cash -= pay
@@ -163,6 +163,15 @@ func call_truck() -> bool:
 	rerolls_left = int(mods().rerolls)
 	offer = draw_cards(int(mods().cards_offered)) if share >= 0.5 else []
 	return true
+
+
+## Round 11 (playtest 12): the truck brings a full tank or nothing, except when the tank is dry: then
+## it brings what the cash buys (at least MIN_DELIVERY), so a forgotten truck never ends a run by itself.
+func can_call_truck() -> bool:
+	var cost := delivery_cost()
+	if cost <= 0.0:
+		return false
+	return cash >= cost if tank >= 1.0 else cash >= minf(cost, MIN_DELIVERY)
 
 
 ## How much the wholesale price rises with each delivery (the supplier's contract slows it, the

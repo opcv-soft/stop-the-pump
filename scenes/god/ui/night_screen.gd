@@ -51,8 +51,8 @@ func refresh() -> void:
 	if not run:
 		return
 	var cost := run.delivery_cost()
-	_truck_btn.disabled = cost <= 0.0 or run.cash < minf(cost, RunState.MIN_DELIVERY)
-	_truck_btn.text = tr("TANK FULL") if cost <= 0.0 else (tr("CALL THE TRUCK") if run.cash >= cost else tr("BUY $%.0f OF GAS") % run.cash)
+	_truck_btn.disabled = not run.can_call_truck()
+	_truck_btn.text = tr("TANK FULL") if cost <= 0.0 else (tr("CALL THE TRUCK") if run.cash >= cost or run.tank >= 1.0 else tr("BUY $%.0f OF GAS") % run.cash)
 	_open_btn.disabled = run.tank < 1.0
 	_open_btn.text = tr("OPEN  ·  DAY %d  »") % (run.day + 1)
 	queue_redraw()

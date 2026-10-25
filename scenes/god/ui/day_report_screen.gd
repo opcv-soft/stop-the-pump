@@ -135,25 +135,38 @@ func _draw_day(r: Rect2) -> void:
 	GodUI.text(self, Vector2(r.get_center().x, r.end.y - 12), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 14, Color(GodUI.CREAM, 0.7), true)
 
 
-## Today's results (the P&L, playtest 11): what came in, what the gas cost at the truck's price.
+## Today's results (the P&L, playtests 11 and 12): revenue, then costs, both as plain amounts the way an
+## accountant writes them, then the net profit (or the net loss, in brackets). Gas at the truck's price.
 func _draw_results(r: Rect2) -> void:
 	var b := run.books(report) if run else {}
 	if b.is_empty():
 		return
 	GodUI.text(self, Vector2(r.get_center().x, r.position.y + 14), tr("TODAY'S RESULTS"), 18, GodUI.GOLD, true)
-	var y := r.position.y + 46
-	for row in [[tr("Sales"), b.sales], [tr("Tips"), b.tips], [tr("Gas sold, at cost"), -b.gas_sold],
-			[tr("Spilled gas"), -b.spills], [tr("Drone gas"), -b.drones], [tr("Fines"), -b.fines]]:
+	var y := r.position.y + 42
+	GodUI.text(self, Vector2(r.position.x, y), tr("REVENUE"), 12, Color(GodUI.GOLD, 0.8))
+	y += 18
+	for row in [[tr("Sales"), b.sales], [tr("Tips"), b.tips]]:
+		_row(r, y, row[0], _money(row[1]), GodUI.CREAM, 13)
+		y += 18
+	_row(r, y, tr("Total revenue"), _money(b.sales + b.tips), GodUI.GOLD, 14)
+	y += 28
+	GodUI.text(self, Vector2(r.position.x, y), tr("COSTS"), 12, Color(GodUI.GOLD, 0.8))
+	y += 18
+	var costs := 0.0
+	for row in [[tr("Gas sold, at cost"), b.gas_sold], [tr("Spilled gas"), b.spills], [tr("Drone gas"), b.drones], [tr("Fines"), b.fines]]:
+		costs += row[1]
 		if absf(row[1]) < 0.5 and row[0] in [tr("Drone gas"), tr("Fines")]:
 			continue
-		_row(r, y, row[0], _money(row[1]), GodUI.CREAM if row[1] >= 0.0 else GodUI.RED, 14)
-		y += 22
+		_row(r, y, row[0], _money(row[1]), GodUI.CREAM, 13)
+		y += 18
+	_row(r, y, tr("Total costs"), _money(costs), GodUI.GOLD, 14)
+	y += 30
 	draw_line(Vector2(r.position.x, y - 14), Vector2(r.end.x, y - 14), Color(GodUI.GOLD_DIM, 0.8), 1.0)
-	_row(r, y + 2, tr("Net profit"), _money(b.net), GodUI.GREEN if b.net >= 0.0 else GodUI.RED, 16)
+	_row(r, y, tr("Net profit") if b.net >= 0.0 else tr("Net loss"), _money(b.net), GodUI.GREEN if b.net >= 0.0 else GodUI.RED, 16)
 
 
 ## Tonight's balance sheet, like a real business: assets = liabilities + equity (Dad's capital, plus
-## what the gaz bar has earned since).
+## what the gaz bar has earned since). Every amount is positive; a deficit shows in brackets.
 func _draw_balance(r: Rect2) -> void:
 	var b := run.books(report) if run else {}
 	if b.is_empty():
@@ -169,23 +182,25 @@ func _draw_balance(r: Rect2) -> void:
 	y += 28
 	GodUI.text(self, Vector2(r.position.x, y), tr("LIABILITIES"), 12, Color(GodUI.GOLD, 0.8))
 	y += 18
-	_row(r, y, tr("Cousin's loan"), _money(-b.loan) if b.loan > 0.0 else "$0", GodUI.RED if b.loan > 0.0 else GodUI.CREAM, 13)
-	y += 18
+	if b.loan > 0.0:
+		_row(r, y, tr("Owed to the truck"), _money(b.loan), GodUI.CREAM, 13)
+		y += 18
 	_row(r, y, tr("Total liabilities"), _money(b.liabilities), GodUI.GOLD, 14)
 	y += 28
 	GodUI.text(self, Vector2(r.position.x, y), tr("EQUITY"), 12, Color(GodUI.GOLD, 0.8))
 	y += 18
 	_row(r, y, tr("Dad's capital"), _money(b.capital), GodUI.CREAM, 13)
 	y += 18
-	_row(r, y, tr("Retained earnings"), _money(b.retained), GodUI.GREEN if b.retained >= 0.0 else GodUI.RED, 13)
+	_row(r, y, tr("Retained earnings") if b.retained >= 0.0 else tr("Accumulated deficit"), _money(b.retained), GodUI.CREAM, 13)
 	y += 18
 	_row(r, y, tr("Total equity"), _money(b.equity), GodUI.GOLD, 14)
 	y += 22
 	GodUI.text(self, Vector2(r.get_center().x, y + 4), tr("Assets = liabilities + equity"), 11, Color(GodUI.CREAM, 0.5), true)
 
 
+## An amount the accountant's way: $12, or ($12) when it's below zero.
 static func _money(v: float) -> String:
-	return ("-$%.0f" % absf(v)) if v < -0.5 else "$%.0f" % maxf(v, 0.0)
+	return "($%.0f)" % absf(v) if v < -0.5 else "$%.0f" % maxf(v, 0.0)
 
 
 ## Playtest 10: the visitor's chat, read after closing instead of over the pour, to keep the story going.

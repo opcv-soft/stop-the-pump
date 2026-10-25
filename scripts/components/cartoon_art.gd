@@ -382,12 +382,12 @@ static func old_pump(ci: CanvasItem, at: Vector2, tank_k: float, shake: float, a
 	var p := at + Vector2(shake, 0)
 	box(ci, Rect2(p + Vector2(-26, -10), Vector2(60, 100)), Color(0.91, 0.26, 0.23), 12.0, 4.0)
 	disc(ci, p + Vector2(4, -22), 18.0, Color(1.0, 0.3, 0.25) if alarm else Color(1.0, 0.95, 0.84), 4.0)
-	label(ci, p + Vector2(4, -16), "GAZ", 13, Color(0.91, 0.26, 0.23) if not alarm else Color.WHITE, true, 3)
+	label(ci, p + Vector2(4, -16), GodUI.t("TANK"), 12, Color(0.91, 0.26, 0.23) if not alarm else Color.WHITE, true, 3)
 	disc(ci, p + Vector2(4, 32), 17.0, Color(1.0, 0.98, 0.94), 3.0)
 	var a := PI * (1.0 + clampf(tank_k, 0.0, 1.0))
 	ci.draw_line(p + Vector2(4, 36), p + Vector2(4, 36) + Vector2.from_angle(a) * 12.0, RED, 3.0, true)
 	ci.draw_circle(p + Vector2(4, 36), 3.0, INK)
-	ci.draw_line(p + Vector2(-16, 70), p + Vector2(-4, 70), SHINE, 3.0)
+	label(ci, p + Vector2(4, 74), "%d%%" % int(round(clampf(tank_k, 0.0, 1.0) * 100.0)), 18, Color.WHITE, true, 4)
 
 
 ## The God Pump's nozzle: a big red grip, a steel spout ending at `tip`, the lever squeezed when pouring.

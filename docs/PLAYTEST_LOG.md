@@ -2,6 +2,14 @@
 
 One entry per hypothesis. Newest first.
 
+## 2026-10-25 — v0.47 played  (#37)
+Hypothesis: The cartoon look, chaining for XP, the car ladder and the codex make the run readable and worth replaying.
+Variable: v0.47.0
+Sessions: 1 (self: 1)
+Observed: "The report works." "The game is totally reachable. Kind of easy to win." The car ladder is too slow. Chaining "does not seem relevant anymore": wants a tutorial and a combo number that moves and pops. Three upgrade layers (Garage, tree, cards) are confusing. The register (or the old pump?) isn't obvious and doesn't show the cash; closing needs an animation (coins into the register, like opening a pack) and a big OUVERT / FERMÉ sign; a new unlock needs a reveal too. Bug: pouring on a car a drone fills can stop the drone and send the car off. Wants the cars at closing to visibly pay. No negative numbers in accounting; what is the cousin's loan? Remove small gas top-offs.
+Biggest weakness: the upgrade structure (three layers, and XP with nothing to spend on in the run, so chaining doesn't matter).
+Decision: Round 11 (docs/ROUND_11_PLAN.md): keep the cards, as rule-changers; Papa's Garage moves into the run (a night tab paid with XP); nozzles as a straight ladder; full truck only unless dry; the fixes; harder and a faster ladder; combo juice and a tutorial; pack-opening reveals.
+
 ## 2026-10-25 — v0.46 reviewed (design pass)  (#37)
 Hypothesis: Coins on the lot, MULTI-JET, Gaétan and the market share, the spill branch and a cartoon look make the run worth fighting for.
 Variable: v0.46.0 and the look test

@@ -158,7 +158,9 @@ var round_sales := 0.0
 ## Coins landed in the tray today, by value. They slide into the register at closing.
 var stacks := {1: 0, 5: 0, 20: 0, 50: 0}
 ## Closing: seconds left while the stacks go into the register; the report waits for it.
-@export var cash_in_time := 1.3
+@export var cash_in_time := 2.2
+## Round 11: the big OUVERT / FERMÉ sign over the lot: {"open": bool, "t": seconds since it swung in}.
+var banner := {}
 var _cash_in := 0.0
 ## The GAZ BAR neon flashes like a pinball machine on Good or better (seconds left, and the grade).
 var neon_flash := 0.0
@@ -511,6 +513,8 @@ func step(dt: float) -> void:
 		_cash_in -= dt
 		if _cash_in <= 0.0:
 			_finish_day()
+	if not banner.is_empty():
+		banner.t += dt
 	_step_fx(dt)
 	for id in _prop_t:
 		_prop_t[id] += dt
@@ -533,8 +537,8 @@ func _pour(dt: float) -> void:
 			targets = [near]
 	targets = targets.slice(0, streams())
 	for c in stream_cars:
-		if not c in targets:
-			_settle(c)  # the ring slid off: a car 80% full or more settles now
+		if not c in targets and not drone_on(c):
+			_settle(c)  # the ring slid off: a car 80% full or more settles now (unless a drone still pours)
 	stream_cars = targets
 	if targets.is_empty():  # no car in the ring: it all runs onto the ground
 		var spilt: float = minf(flow_rate * dt, tank) * mods.spill_mult  # gas saver: less runs onto the ground
@@ -583,8 +587,14 @@ func cars_in_ring() -> Array[ProtoCar]:
 ## Letting go: every car the nozzle was filling settles.
 func _release_streams() -> void:
 	for c in stream_cars:
-		_settle(c)
+		if not drone_on(c):  # playtest 12: a drone still pouring keeps it here; the drone settles it
+			_settle(c)
 	stream_cars.clear()
+
+
+## Is a drone pouring into this car (or hovering over it, waiting for you to let go)?
+func drone_on(car: ProtoCar) -> bool:
+	return drones.any(func(d: Dictionary) -> bool: return d.car == car and d.state in ["pouring", "waiting"])
 
 
 func car_at(p: Vector2) -> ProtoCar:
@@ -1097,6 +1107,13 @@ func end_round() -> void:
 			if partial > 0.0:
 				drop_cash(car.position, partial, 0.0)
 			car.leave(self)
+	for m in money:  # playtest 12: closing pays everything, visibly: every coin flies to the tray now
+		if m.state != "fly":
+			m.from = scr(m.pos) + Vector2(0, -m.get("z", 0.0))
+			m.state = "fly"
+			m.t = minf(m.t, 0.0)
+			m.screen = true
+	banner = {"open": false, "t": 0.0}  # the sign flips to FERMÉ
 	_cash_in = cash_in_time
 	if _cash_in <= 0.0:
 		_finish_day()
@@ -1122,6 +1139,7 @@ func cash_in_progress() -> float:
 ## Opens a day for GodGame: today's mods, the gas in the station's tank, the day number and the car
 ## types that can show up. The clock limits the day (7 h to the closing hour); the tank can end it early.
 func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> void:
+	banner = {"open": true, "t": 0.0}  # a big OUVERT swings in
 	mods = m.duplicate()
 	car_pool = pool
 	day_num = day_n
@@ -1485,6 +1503,9 @@ func _step_drones(dt: float) -> void:
 		if gap.length() > 8.0:
 			d.pos += gap.normalized() * minf(DRONE_SPEED * dt, gap.length())
 			d.state = "flying"
+			continue
+		if car in stream_cars:
+			d.state = "waiting"  # you're pouring on it: the drone hovers, and resumes when you let go
 			continue
 		d.state = "pouring"
 		var dollars := minf(DRONE_FLOW * dt * car.fill_speed, tank)
@@ -1937,7 +1958,7 @@ func _draw_pump(o: Node2D, tip: Vector2) -> void:
 			o.draw_line(prev, p, Color(0.29, 0.3, 0.36), 5.0, true)
 			prev = p
 		var alarm := int(mods.get("tank_alarm", 0)) > 0 and tank < LOW_GAS and fmod(_t, 0.5) < 0.3
-		CartoonArt.old_pump(o, PUMP_AT + Vector2(36, 44), tank / tank_size, sin(_t * 60.0) * (1.5 if pouring else 0.0), alarm)
+		CartoonArt.old_pump(o, PUMP_AT + Vector2(36, 44), tank / tank_full(), sin(_t * 60.0) * (1.5 if pouring else 0.0), alarm)
 		return
 	var tex: Texture2D = _tex.get("pump_hud")
 	var shake := Vector2(sin(_t * 60.0), 0) * (1.5 if pouring else 0.0)
@@ -1959,7 +1980,7 @@ func _draw_pump(o: Node2D, tip: Vector2) -> void:
 	if int(mods.get("tank_alarm", 0)) > 0 and tank < LOW_GAS and fmod(_t, 0.5) < 0.3:
 		o.draw_circle(at + Vector2(17, 10) * 2.0, 14.0, Color(1.0, 0.15, 0.1, 0.55))  # the globe blinks red
 	var c := at + Vector2(18, 42) * 2.0
-	var a := PI * (1.0 - clampf(tank / tank_size, 0.0, 1.0))
+	var a := PI * (1.0 - clampf(tank / tank_full(), 0.0, 1.0))
 	o.draw_line(c, c + Vector2(cos(a), -sin(a)) * 13.0, Color(0.75, 0.1, 0.08), 2.0, true)
 	o.draw_circle(c, 2.5, Color(0.1, 0.1, 0.1))
 
@@ -1992,7 +2013,7 @@ func _draw_tray(o: Node2D) -> void:
 	tray.set_border_width_all(2)
 	tray.border_color = Color(0.0, 0.0, 0.0, 0.9)
 	o.draw_style_box(tray, Rect2(TRAY_AT + Vector2(0, -10), Vector2(168, 22)))
-	var k := smoothstep(0.35, 1.0, cash_in_progress())
+	var k := smoothstep(0.6, 1.0, cash_in_progress())
 	for v in [1, 5, 20, 50]:
 		var n: int = stacks[v]
 		var base := stack_top(v) + Vector2(0, mini(n, 24) * 3)
@@ -2008,19 +2029,53 @@ func _draw_tray(o: Node2D) -> void:
 ## A chunky cash register; its display shows the bank (what's in the tray isn't in yet).
 func _draw_register(o: Node2D, _font: Font) -> void:
 	var at := REGISTER_AT
-	var body := StyleBoxFlat.new()
-	body.bg_color = Color(0.78, 0.2, 0.18)
-	body.set_corner_radius_all(6)
-	body.set_border_width_all(3)
-	body.border_color = Color(0.05, 0.04, 0.04)
-	o.draw_style_box(body, Rect2(at + Vector2(-34, -20), Vector2(68, 44)))
-	o.draw_rect(Rect2(at + Vector2(-38, 18), Vector2(76, 12)), Color(0.55, 0.12, 0.1))  # the drawer
-	o.draw_rect(Rect2(at + Vector2(-38, 18), Vector2(76, 12)), Color(0.05, 0.04, 0.04), false, 2.0)
-	var screen := Rect2(at + Vector2(-28, -40), Vector2(56, 20))
-	o.draw_rect(screen, Color(0.08, 0.12, 0.08))
-	o.draw_rect(screen, Color(0.05, 0.04, 0.04), false, 2.0)
-	var bank := shown_cash - (stacks_value() if _cash_in <= 0.0 or cash_in_progress() < 0.95 else 0)
-	GodUI.text(o, screen.get_center() + Vector2(0, 6), "$%d" % int(bank), 15, Color(0.5, 1.0, 0.5), true, 0)
+	var slide := smoothstep(0.6, 1.0, cash_in_progress())
+	var pop := 1.0 + 0.25 * sin(slide * PI) if _cash_in > 0.0 else 1.0
+	CartoonArt.box(o, Rect2(at + Vector2(-36, -20) * pop, Vector2(72, 46) * pop), Color(0.91, 0.26, 0.23), 8.0, 3.0)
+	CartoonArt.box(o, Rect2(at + Vector2(-40, 20), Vector2(80, 12)), Color(0.6, 0.14, 0.12), 4.0, 2.0)  # the drawer
+	var screen := Rect2(at + Vector2(-44, -50), Vector2(88, 26))
+	CartoonArt.box(o, screen, Color(0.08, 0.16, 0.1), 5.0, 3.0)
+	var today := stacks_value()
+	var bank := shown_cash - today * (1.0 - slide)  # the tray's coins count in as they pour in
+	CartoonArt.label(o, screen.get_center() + Vector2(0, 7), "$%d" % int(bank), 18, Color(0.45, 1.0, 0.5), true, 3)
+	CartoonArt.label(o, at + Vector2(0, 14), tr("CASH"), 15, Color.WHITE, true, 4)
+	if today > 0 and slide < 0.99:  # today's coins, still in the tray
+		CartoonArt.label(o, TRAY_AT + Vector2(84, -40 - mini(stacks.values().max(), 24) * 3), tr("TODAY +$%d") % today, 15, Color(1.0, 0.85, 0.3), true, 4)
+
+
+## What a full station tank holds today (the tank gauge's 100%).
+func tank_full() -> float:
+	return float(mods.get("tank_capacity", tank_size))
+
+
+## The big OUVERT / FERMÉ sign (playtest 12: it wasn't obvious when the day opened or closed). OUVERT swings
+## in on a chain at opening and lifts away; at closing it flips round to FERMÉ and hangs there.
+func _draw_banner(o: Node2D) -> void:
+	if banner.is_empty():
+		return
+	var t: float = banner.t
+	var open: bool = banner.open
+	var lift := 0.0
+	if open:
+		if t > 2.2:
+			return
+		lift = smoothstep(1.6, 2.2, t) * 260.0
+	var drop := (1.0 - exp(-t * 6.0)) * 200.0 - lift
+	var swing := sin(t * 7.0) * exp(-t * 2.5) * 0.3
+	var flip := 1.0
+	var showing_open := open
+	if not open:  # flips from OUVERT to FERMÉ
+		flip = absf(cos(clampf(t / 0.5, 0.0, 1.0) * PI))
+		showing_open = t < 0.25
+	var top := Vector2(WIDTH * 0.5, drop - 60)
+	o.draw_set_transform(top, swing, Vector2(maxf(flip, 0.05), 1.0))
+	o.draw_line(Vector2(-90, -200), Vector2(-90, 0), CartoonArt.INK, 4.0)
+	o.draw_line(Vector2(90, -200), Vector2(90, 0), CartoonArt.INK, 4.0)
+	var col := Color(0.24, 0.78, 0.4) if showing_open else Color(0.91, 0.26, 0.23)
+	CartoonArt.box(o, Rect2(-150, 0, 300, 96), Color(1.0, 0.97, 0.9), 18.0, 6.0)
+	CartoonArt.box(o, Rect2(-138, 10, 276, 76), col, 12.0, 4.0)
+	CartoonArt.label(o, Vector2(0, 66), "OUVERT" if showing_open else "FERMÉ", 54, Color.WHITE, true, 8)
+	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## Today's visitor chatting with the regulars (round 9), kept in the background (playtest 9): small,
@@ -2100,6 +2155,7 @@ func _draw_hud(o: Node2D, font: Font) -> void:
 		_draw_vignette(o)
 	_draw_day_bar(o)
 	_draw_tray(o)
+	_draw_banner(o)
 	_draw_quip(o, font)
 	var combo_text := tr("x%d COMBO") % combo.multiplier
 	if view == "cartoon":  # an orange pill, hotter as the chain grows

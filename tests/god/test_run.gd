@@ -347,3 +347,14 @@ func test_every_car_type_has_a_rule_for_the_codex() -> void:
 	for id in GodData.CAR_ORDER:
 		assert_ne(GodData.CAR_TYPES[id].get("helps", ""), "", id)
 		assert_true(CartoonArt.CARS.has(id), "%s has a cartoon look" % id)
+
+
+func test_the_truck_brings_a_full_tank_or_nothing_unless_dry() -> void:
+	var r := _run()
+	r.tank = r.tank_capacity() * 0.5
+	r.cash = r.delivery_cost() * 0.9
+	assert_false(r.can_call_truck(), "playtest 12: no small top-offs")
+	assert_false(r.call_truck())
+	r.cash = r.delivery_cost()
+	assert_true(r.call_truck())
+	assert_almost_eq(r.tank, r.tank_capacity(), 0.01)

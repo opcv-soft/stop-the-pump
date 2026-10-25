@@ -184,7 +184,7 @@ func test_the_day_report_and_the_signal() -> void:
 	game._settle(car)
 	game.end_round()
 	assert_signal_not_emitted(game, "day_over", "the stacks go into the register first")
-	for i in 40:
+	for i in 60:
 		game.step(0.05)
 	assert_signal_emitted(game, "day_over")
 	var r: Dictionary = game.day_report()
@@ -784,3 +784,37 @@ func test_overfilling_the_trio_eletrico_is_a_disaster_but_a_good_fill_is_loved()
 	assert_almost_eq(game.fines, 20.0, 0.001)
 	assert_almost_eq(game.day_report().rep, (GodData.REPUTATION[ScoreTiers.SUPER_PERFECT] + GodData.REPUTATION[ScoreTiers.MISS]) * 5.0, 0.001)
 	assert_lt(game.cash - cash_before, bad.paid, "the fine comes off")
+
+
+# --- Round 11A ------------------------------------------------------------------------------------
+
+func test_a_drone_waits_while_i_pour_and_the_car_stays_until_nobody_pours() -> void:
+	_open({"drones": 1})
+	var car := _parked("sedan", Vector2(500, 380), 20.0)
+	game.drones[0].pos = car.position
+	game.step(0.3)  # the drone starts pouring
+	assert_eq(game.drones[0].state, "pouring")
+	game.aim(car.position)
+	game.set_pouring(true)
+	game.step(0.2)
+	assert_eq(game.drones[0].state, "waiting", "it hovers while I pour")
+	car.amount = 17.0  # past 80%, not done
+	game.set_pouring(false)  # I let go: the drone takes over, the car stays
+	assert_eq(car.tier, "", "not sent off while a drone will keep pouring")
+	game.step(0.1)
+	assert_eq(game.drones[0].state, "pouring")
+
+
+func test_closing_sends_every_coin_to_the_tray_and_the_unserved_pay_for_what_they_got() -> void:
+	_open()
+	var paid := _parked("sedan", Vector2(400, 380), 20.0)
+	paid.amount = 20.0
+	game._settle(paid)  # its coins lie on the lot
+	var partial := _parked("sedan", Vector2(700, 380), 20.0)
+	partial.amount = 9.0  # under 80% at closing: pays for its $9
+	game.end_round()
+	assert_true(game.money.all(func(m: Dictionary) -> bool: return m.state == "fly"), "nothing waits on the lot")
+	for i in 30:
+		game.step(0.05)
+	assert_eq(game.stacks_value(), int(round(paid.paid)) + 9, "every coin made it to the tray")
+	assert_false(game.banner.open, "the sign says FERMÉ")

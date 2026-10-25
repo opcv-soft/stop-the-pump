@@ -107,3 +107,17 @@ Feature: A GOD PUMP day  (#37, docs/GOD_PUMP_PLAN.md)
   Scenario: Reputation from the day's fills
     When cars are graded
     Then the day counts reputation: Topped off +2, Perfect +1.25, Good +0.6, OK 0, Overfilled -0.75, Unserved -0.5
+
+  # --- Round 11C: make chaining matter -----------------------------------------------------------
+
+  Scenario: The chain on screen
+    When I chain Good-or-better fills
+    Then the combo pill swells and burns hotter, and the chain's sum shows under it ("1+2+3 = 6")
+    When an OK or an overfill breaks the chain
+    Then the pill shakes and the chain's value flies into today's combo total
+
+  Scenario: The first day teaches by doing
+    Given my first run
+    Then a card tells me what to do next and points at it, and moves on when I do it
+    And the day's clock is held while the tutorial runs (never more than 30 s a step)
+    And at night the last card points at THE SHOP and THE GARAGE

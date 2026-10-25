@@ -17,6 +17,8 @@ var codex: CodexScreen
 ## Round 11: the night's two tabs, THE SHOP (cash, the tree) and THE GARAGE (this run's XP).
 var garage: GarageTab
 var tab := "shop"
+## The tutorial's last step points at the tabs (round 11).
+var tutorial: Tutorial
 var _tab_btns := {}
 var _t := 0.0
 var _hover_card := -1
@@ -66,6 +68,8 @@ func show_night(the_run: RunState) -> void:
 ## Shows THE SHOP (the tree, cash) or THE GARAGE (this run's XP).
 func set_tab(id: String) -> void:
 	tab = id
+	if tutorial:
+		tutorial.event("night")
 	tree.visible = id == "shop"
 	garage.visible = id == "garage"
 	refresh()
@@ -144,6 +148,19 @@ func _draw() -> void:
 
 ## The GAS TANK panel (round 8): the station's industrial tank, its sight glass and dial showing the
 ## gas left, how many days it might last, the price per litre, and what the next delivery costs.
+	_draw_tutorial()
+
+
+
+## The tutorial's last card points at the two tabs.
+func _draw_tutorial() -> void:
+	if not tutorial or tutorial.step().get("point", "") != "tabs":
+		return
+	var box := Rect2(Vector2(560, 74), Vector2(500, 52))
+	CartoonArt.box(self, box, Color(1.0, 0.97, 0.88), 14.0, 4.0)
+	GodUI.para_in(self, GodUI.font(), box.position + Vector2(14, 22), tr(tutorial.step().text), 15, box.size.x - 28, CartoonArt.INK, 1.2)
+	var tip := Vector2(1010, 62 + sin(_t * 4.0) * 3.0)
+	CartoonArt.poly(self, PackedVector2Array([tip, tip + Vector2(-12, 14), tip + Vector2(12, 14)]), Color(1.0, 0.8, 0.25), 3.0)
 func _draw_tank() -> void:
 	var r := Rect2(16, 96, 232, 440)
 	GodUI.enamel(self, r, Color(0.12, 0.29, 0.2))  # an old-station green enamel sign

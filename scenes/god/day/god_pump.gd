@@ -159,6 +159,13 @@ var round_sales := 0.0
 var stacks := {1: 0, 5: 0, 20: 0, 50: 0}
 ## Closing: seconds left while the stacks go into the register; the report waits for it.
 @export var cash_in_time := 2.2
+## Round 11: the first day's tutorial (null once it's done), and the chain on screen: the multipliers paid
+## by the chain running now, its pop when it climbs, its break.
+var tutorial: Tutorial
+var chain: Array[int] = []
+var _combo_pop := 0.0
+var _combo_break := 0.0
+var _chain_fly := {}  # a broken chain's value flying to today's total: {"value", "t"}
 ## Round 11: the big OUVERT / FERMÉ sign over the lot: {"open": bool, "t": seconds since it swung in}.
 var banner := {}
 var _cash_in := 0.0
@@ -483,8 +490,17 @@ func step(dt: float) -> void:
 	nozzle_bling.equipped = bling
 	nozzle_bling.owned = bling_owned
 	nozzle_bling.step(dt, _nozzle)
+	if tutorial:
+		tutorial.tick(dt)
+	_combo_pop = maxf(_combo_pop - dt * 3.0, 0.0)
+	_combo_break = maxf(_combo_break - dt * 2.0, 0.0)
+	if not _chain_fly.is_empty():
+		_chain_fly.t += dt
+		if _chain_fly.t > 0.9:
+			_chain_fly = {}
 	if not round_over:
-		round_t += dt
+		if not (tutorial and tutorial.holds_clock()):  # the tutorial holds the clock: no rush
+			round_t += dt
 		if auto_traffic:
 			_next_car -= dt
 			if _next_car <= 0.0:
@@ -545,6 +561,8 @@ func _pour(dt: float) -> void:
 		tank -= spilt
 		round_poured += spilt
 		_waste(spilt, _aim)
+	if tutorial and not targets.is_empty():
+		tutorial.event("poured")
 	for car in targets:  # each car in the ring gets a full stream (Double jet: twice the gas per second)
 		var dollars := minf(flow_rate * dt * car.fill_speed, tank)
 		if car.amount >= car.target:
@@ -976,6 +994,15 @@ func _settle(car: ProtoCar) -> void:
 		paid_mult = combo.register(t)
 	_best_combo = maxi(_best_combo, combo.multiplier)
 	_count(car, t, paid_mult if combo.tiers.extends_combo(t) else 0)
+	if paid_mult > 0 and combo.tiers.extends_combo(t):  # the chain climbs
+		chain.append(paid_mult)
+		_combo_pop = 1.0
+		if tutorial and chain.size() >= 2:
+			tutorial.event("chain2")
+	elif breaks and not car.by_drone and not chain.is_empty():  # the chain breaks: its value banks into today's total
+		_break_chain()
+	if tutorial:
+		tutorial.event("settled")
 	var miss_fine: float = GodData.CAR_TYPES.get(car.type_id, {}).get("miss_fine", 0.0)
 	if t == ScoreTiers.MISS and miss_fine > 0.0:  # the trio elétrico: the samba is ruined
 		fines += miss_fine
@@ -1128,6 +1155,18 @@ func end_round() -> void:
 
 
 ## The stacks are in the register: the day is over for GodGame.
+## The chain breaks: its value flies from the pill to today's total, the pill shatters.
+func _break_chain() -> void:
+	var value := 0
+	for v in chain:
+		value += v
+	if chain.size() >= 2:
+		_chain_fly = {"value": value, "t": 0.0}
+		_combo_break = 1.0
+		_shake = maxf(_shake, 0.3)
+	chain.clear()
+
+
 func _finish_day() -> void:
 	_cash_in = 0.0
 	for v in stacks:
@@ -1185,6 +1224,8 @@ func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> v
 		_floaters.append({"text": "SOIRÉE DU HOCKEY!", "pos": Vector2(WIDTH * 0.5, 150), "life": 3.0, "color": Color(0.95, 0.3, 0.3), "size": 34})
 		say(QUIPS.hockey)
 	_best_combo = 1
+	chain.clear()
+	_chain_fly = {}
 	rival_cars = 0
 	fines = 0.0
 	stolen = 0.0
@@ -2051,6 +2092,81 @@ func _draw_register(o: Node2D, _font: Font) -> void:
 		CartoonArt.label(o, TRAY_AT + Vector2(84, -40 - mini(stacks.values().max(), 24) * 3), tr("TODAY +$%d") % today, 15, Color(1.0, 0.85, 0.3), true, 4)
 
 
+## The combo pill and the chain (round 11, playtest 12: "make the number move and pop as it increases"):
+## the pill swells with each step and burns hotter, flames lick it from x3; under it the chain's sum runs
+## ("1+2+3 = 6") with today's combo total; when the chain breaks the pill shakes red and the chain's value
+## flies into the total.
+func _draw_chain_hud(o: Node2D) -> void:
+	var hot := clampf((combo.multiplier - 1) / 4.0, 0.0, 1.0)
+	var centre := Vector2(WIDTH - 90, 30)
+	var s := 1.0 + 0.45 * _combo_pop * _combo_pop + 0.04 * hot * sin(_t * 10.0)
+	var jolt := Vector2(sin(_t * 70.0) * 6.0 * _combo_break, 0)
+	if combo.multiplier >= 3:  # flames
+		for i in 7:
+			var fx := -70.0 + i * 23.0
+			var h := (10.0 + 10.0 * hot) * (0.7 + 0.3 * sin(_t * 14.0 + i * 1.7))
+			var base := centre + Vector2(fx, -14) * s
+			o.draw_colored_polygon(PackedVector2Array([base + Vector2(-8, 0), base + Vector2(0, -h * s), base + Vector2(8, 0)]), Color(1.0, 0.75, 0.2, 0.9))
+			o.draw_colored_polygon(PackedVector2Array([base + Vector2(-4, 0), base + Vector2(0, -h * 0.6 * s), base + Vector2(4, 0)]), Color(1.0, 0.95, 0.6))
+	var fill := Color(1.0, 0.55, 0.24).lerp(Color(1.0, 0.22, 0.18), hot)
+	if _combo_break > 0.0:
+		fill = fill.lerp(Color(0.5, 0.5, 0.55), _combo_break)
+	var r := Rect2(centre + jolt - Vector2(78, 20) * s, Vector2(156, 40) * s)
+	CartoonArt.box(o, r, fill, 20.0 * s, 4.0)
+	CartoonArt.label(o, centre + jolt + Vector2(0, 8 * s), tr("x%d COMBO") % combo.multiplier, int(22 * s), Color.WHITE)
+	var today: int = day_stats.get("combo_points", 0) if not day_stats.is_empty() else 0
+	var line := ""
+	if chain.size() >= 1:
+		var steps := []
+		for v in chain.slice(maxi(0, chain.size() - 6)):
+			steps.append(str(v))
+		var sum := 0
+		for v in chain:
+			sum += v
+		line = ("…+" if chain.size() > 6 else "") + "+".join(steps) + " = %d" % sum
+	CartoonArt.label(o, Vector2(WIDTH - 90, 70), tr("CHAIN %s") % line if line != "" else tr("no chain yet"), 14, Color(1.0, 0.92, 0.6) if line != "" else Color(1, 1, 1, 0.7), true, 4)
+	CartoonArt.label(o, Vector2(WIDTH - 90, 90), tr("TODAY %d combo") % today, 13, Color.WHITE, true, 4)
+	if not _chain_fly.is_empty():
+		var k: float = _chain_fly.t / 0.9
+		var p := centre.lerp(Vector2(WIDTH - 90, 90), k) + Vector2(0, -40 * sin(k * PI))
+		CartoonArt.label(o, p, "+%d" % _chain_fly.value, int(30 - 10 * k), Color(1.0, 0.85, 0.3))
+
+
+## The tutorial's card (round 11): what to do now, and an arrow at what it's about.
+func _draw_tutorial(o: Node2D) -> void:
+	if not tutorial or tutorial.step().is_empty() or tutorial.step().point == "tabs":
+		return
+	var st: Dictionary = tutorial.step()
+	var text := tr(st.text)
+	var w := 560.0
+	var box := Rect2(Vector2(WIDTH * 0.5 - w * 0.5, 96), Vector2(w, 64))
+	var bob := sin(_t * 3.0) * 2.0
+	CartoonArt.box(o, box.grow(2) , Color(1.0, 0.97, 0.88), 14.0, 4.0)
+	GodUI.para_in(o, GodUI.font(), box.position + Vector2(16, 26 + bob * 0), text, 16, w - 32, CartoonArt.INK, 1.25)
+	GodUI.text(o, box.position + Vector2(w - 70, 14), "%d / %d" % [tutorial.index + 1, Tutorial.STEPS.size()], 11, Color(CartoonArt.INK, 0.5))
+	var target := Vector2.ZERO
+	match st.point:
+		"ring":
+			target = scr(_aim) + Vector2(0, -30)
+		"gauge":
+			var c: ProtoCar = stream_cars[0] if not stream_cars.is_empty() else nearest_customer(_aim, 2000.0)
+			target = car_top(c) + Vector2(0, -60) if c else Vector2.ZERO
+		"pill":
+			target = Vector2(WIDTH - 170, 40)
+		"road":
+			target = scr(Vector2(700, ROAD_Y))
+		"bar":
+			target = Vector2(560, 36)
+	if target != Vector2.ZERO:  # a bouncing arrow from the card toward it
+		var from := box.get_center() + (target - box.get_center()).normalized() * 40.0
+		from = Vector2(clampf(target.x, box.position.x + 20, box.end.x - 20), box.end.y if target.y > box.end.y else box.position.y)
+		var dir := (target - from).normalized()
+		var tip := target - dir * (14.0 + bob * 3.0)
+		o.draw_line(from, tip, CartoonArt.INK, 9.0, true)
+		o.draw_line(from, tip, Color(1.0, 0.8, 0.25), 5.0, true)
+		CartoonArt.poly(o, PackedVector2Array([tip + dir * 16.0, tip + dir.orthogonal() * 11.0, tip - dir.orthogonal() * 11.0]), Color(1.0, 0.8, 0.25), 3.0)
+
+
 ## What a full station tank holds today (the tank gauge's 100%).
 func tank_full() -> float:
 	return float(mods.get("tank_capacity", tank_size))
@@ -2166,14 +2282,13 @@ func _draw_hud(o: Node2D, font: Font) -> void:
 	_draw_banner(o)
 	_draw_quip(o, font)
 	var combo_text := tr("x%d COMBO") % combo.multiplier
-	if view == "cartoon":  # an orange pill, hotter as the chain grows
-		var hot := clampf((combo.multiplier - 1) / 4.0, 0.0, 1.0)
-		CartoonArt.box(o, Rect2(WIDTH - 168, 10, 156, 40), Color(1.0, 0.55, 0.24).lerp(Color(1.0, 0.25, 0.2), hot), 20.0, 4.0)
-		CartoonArt.label(o, Vector2(WIDTH - 90, 38), combo_text, 22, Color.WHITE)
+	if view == "cartoon":
+		_draw_chain_hud(o)
+		_draw_tutorial(o)
 	else:
 		o.draw_string(font, Vector2(WIDTH - 150, 30), combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 1, 1, 0.9))
 	if round_wasted > 0.05:
-		o.draw_string(font, Vector2(WIDTH - 150, 56), "wasted $%.2f" % round_wasted, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(GAS, 0.9))
+		o.draw_string(font, Vector2(WIDTH - 150, 116 if view == "cartoon" else 56), "wasted $%.2f" % round_wasted, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(GAS, 0.9))
 	if round_over and not managed:
 		o.draw_rect(Rect2(0, 0, WIDTH, HEIGHT), Color(0, 0, 0, 0.55))
 		var lines := ["FERMÉ   ROUND %d" % round_num, "",

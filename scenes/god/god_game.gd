@@ -105,6 +105,12 @@ func show_title() -> void:
 func new_run() -> void:
 	run = RunState.new(meta)
 	run.rng.randomize()
+	day.tutorial = null
+	if not meta.tutorial_done and not autostart:  # round 11: the first run teaches by doing
+		day.tutorial = Tutorial.new()
+		day.tutorial.finished.connect(func() -> void:
+			meta.tutorial_done = true
+			meta.save())
 	if not meta.intro_seen and not autostart:
 		_play_cinematic(Cinematic.INTRO, "naming")
 		return
@@ -187,6 +193,7 @@ func _show_night() -> void:
 	state = "night"
 	_hide_all()
 	_hud(false)
+	night.tutorial = day.tutorial
 	night.show_night(run)
 
 
@@ -215,6 +222,8 @@ func _after_truck() -> void:
 func open_next_day() -> void:
 	if run.tank < 1.0:
 		return
+	if day.tutorial:
+		day.tutorial.event("night")
 	run.next_day()
 	start_day()
 

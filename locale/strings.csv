@@ -443,3 +443,13 @@ IN HAND,IN HAND,EN MAIN
 tier %d · %d XP,tier %d · %d XP,niveau %d · %d XP
 MENU  »,MENU  »,MENU  »
 Best market share: %d%%   ·   Runs: %d,Best market share: %d%%   ·   Runs: %d,Meilleure part de marché : %d %%   ·   Parties : %d
+Hold the mouse button to pour. The ring on the ground is where the gas goes.,Hold the mouse button to pour. The ring on the ground is where the gas goes.,"Garde le bouton de la souris enfoncé pour verser. Le cercle au sol, c'est là que va l'essence."
+Let go when the needle reaches F. Past 80% the car pays and drives off.,Let go when the needle reaches F. Past 80% the car pays and drives off.,"Lâche quand l'aiguille atteint F. Passé 80 %, l'auto paie et repart."
+"A Good fill or better starts a CHAIN: x1, then x2, x3... Make two in a row.","A Good fill or better starts a CHAIN: x1, then x2, x3... Make two in a row.","Un BON plein ou mieux lance une CHAÎNE : x1, puis x2, x3... Fais-en deux de suite."
+A chain is worth the sum of its steps: 1+2+3 = 6. That's your XP. An OK or an overfill breaks it. Keep chaining!,A chain is worth the sum of its steps: 1+2+3 = 6. That's your XP. An OK or an overfill breaks it. Keep chaining!,Une chaîne vaut la somme de ses crans : 1+2+3 = 6. C'est ton XP. Un OK ou un débordement la brise. Continue d'enchaîner!
+Cars with a red E want gas. Good fills win them over from Gaétan across the road.,Cars with a red E want gas. Good fills win them over from Gaétan across the road.,"Les autos avec un E rouge veulent de l'essence. Les beaux pleins les arrachent à Gaétan, en face."
+The bar up top is your day. When it fills: FERMÉ.,The bar up top is your day. When it fills: FERMÉ.,"La barre en haut, c'est ta journée. Quand elle est pleine : FERMÉ."
+"Tonight: cash buys THE SHOP, your chains' XP buys THE GARAGE.","Tonight: cash buys THE SHOP, your chains' XP buys THE GARAGE.","Ce soir : l'argent achète à LA BOUTIQUE, l'XP de tes chaînes achète au GARAGE."
+CHAIN %s,CHAIN %s,CHAÎNE %s
+no chain yet,no chain yet,pas encore de chaîne
+TODAY %d combo,TODAY %d combo,AUJOURD'HUI %d combo

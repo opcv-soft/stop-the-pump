@@ -16,6 +16,7 @@ var best_day := 0
 var best_share := 0.0
 var ending_seen := false
 var intro_seen := false
+var tutorial_done := false  # round 11: the first day's tutorial
 var station_name := "GAZ BAR"
 var volume := 0.8  # master volume, 0..1
 var language := ""  # "en" or "fr" (round 9); "" = not chosen yet, follow the computer
@@ -49,6 +50,7 @@ static func load_from(p: String) -> MetaState:
 	m.best_share = cfg.get_value("meta", "best_share", 0.0)
 	m.ending_seen = cfg.get_value("meta", "ending_seen", false)
 	m.intro_seen = cfg.get_value("meta", "intro_seen", false)
+	m.tutorial_done = cfg.get_value("meta", "tutorial_done", false)
 	m.station_name = cfg.get_value("meta", "station_name", "GAZ BAR")
 	m.volume = cfg.get_value("meta", "volume", 0.8)
 	m.language = cfg.get_value("meta", "language", "")
@@ -75,6 +77,7 @@ func save() -> void:
 	cfg.set_value("meta", "best_share", best_share)
 	cfg.set_value("meta", "ending_seen", ending_seen)
 	cfg.set_value("meta", "intro_seen", intro_seen)
+	cfg.set_value("meta", "tutorial_done", tutorial_done)
 	cfg.set_value("meta", "station_name", station_name)
 	cfg.set_value("meta", "volume", volume)
 	cfg.set_value("meta", "language", language)

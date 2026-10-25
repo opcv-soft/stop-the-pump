@@ -47,6 +47,13 @@ func _open() -> void:
 	m.close_hour = 23.0
 	day.start_day(m, 700.0, 3, ["sedan", "pickup", "cadillac", "bumper", "rush", "tank", "trio"])
 	day.regulars[0].cheer = 1.0
+	if OS.get_cmdline_user_args().has("tutorial"):
+		day.tutorial = Tutorial.new()
+		day.tutorial.index = 2
+	day.chain.assign([1, 2, 3])
+	day._combo_pop = 0.6
+	for i in 3:
+		day.combo.register(ScoreTiers.PERFECT)
 	day.stacks = {1: 7, 5: 4, 20: 3, 50: 1}  # a morning's chips already in the tray
 
 

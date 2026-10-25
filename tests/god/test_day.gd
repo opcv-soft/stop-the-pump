@@ -818,3 +818,51 @@ func test_closing_sends_every_coin_to_the_tray_and_the_unserved_pay_for_what_the
 		game.step(0.05)
 	assert_eq(game.stacks_value(), int(round(paid.paid)) + 9, "every coin made it to the tray")
 	assert_false(game.banner.open, "the sign says FERMÉ")
+
+
+# --- Round 11C: the chain on screen, and the tutorial ----------------------------------------------
+
+func test_the_chain_runs_on_screen_and_banks_when_it_breaks() -> void:
+	_open()
+	for i in 3:
+		var car := _parked("sedan", Vector2(200 + i * 150, 380), 20.0)
+		car.amount = 19.6
+		game._settle(car)
+	assert_eq(game.chain, [1, 2, 3])
+	var ok := _parked("sedan", Vector2(800, 380), 20.0)
+	ok.amount = 17.0  # an OK breaks it
+	game._settle(ok)
+	assert_true(game.chain.is_empty())
+	assert_eq(game._chain_fly.value, 6, "its value flies to today's total")
+	assert_eq(game.day_stats.combo_points, 6)
+
+
+func test_the_tutorial_teaches_by_doing_and_holds_the_clock() -> void:
+	_open()
+	game.tutorial = Tutorial.new()
+	game.step(1.0)
+	assert_almost_eq(game.round_t, 0.0, 0.001, "the clock stands still")
+	var car := _parked("sedan", Vector2(500, 380), 20.0)
+	game.aim(car.position)
+	game.set_pouring(true)
+	game.step(0.1)
+	assert_eq(game.tutorial.index, 1, "poured: next, let go at F")
+	car.amount = 19.6
+	game.set_pouring(false)
+	assert_eq(game.tutorial.index, 2, "settled: next, make a chain")
+	var b := _parked("sedan", Vector2(700, 380), 20.0)
+	b.amount = 19.6
+	game._settle(b)
+	assert_eq(game.tutorial.index, 3, "a chain of two")
+	for i in 60:
+		game.step(0.5)
+	assert_eq(Tutorial.STEPS[game.tutorial.index].point, "tabs", "the reading steps pass; the last waits for the night")
+	assert_false(game.tutorial.holds_clock())
+
+
+func test_the_tutorial_never_holds_the_clock_for_good() -> void:
+	_open()
+	game.tutorial = Tutorial.new()
+	for i in 260:  # three give-ups (30 s each) and three reads (5.5 s each)
+		game.step(0.5)
+	assert_gt(game.round_t, 0.0)

@@ -22,7 +22,7 @@
 - [x] `[standard]` **Round 11A (built): full truck unless dry, drone + player fix, closing pays visibly, OUVERT/FERMÉ sign, CASH and TANK labels, the books without negatives**
 - [x] `[innovation]` **Round 11B (built): Papa's Garage in the run (night tab, paid with XP), the nozzle ladder, cards as rule-changers, no meta**
 - [x] `[tech]` **Round 11 balance (done): faster car ladder, harder to win**
-- [ ] `[innovation]` **Round 11C: combo juice, the chain's value on screen, a first-day tutorial**
+- [x] `[innovation]` **Round 11C (built): combo juice, the chain's value on screen, a first-day tutorial**
 - [ ] `[juice]` **Round 11D: pack-opening closing and report, new-car card reveal**
 - [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)

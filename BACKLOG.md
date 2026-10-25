@@ -12,12 +12,12 @@
 - [x] Round 9 (v0.44.0): lore visitors instead of the paper, wheel clamps, French and English, Windows installer
 - [x] Playtest v0.44 (playtest 9): bubbles steal focus, Double jet broken, cars under the money; asked for the rival station and market share, new cars, the cartoon look (docs/ROUND_10_PLAN.md)
 - [x] `[standard]` **Round 10 batch A (v0.45.0, built): the nozzle ring and a working Double jet, chips in poker stacks, the day bar, the regulars step aside, drones burn gas, XP = litres × combo × accuracy** (#37)
-- [ ] Playtest v0.45: does the ring make aiming (and Double jet) clear; do the chips and stacks read; is the pour easier to focus on with the regulars quiet; how does the new XP feel in the Garage
+- [x] Playtest v0.45 (playtest 10): ring much better, focus better, XP good; coins back on the lot, MULTI-JET branch, drone-touched cars don't tip, XP = L × (1 + avg combo) × accuracy, chat beside the report (done, not yet played)
 - [ ] `[innovation]` **Round 10 batch B: Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
 - [ ] `[art]` **Round 10 batch C: the 2D cartoon look test, then the redraw**
 - [ ] `[standard]` **Round 10 batch D: car codex, in-run unlocks by XP, bumper car, in a rush, the tank, trio elétrico**
 - [ ] `[standard]` **Round 10 batch E: the spill branch (a second tube man returns spills), the herding dog robot**
-- [ ] Still to check from playtest 9: the clamps; play once in French; install on a Windows PC
+- [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)
 - [x] `[art]` **Scene view for the god pump: isometric tried, three-quarter top-down kept; dépanneur, neon, regulars, vintage pump, tip jar** (#36, v0.32.0, kept)
 - [ ] `[art]` **HD-2D try: pixel art in a lit 3D scene (shadows, bloom, tilt-shift)** (#36, v0.33.0, awaiting playtest)
@@ -84,6 +84,7 @@
 - On-release procs
 
 ## Parked (good ideas that are out of scope until the core loop is proven)
+- Windows build and installer: on hold until the game is stable (designer, 2026-10-25). The tooling stays in tools/windows.
 - Future phase: car types (diesel, electric, environmentalist, ...) with their own rules (designer, 2026-10-20)
 - Pump as a character (Roger Rabbit style)
 - Receipts and invoices

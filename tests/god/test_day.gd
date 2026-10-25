@@ -461,27 +461,25 @@ func test_without_double_jet_only_the_nearest_car_in_the_ring_fills() -> void:
 	assert_almost_eq(b.amount, 0.0, 0.001)
 
 
-func test_coins_are_poker_chips_by_value() -> void:
-	assert_eq(GodPump.chips_for(27.0), [20, 5, 1, 1])
-	assert_eq(GodPump.chips_for(76.4), [50, 20, 5, 1])
-	assert_eq(GodPump.chips_for(0.4), [])
+func test_coins_come_in_four_values() -> void:
+	assert_eq(GodPump.coins_for(27.0), [20, 5, 1, 1])
+	assert_eq(GodPump.coins_for(76.4), [50, 20, 5, 1])
+	assert_eq(GodPump.coins_for(0.4), [])
 
 
-func test_paid_coins_fly_to_the_stacks_and_never_rest_on_the_lot() -> void:
+func test_paid_coins_lie_on_the_lot_then_fly_to_the_stacks() -> void:
 	_open()
 	var car := _parked("sedan", Vector2(500, 380), 25.0)
 	car.amount = 25.0
 	game._settle(car)
-	assert_false(game.money.is_empty())
-	for i in 40:
+	for i in 30:
 		game.step(0.05)
-		for m in game.money:
-			assert_ne(m.state, "rest")
-	assert_true(game.money.is_empty(), "all in the tray after 2 s")
-	var total := 0
-	for v in game.stacks:
-		total += v * game.stacks[v]
-	assert_eq(total, int(round(car.paid)))
+	assert_false(game.coins_on_lot().is_empty(), "playtest 10: coins stay on the lot a few seconds")
+	assert_true(game.money.all(func(m: Dictionary) -> bool: return m.kind == "coin"))
+	for i in 100:
+		game.step(0.05)
+	assert_true(game.money.is_empty(), "then they're all in the tray")
+	assert_eq(game.stacks_value(), int(round(car.paid)))
 
 
 func test_the_day_bar_runs_from_opening_to_closing() -> void:
@@ -519,8 +517,8 @@ func test_a_flying_drone_burns_gas() -> void:
 	assert_almost_eq(car.amount, 0.0, 0.001)
 
 
-func test_xp_is_litres_times_combo_points_times_accuracy() -> void:
-	assert_eq(GodPump.xp_formula(30.0, 6, 0.9), 162)
+func test_xp_is_litres_times_one_plus_average_combo_times_accuracy() -> void:
+	assert_eq(GodPump.xp_formula(30.0, 2.0, 0.9), 81)
 	_open()
 	for i in 3:  # three Perfects in a row: combo paid x1, x2, x3 = 6 combo points
 		var car := _parked("sedan", Vector2(300 + i * 150, 380), 20.0)
@@ -529,7 +527,8 @@ func test_xp_is_litres_times_combo_points_times_accuracy() -> void:
 	var litres := 3 * 19.6 / game.economy.price_per_liter
 	assert_almost_eq(game.day_stats.litres, litres, 0.01)
 	assert_eq(game.day_stats.combo_points, 6)
-	assert_eq(game.day_report().xp, GodPump.xp_formula(litres, 6, game.day_accuracy()))
+	assert_almost_eq(game.avg_combo(), 2.0, 0.001)
+	assert_eq(game.day_report().xp, GodPump.xp_formula(litres, 2.0, game.day_accuracy()))
 
 
 func test_drone_fills_add_litres_but_no_combo_points() -> void:
@@ -540,4 +539,48 @@ func test_drone_fills_add_litres_but_no_combo_points() -> void:
 	game._settle(car)
 	assert_gt(game.day_stats.litres, 0.0)
 	assert_eq(game.day_stats.combo_points, 0)
-	assert_eq(game.day_report().xp, 0)
+	assert_eq(game.day_report().xp, GodPump.xp_formula(game.day_stats.litres, 0.0, game.day_accuracy()), "volume still counts")
+
+
+func test_a_car_a_drone_touched_never_tips() -> void:
+	_open({"drones": 1, "tip_mult": 2.0})
+	var car := _parked()
+	game.drones[0].pos = car.position
+	game.step(0.2)  # the drone pours a little
+	assert_true(car.drone_touched)
+	game.drones.clear()
+	car.amount = 19.95  # then I top it off by hand
+	game._settle(car)
+	assert_ne(car.tier, "")
+	assert_almost_eq(car.tip, 0.0, 0.001, "playtest 10: no tip once a drone touched it")
+	assert_gt(car.paid, 0.0, "it still pays for its gas")
+
+
+func test_the_multi_jet_branch_opens_after_bec_large() -> void:
+	var run := RunState.new()
+	run.cash = 5000.0
+	assert_true(run.next_node("multi").is_empty(), "closed until Bec large")
+	assert_false(run.buy("multi"))
+	assert_true(run.buy("nozzle"))  # Bec large
+	assert_true(run.buy("multi"))  # Double pistolet
+	assert_eq(run.mods().twin_stream, 1)
+	run.buy("multi")
+	run.buy("multi")  # Triple pistolet
+	assert_eq(run.mods().twin_stream, 2)
+
+
+func test_double_pistolet_and_the_card_stack_to_three_cars() -> void:
+	_open({"twin_stream": 2})
+	assert_eq(game.streams(), 3)
+
+
+func test_the_visitors_chat_goes_to_the_report() -> void:
+	game.start_day(_mods({"close_hour": 23.0}), 800.0, 2, ["sedan"])
+	game.visit = Visitors.beat_for(2)
+	for i in 600:
+		game.step(0.05)
+		if game._visit_done:
+			break
+	var chat: Array = game.day_report().chat
+	assert_gt(chat.size(), 1)
+	assert_true(String(chat[0]).begins_with("Gaétan:"))

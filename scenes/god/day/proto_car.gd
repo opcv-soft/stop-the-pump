@@ -52,6 +52,8 @@ var patience := 24.0
 var drone_target := false  # a drone has claimed it
 var wants_in := false  # on the road: will pull in (customers and troublemakers)
 var by_drone := false  # filled by a drone
+## Round 10 (playtest 10): a drone poured into it, even a little. Such a car never tips.
+var drone_touched := false
 ## Round 9: a visitor (Visitors) comes to chat, not to fill up: it parks by the store and waits.
 var visitor := false
 var parked := false

@@ -166,22 +166,25 @@ func test_round_end_sends_cars_away_paying_what_they_got() -> void:
 	assert_almost_eq(game.round_earned, 8.0, 0.01)
 
 
-func test_a_filled_car_pays_in_chips_worth_its_sale_and_tip() -> void:
+func test_a_filled_car_pays_in_coins_worth_its_sale_and_tip() -> void:
 	var car := _car(20.0)
 	_pour_on(car, 5.0)  # $20: topped off
 	game.set_pouring(false)
 	var worth := 0
 	for m in game.money:
-		assert_eq(m.kind, "chip")
+		assert_eq(m.kind, "coin")
 		worth += m.value
 	assert_eq(worth, int(round(car.paid)))
 
 
-func test_paid_chips_land_in_the_stacks() -> void:
+func test_dropped_coins_land_in_the_stacks() -> void:
 	var car := _car(20.0)
 	_pour_on(car, 5.0)
 	game.set_pouring(false)
-	for i in 40:
+	for i in 60:
+		game.step(0.05)
+	assert_false(game.money.is_empty(), "still lying on the lot after 3 s")
+	for i in 60:
 		game.step(0.05)
 	assert_true(game.money.is_empty())
 	assert_almost_eq(game.shown_cash, game.cash, 0.01)

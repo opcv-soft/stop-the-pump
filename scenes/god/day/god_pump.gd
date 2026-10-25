@@ -26,9 +26,9 @@ const TUBE_EVERY := 8.0
 const TUBE_REACH := 240.0
 const CASH_AT := Vector2(70, 26)
 ## Where tips and sales land on screen: the tip jar, and the pile of bills beside it.
-## Round 10 (playtest 9): poker chips by value, stacked in a tray bottom right, off the lot.
-const CHIP_VALUES := [50, 20, 5, 1]
-const CHIP_COLORS := {1: Color(0.2, 0.5, 0.95), 5: Color(0.2, 0.75, 0.3), 20: Color(0.9, 0.18, 0.2), 50: Color(0.62, 0.3, 0.9)}
+## Round 10: coins by value (playtest 10: coins, not poker chips), stacked in a tray bottom right.
+const COIN_VALUES := [50, 20, 5, 1]
+const COIN_COLORS := {1: Color(0.25, 0.55, 1.0), 5: Color(0.25, 0.8, 0.35), 20: Color(0.95, 0.22, 0.22), 50: Color(0.68, 0.35, 0.95)}
 const TRAY_AT := Vector2(872, 632)  # the tray's left end, on the grass below the lot
 const REGISTER_AT := Vector2(1092, 600)
 const NOZZLE_RAISE := Vector2(-20, -96)  # the nozzle hovers up-left of where its stream lands
@@ -99,6 +99,8 @@ var _alarm_said := false
 var visit := {}
 var visitor_car: ProtoCar
 var chat_line := {}
+## Today's visitor chat, line by line ("Gaétan: ..."): shown beside the day report (playtest 10).
+var chat_log: Array[String] = []
 var _chat := {}
 var _visit_t := 0.0
 var _visit_done := false
@@ -143,7 +145,7 @@ var round_tips := 0.0
 ## counter during the round; the summary adds it all up.
 var tip_jar := 0.0
 var round_sales := 0.0
-## Chips landed in the tray today, by value. They slide into the register at closing.
+## Coins landed in the tray today, by value. They slide into the register at closing.
 var stacks := {1: 0, 5: 0, 20: 0, 50: 0}
 ## Closing: seconds left while the stacks go into the register; the report waits for it.
 @export var cash_in_time := 1.3
@@ -666,6 +668,7 @@ func _step_visit(dt: float) -> void:
 		return
 	var who: String = lines[_chat.i][0]
 	var text := "%s: %s" % [tr(Visitors.speaker_name(who)), tr(lines[_chat.i][1])]
+	chat_log.append(text)
 	_chat.t = CHAT_LINE
 	if Visitors.CAST.has(who):
 		chat_line = {"text": text}
@@ -839,11 +842,13 @@ func _settle(car: ProtoCar) -> void:
 		paid_mult = combo.register(t)
 	_best_combo = maxi(_best_combo, combo.multiplier)
 	_count(car, t, paid_mult if combo.tiers.extends_combo(t) else 0)
-	car.tip = tip_for(car.fill(), car.spilled) * _tip_mult(car)
+	var tips_ok := not (car.by_drone or car.drone_touched)  # playtest 10: a car a drone touched never tips
+	car.tip = tip_for(car.fill(), car.spilled) * _tip_mult(car) if tips_ok else 0.0
 	if t in [ScoreTiers.SUPER_PERFECT, ScoreTiers.PERFECT]:
-		car.tip += mods.perfect_bonus + mods.applause_bonus
+		if tips_ok:
+			car.tip += mods.perfect_bonus + mods.applause_bonus
 		applause += 1
-	if mods.loto_chance > 0.0 and rng.randf() < mods.loto_chance * (1.0 + mods.luck / 100.0):
+	if tips_ok and mods.loto_chance > 0.0 and rng.randf() < mods.loto_chance * (1.0 + mods.luck / 100.0):
 		car.tip += 20.0
 		_floaters.append({"text": "LOTO! +$20", "pos": scr(car.position) + Vector2(0, -110), "life": 1.6, "color": Color(1, 0.9, 0.3), "size": 22})
 	var sale: float = minf(car.amount, car.target) * car.pay_share * mods.get("sale_mult", 1.0) + mods.per_car_bonus
@@ -901,13 +906,20 @@ func _count(car: ProtoCar, t: String, combo_paid := 0) -> void:
 	day_stats.accuracy_sum += car.accuracy()
 	day_stats.litres += minf(car.amount, car.target) / economy.price_per_liter
 	day_stats.combo_points += combo_paid
-	day_stats.xp = xp_formula(day_stats.litres, day_stats.combo_points, day_accuracy())
+	day_stats.xp = xp_formula(day_stats.litres, avg_combo(), day_accuracy())
 
 
-## Round 10 (playtest 9): a day's XP is the litres put in cars × the combo points × the accuracy, so you
-## progress by playing more or by playing better.
-static func xp_formula(litres: float, combo_points: int, accuracy: float) -> int:
-	return int(round(litres * combo_points * accuracy))
+## The day's average combo: the combo points over the cars fueled (0 when none had a hand-poured
+## Good-or-better fill).
+func avg_combo() -> float:
+	return float(day_stats.combo_points) / day_stats.cars if not day_stats.is_empty() and day_stats.cars > 0 else 0.0
+
+
+## Round 10: a day's XP = litres put in cars × (1 + average combo) × accuracy (playtest 10). Playing more
+## (litres) and playing better (combo, accuracy) both pay, and it grows in step with the day's size
+## (playtest 9's litres × combo points grew with its square).
+static func xp_formula(litres: float, combo: float, accuracy: float) -> int:
+	return int(round(litres * (1.0 + combo) * accuracy))
 
 
 func day_accuracy() -> float:
@@ -1002,6 +1014,7 @@ func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> v
 	_alarm_said = false
 	visitor_car = null
 	chat_line = {}
+	chat_log.clear()
 	_chat = {}
 	_visit_t = 0.0
 	_visit_done = false
@@ -1041,7 +1054,8 @@ func day_report() -> Dictionary:
 		"accuracy": day_accuracy(), "best_combo": _best_combo, "wasted": round_wasted, "fines": fines,
 		"stolen": stolen, "out_of_gas": tank <= 0.0001, "hockey": hockey_night,
 		"tube_gas": tube_gas, "tube_grabs": tube_grabs, "litres": day_stats.litres,
-		"combo_points": day_stats.combo_points, "drone_gas": drone_gas}
+		"combo_points": day_stats.combo_points, "avg_combo": avg_combo(), "drone_gas": drone_gas,
+		"chat": chat_log.duplicate()}
 
 
 ## A car type for a new car, weighted; troublemakers ramp in over the first days.
@@ -1133,33 +1147,34 @@ func _burst(car: ProtoCar, t: String) -> void:
 	_play("pop")
 
 
-const CHIP_POP := 0.35  # a chip hops out of the car...
-const MONEY_FLY := 0.55  # ...then flies straight to its stack: nothing rests on the lot (playtest 9)
+const MONEY_REST := 3.45  # coins lie on the lot a while before they're collected (god-pump playtest 5, back in playtest 10)
+const MONEY_FLY := 0.55
 
 
-## The chips for an amount, biggest first: $27 is a red $20, a green $5 and two blue $1.
-static func chips_for(dollars: float) -> Array:
+## The coins for an amount, biggest first: $27 is a red $20, a green $5 and two blue $1.
+static func coins_for(dollars: float) -> Array:
 	var left := int(round(dollars))
 	var out := []
-	for v in CHIP_VALUES:
+	for v in COIN_VALUES:
 		while left >= v:
 			out.append(v)
 			left -= v
 	return out
 
 
-## The car pays: its sale and tip hop out as chips and fly to the tray. (`tip_coins` is kept for callers.)
+## The car pays: its sale and tip spill out as coins that bounce, lie on the lot (under the cars) a few
+## seconds, then fly to the tray. (`tip_coins` is kept for callers.)
 func drop_cash(from: Vector2, sale: float, tip: float, _tip_coins := 4) -> void:
-	var chips := chips_for(sale + tip)
-	var at := scr(from) + Vector2(0, -24)
-	for i in chips.size():
-		money.append({"kind": "chip", "value": chips[i], "pos": at, "from": at, "state": "pop", "t": -i * 0.05,
-			"vel": Vector2(rng.randf_range(-70, 70), rng.randf_range(-260, -180)), "rot": rng.randf() * TAU})
+	var coins := coins_for(sale + tip)
+	for i in coins.size():
+		money.append({"kind": "coin", "value": coins[i], "pos": from, "z": 8.0, "state": "drop", "t": -i * 0.03,
+			"vel": Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(90, 200), "vz": rng.randf_range(220, 320),
+			"rot": rng.randf() * TAU, "from": from})
 
 
 ## Where the top of a stack is in the tray now.
 func stack_top(v: int) -> Vector2:
-	var i := CHIP_VALUES.size() - 1 - CHIP_VALUES.find(v)  # $1 at the left, $50 at the right
+	var i := COIN_VALUES.size() - 1 - COIN_VALUES.find(v)  # $1 at the left, $50 at the right
 	return TRAY_AT + Vector2(22 + i * 40, -6 - mini(stacks[v], 24) * 3)
 
 
@@ -1168,21 +1183,34 @@ func _step_money(dt: float) -> void:
 		m.t += dt
 		if m.t < 0.0:
 			continue
-		m.rot += dt * 9.0
 		match m.state:
-			"pop":
-				m.vel.y += 900.0 * dt
+			"drop":
 				m.pos += m.vel * dt
-				if m.t >= CHIP_POP:
+				m.vel *= 1.0 - 1.6 * dt
+				m.vz -= 900.0 * dt
+				m.z += m.vz * dt
+				m.rot += dt * 15.0
+				if m.z <= 0.0:
+					m.z = 0.0
+					if m.vz < -80.0:
+						m.vz = -m.vz * 0.45  # coins bounce
+						_play("counter_%d" % (rng.randi() % 3 + 1))
+					else:
+						m.state = "rest"
+						m.t = 0.0
+			"rest":
+				if m.t >= MONEY_REST:
 					m.state = "fly"
 					m.t = 0.0
-					m.from = m.pos
+					m.from = scr(m.pos)  # from here on it travels on the screen, over everything
+					m.screen = true
 			"fly":
 				var k: float = clampf(m.t / MONEY_FLY, 0.0, 1.0)
 				var j := k * k  # pulled in, faster and faster
 				var to := stack_top(m.value)
 				var mid: Vector2 = (m.from + to) * 0.5 + Vector2(0, -90)
 				m.pos = m.from.lerp(mid, j).lerp(mid.lerp(to, j), j)
+				m.rot += dt * 9.0
 				if k >= 1.0:
 					stacks[m.value] += 1
 					shown_cash += m.value
@@ -1192,7 +1220,12 @@ func _step_money(dt: float) -> void:
 		shown_cash = cash
 
 
-## What the chips in the tray are worth.
+## The coins still on the ground (falling, bouncing or lying there): the views draw them under the cars.
+func coins_on_lot() -> Array:
+	return money.filter(func(m: Dictionary) -> bool: return m.state != "fly" and m.t >= 0.0)
+
+
+## What the coins in the tray are worth.
 func stacks_value() -> int:
 	var total := 0
 	for v in stacks:
@@ -1316,6 +1349,7 @@ func _step_drones(dt: float) -> void:
 		tank -= dollars
 		round_poured += dollars
 		car.receive(dollars)
+		car.drone_touched = true
 		if car.fill() >= d.goal or car.amount >= car.target:
 			car.by_drone = true
 			_settle(car)
@@ -1407,6 +1441,9 @@ func _draw() -> void:
 		draw_circle(Vector2(-p.r * 0.15, -p.r * 0.2), p.r * 0.7, Color(GAS, 0.8 * a))
 		draw_circle(Vector2(-p.r * 0.35, -p.r * 0.35), p.r * 0.22, Color(1, 1, 0.85, 0.7 * a))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for m in coins_on_lot():  # drawn before the cars (child nodes), so the cars stay in front
+		draw_circle(m.pos + Vector2(0, 3), 7.0, Color(0, 0, 0, 0.25))
+		draw_coin(self, m.pos + Vector2(0, -m.z), m.value, absf(cos(m.rot)), 8.0)
 
 
 ## Tiles a 32 px texture over `r` at 2x.
@@ -1591,33 +1628,30 @@ func _draw_pump(o: Node2D, tip: Vector2) -> void:
 	o.draw_circle(c, 2.5, Color(0.1, 0.1, 0.1))
 
 
-## One poker chip seen from above, `squash` for its spin. $1 blue, $5 green, $20 red, $50 purple.
-func _draw_chip(o: Node2D, at: Vector2, v: int, squash := 1.0, r := 12.0) -> void:
-	var col: Color = CHIP_COLORS[v]
+## One coin seen from above, `squash` for its spin: a coloured disc with a bright rim and a shine.
+## $1 blue, $5 green, $20 red, $50 purple. Static so the pixel view can draw them too.
+static func draw_coin(o: CanvasItem, at: Vector2, v: int, squash := 1.0, r := 9.0, a := 1.0) -> void:
+	var col: Color = COIN_COLORS[v]
 	o.draw_set_transform(at, 0.0, Vector2(maxf(squash, 0.2), 1.0))
-	o.draw_circle(Vector2(0, 2), r, col.darkened(0.45))
-	o.draw_circle(Vector2.ZERO, r, col)
-	for i in 6:  # the white edge spots
-		var a := i / 6.0 * TAU
-		o.draw_line(Vector2.from_angle(a) * r * 0.72, Vector2.from_angle(a) * r * 0.98, Color.WHITE, r * 0.32)
-	o.draw_arc(Vector2.ZERO, r * 0.58, 0, TAU, 16, Color(1, 1, 1, 0.7), 1.2, true)
-	o.draw_circle(Vector2(-r * 0.25, -r * 0.3), r * 0.18, Color(1, 1, 1, 0.55))  # shine
+	o.draw_circle(Vector2(0, r * 0.18), r, Color(col.darkened(0.55), a))  # its edge
+	o.draw_circle(Vector2.ZERO, r, Color(col.lightened(0.35), a))  # the rim
+	o.draw_circle(Vector2.ZERO, r * 0.78, Color(col, a))
+	o.draw_arc(Vector2.ZERO, r * 0.55, 0, TAU, 16, Color(col.lightened(0.45), 0.8 * a), maxf(r * 0.12, 1.0), true)
+	o.draw_circle(Vector2(-r * 0.3, -r * 0.35), r * 0.2, Color(1, 1, 1, 0.7 * a))  # shine
 	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## A chip lying flat in a stack: a coloured disc with its edge stripes, seen at an angle.
-func _draw_stacked_chip(o: Node2D, at: Vector2, v: int, a := 1.0) -> void:
-	var col: Color = CHIP_COLORS[v]
+## A coin lying flat in a stack, seen at an angle.
+func _draw_stacked_coin(o: Node2D, at: Vector2, v: int, a := 1.0) -> void:
+	var col: Color = COIN_COLORS[v]
 	o.draw_set_transform(at, 0.0, Vector2(1.0, 0.42))
-	o.draw_circle(Vector2(0, 6), 14.0, Color(col.darkened(0.4), a))
-	for i in 4:  # stripes on the side
-		o.draw_rect(Rect2(-12 + i * 7, 2, 3, 8), Color(1, 1, 1, 0.75 * a))
-	o.draw_circle(Vector2.ZERO, 14.0, Color(col, a))
-	o.draw_arc(Vector2.ZERO, 9.0, 0, TAU, 16, Color(1, 1, 1, 0.6 * a), 1.5, true)
+	o.draw_circle(Vector2(0, 6), 14.0, Color(col.darkened(0.45), a))
+	o.draw_circle(Vector2.ZERO, 14.0, Color(col.lightened(0.3), a))
+	o.draw_circle(Vector2.ZERO, 11.0, Color(col, a))
 	o.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## The chips in the air, and the tray: four poker stacks ($1, $5, $20, $50) beside the cash register.
+## The coins flying in, and the tray: four stacks ($1, $5, $20, $50) beside the cash register.
 ## At closing the stacks slide into the register.
 func _draw_tray(o: Node2D) -> void:
 	var font := GodUI.font()
@@ -1633,13 +1667,11 @@ func _draw_tray(o: Node2D) -> void:
 		var base := stack_top(v) + Vector2(0, mini(n, 24) * 3)
 		var at := base.lerp(REGISTER_AT + Vector2(-6, -6), k)
 		for i in mini(n, 24):
-			_draw_stacked_chip(o, at + Vector2(0, -i * 3), v, 1.0 - k * 0.6)
-		if n > 0 and k <= 0.0:
-			GodUI.text(o, at + Vector2(0, -mini(n, 24) * 3 - 14), "%d" % n, 13, Color.WHITE, true, 4)
+			_draw_stacked_coin(o, at + Vector2(0, -i * 3), v, 1.0 - k * 0.6)
 	_draw_register(o, font)
 	for m in money:
-		if m.t >= 0.0:
-			_draw_chip(o, m.pos, m.value, absf(cos(m.rot)))
+		if m.state == "fly":
+			draw_coin(o, m.pos, m.value, absf(cos(m.rot)), 11.0)
 
 
 ## A chunky cash register; its display shows the bank (what's in the tray isn't in yet).

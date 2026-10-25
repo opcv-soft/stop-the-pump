@@ -31,7 +31,15 @@ Tried along the way (price rise per delivery, fresh save):
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
 
-## Round 10 retune: the new XP (2026-10-25)
+## Round 10 retune, take 2 (playtest 10, 2026-10-25)
+XP is now **litres × (1 + average combo) × accuracy**: it grows in step with a day's size instead of with its square.
+- 10 fresh runs: 3,502 XP a run, **5,717 XP per hour** (×5 the round-8 1,152).
+- Garage prices are **×5** the round-8 prices (were ×15 under take 1). F6 and the F1 panel give 5,000 XP.
+
+    campaign: 12 players from a fresh save
+    first day 50: 12 of 12 players; median 3.0 h
+
+## Round 10 retune: the new XP (2026-10-25, replaced the same day)
 XP is now **litres put in cars × combo points × accuracy** per day (playtest 9). Same bot, same 10 fresh runs:
 - Before: 648 XP a run, **1,152 XP per hour**.
 - After: 10,664 XP a run, **18,100 XP per hour** (×15.7). Days survived barely moved (drones burning $0.30/s of gas costs little).

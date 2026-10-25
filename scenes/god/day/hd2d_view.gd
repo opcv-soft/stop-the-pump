@@ -27,6 +27,8 @@ var clock_hands: Array[Node3D] = []
 var regular_sprites: Array[Sprite3D] = []
 var _cars := {}  # ProtoCar -> Node3D
 var _puddles: Array[MeshInstance3D] = []
+var _coins: Array[MeshInstance3D] = []  # coins on the lot, in the scene so the cars stay in front
+var _coin_mats := {}
 var _slice_mats := {}
 var _puddle_mats := {}
 var _env: Environment
@@ -405,6 +407,7 @@ func _process(_dt: float) -> void:
 		return
 	_sync_cars()
 	_sync_puddles()
+	_sync_coins()
 	_sync_store()
 	_sync_props(_dt)
 
@@ -457,6 +460,40 @@ func _sync_cars() -> void:
 		node.position = to3(car.position, anim.lift * K)
 		node.rotation = Vector3(0, -(car.heading + anim.spin), 0)
 		node.scale = Vector3(anim.squash.x, (anim.squash.x + anim.squash.y) * 0.5, anim.squash.y)
+
+
+## The coins lying on the lot (round 10): small shiny discs on the asphalt, under the cars.
+func _sync_coins() -> void:
+	var lot := game.coins_on_lot()
+	while _coins.size() < lot.size():
+		var mi := MeshInstance3D.new()
+		var disc := CylinderMesh.new()
+		disc.top_radius = 0.24
+		disc.bottom_radius = 0.24
+		disc.height = 0.05
+		disc.radial_segments = 16
+		mi.mesh = disc
+		add_child(mi)
+		_coins.append(mi)
+	for i in _coins.size():
+		var mi := _coins[i]
+		mi.visible = i < lot.size()
+		if not mi.visible:
+			continue
+		var m: Dictionary = lot[i]
+		var v: int = m.value
+		if not _coin_mats.has(v):
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = GodPump.COIN_COLORS[v]
+			mat.metallic = 0.7
+			mat.roughness = 0.25
+			mat.emission_enabled = true
+			mat.emission = GodPump.COIN_COLORS[v]
+			mat.emission_energy_multiplier = 0.7
+			_coin_mats[v] = mat
+		mi.material_override = _coin_mats[v]
+		mi.position = to3(m.pos, 0.04 + m.z * K)
+		mi.rotation = Vector3(m.rot if m.state == "drop" else 0.0, 0.0, 0.0)
 
 
 func _sync_puddles() -> void:

@@ -59,6 +59,8 @@ func tank_capacity() -> float:
 func next_node(branch_id: String) -> Dictionary:
 	var b := GodData.branch(branch_id)
 	var level: int = owned.get(branch_id, 0)
+	if not b.is_empty() and level == 0 and b.has("root") and not owns(b.root):
+		return {}  # a branch hanging off another upgrade opens once that upgrade is owned
 	return b.nodes[level] if not b.is_empty() and level < b.nodes.size() else {}
 
 

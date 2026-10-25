@@ -2,6 +2,14 @@
 
 One entry per hypothesis. Newest first.
 
+## 2026-10-25 — Round 10 batch A, played  (#37)
+Hypothesis: A visible nozzle ring, coins in stacks off the lot, a day bar and quiet regulars bring the focus back to the pour.
+Variable: v0.45.0
+Sessions: 1 (self: 1)
+Observed: "Ring makes aiming much better." Focus is better with the regulars quiet. Earning XP is good. But: bring back the coins dropping and lying on the lot for a few seconds, as coins of different colours (not poker chips); no labels on the stacks. There's no upgrade to fill more cars at once: wants a branch. New rule: a car a drone touches never tips. XP should be litres × (1 + combo) × accuracy, or a better-balanced function. Show the visitors' chat after the day, beside the report, to keep the story going. Forget Windows until the game is stable.
+Biggest weakness: the money lost its weight (chips flying straight to a tray felt like a UI, not loot).
+Decision: KEPT the ring, the day bar, the quiet regulars and the stacks. Coins drop and rest on the lot again (drawn under the cars), in four colours. MULTI-JET branch off Bec large. Drone-touched cars don't tip. XP = litres × (1 + average combo) × accuracy (grows in step with the day, not with its square); Garage ×5. The chat moves to the day report.
+
 ## 2026-10-25 — Round 9, played  (#37)
 Hypothesis: Visitors who drive in and chat, wheel clamps, French and English, and a Windows installer make the run livelier and reach more players.
 Variable: v0.44.0

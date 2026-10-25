@@ -31,6 +31,8 @@ func _draw() -> void:
 		return
 	draw_rect(Rect2(Vector2.ZERO, GodPump.ISO_VIEWPORT), Color(0.16, 0.13, 0.10))
 	_draw_ground()
+	for m in game.coins_on_lot():  # coins on the ground go under the cars (playtest 9)
+		GodPump.draw_coin(self, _p(m.pos.x, m.pos.y, m.z * 0.5), m.value, absf(cos(m.rot)), 4.0)
 	var order := game.cars.duplicate()
 	order.sort_custom(func(a: ProtoCar, b: ProtoCar) -> bool: return a.position.y < b.position.y)
 	for car in order:  # cars on the road pass behind the store

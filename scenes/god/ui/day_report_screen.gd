@@ -47,6 +47,10 @@ func _draw() -> void:
 	if report.is_empty():
 		return
 	GodUI.dim(self, size, 0.6)
+	var chat: Array = report.get("chat", [])
+	_btn.position = Vector2(466 - (136 if not chat.is_empty() else 0), 548)
+	if not chat.is_empty():  # the report moves left to make room for what was overheard
+		draw_set_transform(Vector2(-136, 0))
 	var r := Rect2(286, 52, 580, 480)
 	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), r)
 	var day: int = report.get("day", 1)
@@ -66,7 +70,7 @@ func _draw() -> void:
 		GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(row[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x, y), row[1], 22, GodUI.GOLD)
 		y += 34.0
 	# Round 10: how the XP was earned, litres × combo points × accuracy.
-	var sum := tr("%.0f L x %d combo x %d%%") % [report.get("litres", 0.0), report.get("combo_points", 0), int(report.get("accuracy", 0.0) * 100.0)]
+	var sum := tr("%.0f L x (1 + %.1f combo) x %d%%") % [report.get("litres", 0.0), report.get("avg_combo", 0.0), int(report.get("accuracy", 0.0) * 100.0)]
 	GodUI.text(self, Vector2(820 - GodUI.font().get_string_size(sum, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, y - 14), sum, 14, Color(GodUI.CREAM, 0.7))
 	var tiers: Dictionary = report.get("tiers", {})
 	var grades := [[ScoreTiers.SUPER_PERFECT, "SUPER"], [ScoreTiers.PERFECT, "PERFECT"], [ScoreTiers.GOOD, "GOOD"],
@@ -91,3 +95,24 @@ func _draw() -> void:
 		draw_rect(bar, Color(0, 0, 0, 0.5))
 		draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(float(have) / nxt.need, 0.0, 1.0), bar.size.y)), GodUI.GOLD)
 	GodUI.text(self, Vector2(576, 500), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 16, Color(GodUI.CREAM, 0.7), true)
+	draw_set_transform(Vector2.ZERO)
+	if not chat.is_empty():
+		_draw_chat(chat)
+
+
+## Playtest 10: the visitor's chat, read after closing instead of over the pour, to keep the story going.
+func _draw_chat(chat: Array) -> void:
+	var r := Rect2(746, 52, 380, 480)
+	draw_style_box(GodUI.panel_box(GodUI.GOLD_DIM), r)
+	GodUI.text(self, Vector2(r.get_center().x, 96), tr("OVERHEARD TODAY"), 22, GodUI.GOLD, true)
+	var y := 132.0
+	for line in chat:
+		var parts := String(line).split(": ", true, 1)
+		if parts.size() == 2:
+			GodUI.text(self, Vector2(r.position.x + 24, y), parts[0], 15, GodUI.GOLD)
+			y += 20.0
+			y += GodUI.para(self, Vector2(r.get_center().x, y), parts[1], 15, r.size.x - 48, GodUI.CREAM) + 10.0
+		else:
+			y += GodUI.para(self, Vector2(r.get_center().x, y), line, 15, r.size.x - 48, GodUI.CREAM) + 10.0
+		if y > r.end.y - 30:
+			break

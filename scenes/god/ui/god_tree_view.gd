@@ -20,6 +20,7 @@ const CELLS := {
 	"truck": [Vector2i(-1, 1), Vector2i(-2, 2), Vector2i(-3, 3)],
 	"nozzle": [Vector2i(-1, 0), Vector2i(-2, 0), Vector2i(-3, 0), Vector2i(-4, 0), Vector2i(-5, 0), Vector2i(-6, 0)],
 	"attractions": [Vector2i(-1, -1), Vector2i(-2, -2), Vector2i(-3, -3), Vector2i(-4, -4)],
+	"multi": [Vector2i(-2, -1), Vector2i(-3, -1), Vector2i(-4, -1), Vector2i(-5, -1)],  # off Bec large
 }
 ## Where each two-parent upgrade sits: in the wedge between its parents' branches.
 const LINK_CELLS := {
@@ -29,7 +30,7 @@ const LINK_CELLS := {
 }
 const FILL := {"hours": Color(0.2, 0.24, 0.42), "marketing": Color(0.42, 0.22, 0.38), "attractions": Color(0.2, 0.38, 0.36),
 	"nozzle": Color(0.5, 0.14, 0.11), "tank": Color(0.35, 0.3, 0.12), "service": Color(0.2, 0.36, 0.22), "vibe": Color(0.47, 0.33, 0.13),
-	"truck": Color(0.45, 0.18, 0.16), "link": Color(0.3, 0.22, 0.42)}
+	"truck": Color(0.45, 0.18, 0.16), "link": Color(0.3, 0.22, 0.42), "multi": Color(0.62, 0.36, 0.08)}
 const NODE := 46.0
 
 var area := Rect2(250, 96, 880, 470)
@@ -72,9 +73,12 @@ func nodes() -> Array:
 		for i in b.nodes.size():
 			var cell: Vector2i = CELLS[b.id][i]
 			cell_of[b.nodes[i].id] = cell
+			var first: Vector2i = cell_of.get(b.get("root", ""), Vector2i.ZERO)  # a branch can hang off an upgrade
+			var st := 0 if i < level else (1 if i == level else 2)
+			if st == 1 and run.next_node(b.id).is_empty():
+				st = 2  # its root upgrade isn't owned yet
 			out.append({"key": "%s:%d" % [b.id, i], "branch": b.id, "level": i, "cell": cell,
-				"state": 0 if i < level else (1 if i == level else 2), "node": b.nodes[i],
-				"parents": [Vector2i.ZERO if i == 0 else CELLS[b.id][i - 1]]})
+				"state": st, "node": b.nodes[i], "parents": [first if i == 0 else CELLS[b.id][i - 1]]})
 	for l in GodData.LINKS:
 		var st := 0 if l.id in run.links else (1 if run.link_open(l.id) else 2)
 		out.append({"key": "link:" + l.id, "branch": "link", "level": -1, "cell": LINK_CELLS[l.id], "state": st,
@@ -198,7 +202,7 @@ func _draw() -> void:
 	for n in all:
 		_draw_node(n)
 	for b in GodData.BRANCHES:
-		var last: Vector2i = CELLS[b.id][-1]
+		var last: Vector2i = CELLS[b.id][b.nodes.size() - 1]
 		var dir := Vector2(last).normalized()
 		GodUI.text(self, _pos(last) + dir * _unit * 0.95 + Vector2(0, 5), b.name, 13, Color(GodUI.GOLD, 0.6), true)
 	if hover != "":
@@ -249,6 +253,8 @@ func _draw_node(n: Dictionary) -> void:
 	var tex: Texture2D = GodUI.icon(n.node.id)
 	if tex:
 		draw_texture_rect(tex, Rect2(p - Vector2(half, half) * 0.8, Vector2(half, half) * 1.6), false, tint)
+	elif n.node.has("glyph"):  # no icon drawn yet: a short sign instead
+		GodUI.text(self, p + Vector2(0, 7), n.node.glyph, 20, GodUI.CREAM * tint, true, 4)
 	if n.state == 1:
 		var can2 := run.cash >= price
 		var label := "$%.0f" % price

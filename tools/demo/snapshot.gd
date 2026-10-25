@@ -46,7 +46,7 @@ func _process(_dt: float) -> bool:
 		if target:
 			day.aim(target.position)
 		day.set_pouring(f % 90 < 60)
-		if f == int(seconds * 30.0) - 12 and target:  # a car pays just before the shot: chips in the air
+		if f == int(seconds * 30.0) - 40 and target:  # a car pays just before the shot: chips in the air
 			target.amount = target.target
 			day._settle(target)
 		return false

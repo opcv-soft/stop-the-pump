@@ -277,4 +277,5 @@ The driver gets out. Sunburnt. Smells like a lake.,The driver gets out. Sunburnt
 He looks at the lot. The regulars. The jar.,He looks at the lot. The regulars. The jar.,Y regarde le terrain. Les habitués. Le pot.
 """T'es un vrai gaz bar boy.""","""T'es un vrai gaz bar boy.""",« T'es un vrai gaz bar boy. »
 Thanks for playing.,Thanks for playing.,Merci d'avoir joué.
-"%.0f L x %d combo x %d%%","%.0f L x %d combo x %d%%","%.0f L x %d combo x %d %%"
+"%.0f L x (1 + %.1f combo) x %d%%","%.0f L x (1 + %.1f combo) x %d%%","%.0f L x (1 + %.1f combo) x %d %%"
+OVERHEARD TODAY,OVERHEARD TODAY,ENTENDU AUJOURD'HUI

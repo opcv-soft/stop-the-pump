@@ -250,6 +250,7 @@ func pick_card(id: String) -> bool:
 
 ## Folds a finished day into the run: its cash, gas left, XP and stats.
 func end_day(report: Dictionary) -> void:
+	var before := unlocked_cars()  # to announce what today's XP unlocks
 	cash += report.get("loot", 0.0)
 	tank = minf(report.get("tank_left", tank), tank_capacity())  # the tube man can't overfill it
 	xp += report.get("xp", 0)
@@ -265,6 +266,21 @@ func end_day(report: Dictionary) -> void:
 	totals.best_combo = maxi(totals.best_combo, report.get("best_combo", 1))
 	cash_history.append(cash)
 	_fight_for_the_village(report.get("rep", 0.0))
+	last_night.unlocked = unlocked_cars().filter(func(id: String) -> bool: return not id in before)
+
+
+## Round 10 D: the car types this run has unlocked, by the XP earned in it (a difficulty ladder).
+func unlocked_cars() -> Array:
+	return GodData.CAR_ORDER.filter(func(id: String) -> bool: return xp >= GodData.CAR_TYPES[id].unlock)
+
+
+## The next car type this run unlocks: {id, name, have, need}, or {} when all are in.
+func next_unlock() -> Dictionary:
+	for id in GodData.CAR_ORDER:
+		var need: int = GodData.CAR_TYPES[id].unlock
+		if xp < need:
+			return {"id": id, "name": GodData.CAR_TYPES[id].name, "have": xp, "need": need}
+	return {}
 
 
 ## The night after a day: your fills move your reputation, Gaétan's specials take some back, and the

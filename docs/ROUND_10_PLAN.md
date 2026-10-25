@@ -62,7 +62,7 @@
 - Noted while drawing: the strip across the road is too thin for Gaétan's station under the HUD; the redraw
   moves the avenue down a little to give his station room.
 
-## Batch D: the car codex and new cars (v0.48.0)
+## Batch D: the car codex and new cars — built 2026-10-25 (v0.47.0)
 - **Car types unlock in the run by XP** (a difficulty ladder, no longer permanent).
 - **A codex:** every car type, what it does and the XP that unlocks it.
 - **New cars**, each with a very distinct look:

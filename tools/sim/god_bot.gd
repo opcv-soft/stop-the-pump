@@ -120,7 +120,7 @@ func play_run(seed: int, meta: MetaState) -> Dictionary:
 	while not run.over:
 		var tank_before := run.tank
 		day.market_share = run.share
-		day.start_day(run.mods(), run.tank, run.day, meta.unlocked_cars())
+		day.start_day(run.mods(), run.tank, run.day, run.unlocked_cars())
 		seconds += (run.mods().close_hour - GodData.OPEN_HOUR) * GodData.HOUR_SECONDS + 25.0
 		_play_day(day)
 		var report := day.day_report()

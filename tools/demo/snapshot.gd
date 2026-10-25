@@ -24,7 +24,7 @@ func _initialize() -> void:
 	if args.size() > 2:
 		mode = args[2]
 	DisplayServer.window_set_size(Vector2i(1152, 648))
-	if mode in ["report", "night"]:
+	if mode in ["report", "night", "codex"]:
 		game = load("res://scenes/god/god_game.tscn").instantiate()
 		game.meta_path = ""
 		game.sound_on = false
@@ -45,7 +45,7 @@ func _open() -> void:
 	m.puddle_vacuum = 1
 	m.queue = 4
 	m.close_hour = 23.0
-	day.start_day(m, 700.0, 3, ["sedan", "pickup", "cadillac"])
+	day.start_day(m, 700.0, 3, ["sedan", "pickup", "cadillac", "bumper", "rush", "tank", "trio"])
 	day.regulars[0].cheer = 1.0
 	day.stacks = {1: 7, 5: 4, 20: 3, 50: 1}  # a morning's chips already in the tray
 
@@ -56,6 +56,18 @@ func _process(_dt: float) -> bool:
 		return _report_frame()
 	if mode == "night":
 		return _night_frame()
+	if mode == "codex":
+		if game.run and f == 5:
+			game.run.xp = 3600
+			game.day.end_round()
+		if f == 8:
+			game._after_report()
+			game.night.codex.open(game.run)
+		if f == 20:
+			root.get_viewport().get_texture().get_image().save_png(out)
+			print("saved ", out)
+			return true
+		return false
 	if f == 2:
 		_open()
 	if f < 3:

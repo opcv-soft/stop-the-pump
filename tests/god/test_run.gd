@@ -188,7 +188,7 @@ func test_the_shop_sells_nodes_in_order() -> void:
 func test_garage_purchases_apply_and_are_saved() -> void:
 	var m := MetaState.new()
 	m.path = SAVE
-	m.xp = 75000  # round 10: Garage prices ×15
+	m.xp = 50000  # round 10: Garage prices ×10
 	assert_true(m.buy_nozzle("laser"))
 	assert_true(m.buy_bling("receipt"))
 	assert_true(m.buy_perk("nest_egg"))
@@ -218,11 +218,12 @@ func test_finishing_a_run_banks_xp_and_cars() -> void:
 func test_car_types_unlock_with_cars_filled() -> void:
 	var m := MetaState.new()
 	m.path = ""
-	assert_eq(m.unlocked_cars(), ["sedan"])
-	assert_eq(m.next_unlock().id, "pickup")
-	m.total_cars = 95
-	assert_true("cadillac" in m.unlocked_cars())
-	assert_eq(m.next_unlock().id, "bazou")
+	var r2 := RunState.new(m)
+	assert_eq(r2.unlocked_cars(), ["sedan"], "round 10 D: every run starts with sedans only")
+	assert_eq(r2.next_unlock().id, "pickup")
+	r2.xp = 450
+	assert_true("cadillac" in r2.unlocked_cars())
+	assert_eq(r2.next_unlock().id, "bazou")
 
 
 func test_the_truck_sells_what_the_cash_buys() -> void:
@@ -330,3 +331,19 @@ func test_the_forward_contract_freezes_every_fourth_delivery() -> void:
 		prices.append(r.price)
 	assert_gt(prices[2], prices[1])
 	assert_eq(prices[3], prices[2], "the fourth delivery comes at the old price")
+
+
+# --- Round 10 D: the car ladder unlocks by the run's XP ------------------------------------------
+
+func test_a_new_car_type_is_announced_the_night_it_unlocks() -> void:
+	var r := _run()
+	r.end_day({"loot": 10.0, "xp": 200})
+	assert_eq(r.last_night.unlocked, ["pickup"])
+	r.end_day({"loot": 10.0, "xp": 10})
+	assert_true(r.last_night.unlocked.is_empty())
+
+
+func test_every_car_type_has_a_rule_for_the_codex() -> void:
+	for id in GodData.CAR_ORDER:
+		assert_ne(GodData.CAR_TYPES[id].get("helps", ""), "", id)
+		assert_true(CartoonArt.CARS.has(id), "%s has a cartoon look" % id)

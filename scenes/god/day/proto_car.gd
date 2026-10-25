@@ -17,7 +17,7 @@ const CELEBRATE_SECONDS := 1.1
 const LEAVE_AT := 0.8
 ## Readable movement: circles the lot / drives back and forth along a row / parks, waits, moves on.
 const PATTERNS := ["loop", "shuttle", "park"]
-const PATTERN_SPEED := {"loop": 75.0, "shuttle": 95.0, "park": 110.0}
+const PATTERN_SPEED := {"loop": 75.0, "shuttle": 95.0, "park": 110.0, "bounce": 120.0}
 
 var phase := Phase.ROAD
 var customer := false
@@ -48,6 +48,7 @@ var fill_speed := 1.0  # how fast its tank takes fuel
 var pay_share := 1.0  # share of the sale it pays (the pickup haggles)
 var tip_mult := 1.0
 var speed_mult := 1.0
+var patience_k := 1.0  # its type's patience (Le Pressé: 0.4)
 ## Seconds spent waiting in the lot; past its patience it drives off (a Miss).
 var waited := 0.0
 var patience := 24.0
@@ -182,6 +183,9 @@ func set_type(id: String, rng: RandomNumberGenerator) -> void:
 	pay_share = t.get("pay", 1.0)
 	tip_mult = t.get("tip", 1.0)
 	speed_mult = t.get("speed", 1.0)
+	patience_k = t.get("patience", 1.0)
+	if t.has("pattern"):
+		pattern = t.pattern
 	var orders: Array = t.get("orders", [20.0])
 	target = orders[rng.randi() % orders.size()]
 	if id != "sedan":
@@ -204,6 +208,8 @@ func start_pattern(game: GodPump) -> void:
 			_leg = 0 if position.x > lot.get_center().x else 1
 		"park":
 			_goal = game.random_lot_point()
+		"bounce":  # the bumper car: a straight line, bouncing off the curbs
+			heading = game.rng.randf() * TAU
 
 
 func step(dt: float, game: GodPump) -> void:
@@ -328,6 +334,13 @@ func _move_pattern(dt: float, game: GodPump) -> void:
 			if position.distance_to(_ends[_leg]) < 20.0:
 				_leg = 1 - _leg
 				_wait = 0.5
+		"bounce":
+			position += Vector2.from_angle(heading) * speed * dt
+			var lot: Rect2 = game.LOT.grow(-30)
+			if position.x < lot.position.x or position.x > lot.end.x:
+				heading = PI - heading
+			if position.y < lot.position.y or position.y > lot.end.y:
+				heading = -heading
 		"park":
 			if _wait > 0.0:
 				_wait -= dt

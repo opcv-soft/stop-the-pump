@@ -736,3 +736,51 @@ func test_one_long_chain_beats_several_short_ones() -> void:
 			ok.amount = 17.0
 			game._settle(ok)
 	assert_eq(game.day_stats.combo_points, 9)
+
+
+# --- Round 10 D: the new cars --------------------------------------------------------------------
+
+func test_le_presse_leaves_quickly_and_tips_big() -> void:
+	_open({}, ["rush"])
+	game.customer_chance = 1.0
+	game.market_share = 100.0
+	var car: ProtoCar = null
+	while not car or not car.wants_in:
+		car = game.spawn_road_car()
+	assert_almost_eq(car.patience, 24.0 * 0.4, 0.01)
+	assert_almost_eq(car.tip_mult, 2.5, 0.001)
+
+
+func test_the_bumper_car_knocks_cars_away() -> void:
+	_open()
+	var bumper := _parked("bumper", Vector2(500, 380))
+	bumper.phase = ProtoCar.Phase.WANDER
+	var other := _parked("sedan", Vector2(530, 380))
+	other.phase = ProtoCar.Phase.WANDER
+	game._step_roles(0.1)
+	assert_gt(other.position.distance_to(bumper.position), 60.0, "knocked out of the way")
+
+
+func test_the_tanker_drives_in_straight_lines_with_a_huge_order() -> void:
+	_open()
+	var car := game.park_customer(0.0, Vector2(500, 380))
+	car.set_type("tank", game.rng)
+	assert_eq(car.pattern, "shuttle")
+	assert_gte(car.target, 100.0)
+
+
+func test_overfilling_the_trio_eletrico_is_a_disaster_but_a_good_fill_is_loved() -> void:
+	_open()
+	var good := _parked("trio", Vector2(400, 380), 40.0)
+	good.amount = 40.0
+	game._settle(good)
+	assert_almost_eq(game.day_report().rep, GodData.REPUTATION[ScoreTiers.SUPER_PERFECT] * 5.0, 0.001)
+	var cash_before := game.cash
+	var bad := _parked("trio", Vector2(700, 380), 40.0)
+	bad.amount = 40.0
+	bad.spilled = 2.0
+	game._settle(bad)
+	assert_eq(bad.tier, ScoreTiers.MISS)
+	assert_almost_eq(game.fines, 20.0, 0.001)
+	assert_almost_eq(game.day_report().rep, (GodData.REPUTATION[ScoreTiers.SUPER_PERFECT] + GodData.REPUTATION[ScoreTiers.MISS]) * 5.0, 0.001)
+	assert_lt(game.cash - cash_before, bad.paid, "the fine comes off")

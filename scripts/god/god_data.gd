@@ -135,60 +135,79 @@ const CARDS := [
 ]
 const RARITY_WEIGHT := {"common": 70.0, "rare": 25.0, "legendary": 5.0}
 
-# --- Car types (unlocked by cars filled across all runs) -----------------------------------------
+# --- Car types: a difficulty ladder that unlocks during each run, by the XP earned in it (round 10 D) --
 ## customer: wants gas. fill_speed: how fast its tank takes fuel. pay: share of the sale it pays.
-## tip: tip multiplier. speed: how fast it drives. orders: what it asks for. unlock: cars filled needed.
+## tip: tip multiplier. speed: how fast it drives. orders: what it asks for. unlock: run XP needed.
+## patience: how long it waits (x the usual). pattern: how it moves. rep_mult: reputation per grade (x).
+## miss_fine: what an overfill costs you. helps: its rule, as the codex says it.
 const CAR_TYPES := {
-	"sedan": {"name": "Berline", "customer": true, "orders": [10.0, 15.0, 20.0, 25.0, 30.0], "unlock": 0, "weight": 10.0},
-	"pickup": {"name": "Le Pick-up", "customer": true, "orders": [40.0, 50.0, 60.0], "pay": 0.8, "unlock": 30, "weight": 3.0},
-	"cadillac": {"name": "Le Cadillac", "customer": true, "orders": [20.0, 30.0, 40.0], "tip": 2.0, "unlock": 90, "weight": 2.0},
-	"bazou": {"name": "Le Bazou", "customer": true, "orders": [10.0, 15.0, 20.0], "fill_speed": 0.6, "unlock": 180, "weight": 2.5},
-	"racer": {"name": "Le Char de course", "customer": true, "orders": [15.0, 20.0, 25.0], "speed": 2.2, "tip": 1.3, "unlock": 300, "weight": 2.0},
-	"sweeper": {"name": "La Balayeuse", "customer": false, "role": "sweeper", "unlock": 450, "weight": 1.0},
-	"thief": {"name": "Le Voleur", "customer": false, "role": "thief", "unlock": 650, "weight": 1.2},
-	"clumsy": {"name": "Le Maladroit", "customer": true, "orders": [15.0, 20.0, 25.0], "role": "clumsy", "unlock": 900, "weight": 1.5},
-	"electric": {"name": "L'Électrique", "customer": false, "role": "electric", "unlock": 1200, "weight": 1.5},
-	# Day 50 only: Dad, in the old orange hatchback (never drawn from the pool).
+	"sedan": {"name": "Berline", "customer": true, "orders": [10.0, 15.0, 20.0, 25.0, 30.0], "unlock": 0, "weight": 10.0,
+		"helps": "The everyday car. Fill it, get paid."},
+	"pickup": {"name": "Le Pick-up", "customer": true, "orders": [40.0, 50.0, 60.0], "pay": 0.8, "unlock": 150, "weight": 3.0,
+		"helps": "A huge order, but it haggles: pays 80%."},
+	"cadillac": {"name": "Le Cadillac", "customer": true, "orders": [20.0, 30.0, 40.0], "tip": 2.0, "unlock": 400, "weight": 2.0,
+		"helps": "A big tipper: tips x2."},
+	"bazou": {"name": "Le Bazou", "customer": true, "orders": [10.0, 15.0, 20.0], "fill_speed": 0.6, "unlock": 800, "weight": 2.5,
+		"helps": "A rusty beater: its tank takes gas slowly (60%)."},
+	"racer": {"name": "Le Char de course", "customer": true, "orders": [15.0, 20.0, 25.0], "speed": 2.2, "tip": 1.3, "unlock": 1300, "weight": 2.0,
+		"helps": "Drives around fast. Tips x1.3."},
+	"rush": {"name": "Le Pressé", "customer": true, "orders": [10.0, 15.0, 20.0], "patience": 0.4, "tip": 2.5, "speed": 1.3, "unlock": 1900, "weight": 2.0,
+		"helps": "In a rush: leaves quickly, but tips x2.5."},
+	"sweeper": {"name": "La Balayeuse", "customer": false, "role": "sweeper", "unlock": 2600, "weight": 1.0,
+		"helps": "Not a customer: cleans up the puddles it drives over."},
+	"bumper": {"name": "L'Auto tamponneuse", "customer": true, "orders": [15.0, 20.0, 25.0], "role": "bumper", "pattern": "bounce", "speed": 1.5, "tip": 1.2, "unlock": 3400, "weight": 1.5,
+		"helps": "A bumper car: bounces around and knocks other cars out of your ring."},
+	"thief": {"name": "Le Voleur", "customer": false, "role": "thief", "unlock": 4300, "weight": 1.2,
+		"helps": "Not a customer: siphons gas from your customers. Pour on it to scare it off."},
+	"clumsy": {"name": "Le Maladroit", "customer": true, "orders": [15.0, 20.0, 25.0], "role": "clumsy", "unlock": 5300, "weight": 1.5,
+		"helps": "Bumps into cars and makes them spill a quarter of their gas."},
+	"tank": {"name": "Le Mastodonte", "customer": true, "orders": [100.0, 120.0, 150.0], "fill_speed": 1.8, "speed": 0.55, "pattern": "shuttle", "unlock": 6400, "weight": 1.0,
+		"helps": "A tanker: a huge order, drives in straight lines, takes gas fast."},
+	"electric": {"name": "L'Électrique", "customer": false, "role": "electric", "unlock": 7600, "weight": 1.5,
+		"helps": "Doesn't take gas: pour on it and you pay a $10 fine."},
+	"trio": {"name": "Le Trio elétrico", "customer": true, "orders": [40.0, 50.0, 60.0], "speed": 0.7, "tip": 1.5, "rep_mult": 5.0, "miss_fine": 20.0, "unlock": 9000, "weight": 1.0,
+		"helps": "A samba truck: a good fill is reputation x5; an overfill costs $20 and reputation x5."},
+	# Day 50 only, before round 10 B: Dad, in the old orange hatchback (never drawn from the pool).
 	"papa": {"name": "Papa", "customer": true, "orders": [30.0], "tip": 5.0, "unlock": 1000000000, "weight": 0.0, "stack": "papa"},
 }
-const CAR_ORDER := ["sedan", "pickup", "cadillac", "bazou", "racer", "sweeper", "thief", "clumsy", "electric"]
+const CAR_ORDER := ["sedan", "pickup", "cadillac", "bazou", "racer", "rush", "sweeper", "bumper", "thief", "clumsy", "tank", "electric", "trio"]
 
 # --- Papa's Garage: bought with XP, kept forever ------------------------------------------------
-# Round 10: prices ×15 for the new XP (litres × the sum of chains × accuracy earns ~15× more per hour).
+# Round 10: prices ×10 round 8 (litres × the sum of chains × accuracy, with the car ladder, earns ~9× more per hour).
 const NOZZLES := [
 	{"id": "classique", "name": "Le Classique", "helps": "Dad's old nozzle. Honest.", "price": 0, "fx": {}},
-	{"id": "douche", "name": "La Douche", "helps": "a wide shower head: stream +20, flow -20%", "price": 6000, "fx": {"stream_radius": 20.0, "flow_mult": 0.8}},
-	{"id": "laser", "name": "Le Laser", "helps": "flow +40%, top-off tips +50%", "price": 13500, "fx": {"flow_mult": 1.4, "topoff_bonus": 1.0}},
-	{"id": "lente", "name": "La Lente", "helps": "flow -30%, tips +30%: for the precise", "price": 10500, "fx": {"flow_mult": 0.7, "tip_mult": 1.3}},
-	{"id": "gros_calibre", "name": "Le Gros Calibre", "helps": "flow ×2. Good luck.", "price": 22500, "fx": {"flow_mult": 2.0}},
-	{"id": "doree", "name": "La Dorée", "helps": "10% golden fills (tip ×3), flow +10%", "price": 45000, "fx": {"golden_chance": 0.1, "flow_mult": 1.1}},
+	{"id": "douche", "name": "La Douche", "helps": "a wide shower head: stream +20, flow -20%", "price": 4000, "fx": {"stream_radius": 20.0, "flow_mult": 0.8}},
+	{"id": "laser", "name": "Le Laser", "helps": "flow +40%, top-off tips +50%", "price": 9000, "fx": {"flow_mult": 1.4, "topoff_bonus": 1.0}},
+	{"id": "lente", "name": "La Lente", "helps": "flow -30%, tips +30%: for the precise", "price": 7000, "fx": {"flow_mult": 0.7, "tip_mult": 1.3}},
+	{"id": "gros_calibre", "name": "Le Gros Calibre", "helps": "flow ×2. Good luck.", "price": 15000, "fx": {"flow_mult": 2.0}},
+	{"id": "doree", "name": "La Dorée", "helps": "10% golden fills (tip ×3), flow +10%", "price": 30000, "fx": {"golden_chance": 0.1, "flow_mult": 1.1}},
 ]
 const BLING := [
-	{"id": "fuzzy_dice", "name": "Dés en minou", "helps": "luck +10", "price": 2250, "fx": {"luck": 10.0}},
-	{"id": "flame_decal", "name": "Flammes", "helps": "max combo +1", "price": 4500, "fx": {"combo_max": 1}},
-	{"id": "chrome_tip", "name": "Embout chromé", "helps": "flow +10%", "price": 3750, "fx": {"flow_mult": 1.1}},
-	{"id": "hula", "name": "Danseuse hula", "helps": "the first car of each day tips double", "price": 5250, "fx": {"first_car_tip_mult": 2.0}},
-	{"id": "pine", "name": "Sapin parfumé", "helps": "cars wait 20% longer", "price": 3000, "fx": {"patience_mult": 1.2}},
-	{"id": "medal", "name": "Médaille de saint Christophe", "helps": "once a day, an overfill doesn't break the combo", "price": 7500, "fx": {"overfill_saves": 1}},
-	{"id": "rabbit", "name": "Patte de lapin", "helps": "every 10th car's gas goes back in the tank", "price": 12000, "fx": {"refund_every": 10}},
-	{"id": "bobblehead", "name": "Bobblehead", "helps": "+5% tip per combo level", "price": 9000, "fx": {}},
-	{"id": "coupons", "name": "Livret de coupons", "helps": "shop upgrades 10% cheaper", "price": 6750, "fx": {"upgrade_discount": 0.10}},
-	{"id": "receipt", "name": "Vieux reçu", "helps": "start each run with $50 more", "price": 4500, "fx": {"start_cash": 50.0}},
+	{"id": "fuzzy_dice", "name": "Dés en minou", "helps": "luck +10", "price": 1500, "fx": {"luck": 10.0}},
+	{"id": "flame_decal", "name": "Flammes", "helps": "max combo +1", "price": 3000, "fx": {"combo_max": 1}},
+	{"id": "chrome_tip", "name": "Embout chromé", "helps": "flow +10%", "price": 2500, "fx": {"flow_mult": 1.1}},
+	{"id": "hula", "name": "Danseuse hula", "helps": "the first car of each day tips double", "price": 3500, "fx": {"first_car_tip_mult": 2.0}},
+	{"id": "pine", "name": "Sapin parfumé", "helps": "cars wait 20% longer", "price": 2000, "fx": {"patience_mult": 1.2}},
+	{"id": "medal", "name": "Médaille de saint Christophe", "helps": "once a day, an overfill doesn't break the combo", "price": 5000, "fx": {"overfill_saves": 1}},
+	{"id": "rabbit", "name": "Patte de lapin", "helps": "every 10th car's gas goes back in the tank", "price": 8000, "fx": {"refund_every": 10}},
+	{"id": "bobblehead", "name": "Bobblehead", "helps": "+5% tip per combo level", "price": 6000, "fx": {}},
+	{"id": "coupons", "name": "Livret de coupons", "helps": "shop upgrades 10% cheaper", "price": 4500, "fx": {"upgrade_discount": 0.10}},
+	{"id": "receipt", "name": "Vieux reçu", "helps": "start each run with $50 more", "price": 3000, "fx": {"start_cash": 50.0}},
 ]
 ## Perks have tiers; each tier costs more (price × tier).
 const PERKS := [
-	{"id": "truck_friend", "name": "Ami du camionneur", "helps": "the first delivery of each run costs 25% less", "price": 4500, "tiers": 2, "fx": {"first_delivery_discount": 0.25}},
-	{"id": "lucky", "name": "Bonne étoile", "helps": "luck +5", "price": 3750, "tiers": 4, "fx": {"luck": 5.0}},
-	{"id": "big_cards", "name": "Plus de choix", "helps": "4 cards per delivery", "price": 18000, "tiers": 1, "fx": {"cards_offered": 1}},
-	{"id": "reroll", "name": "Rebrasser", "helps": "1 reroll per delivery", "price": 9000, "tiers": 2, "fx": {"rerolls": 1}},
-	{"id": "morning_rush", "name": "Rush du matin", "helps": "+1 car waiting when you open", "price": 6000, "tiers": 3, "fx": {"queue": 1}},
-	{"id": "jackpot", "name": "Jackpot", "helps": "3% of fills tip ×4", "price": 10500, "tiers": 2, "fx": {"jackpot_chance": 0.03}},
-	{"id": "slot", "name": "Place pour bling", "helps": "one more bling slot", "price": 7500, "tiers": 2, "fx": {"bling_slots": 1}},
-	{"id": "head_start", "name": "Longueur d'avance", "helps": "start each run with a drone nozzle", "price": 30000, "tiers": 1, "fx": {"drones": 1}},
-	{"id": "contract", "name": "Contrat du fournisseur", "helps": "gas prices rise 20% slower", "price": 6750, "tiers": 3, "fx": {"price_rise_mult": 0.8}},
-	{"id": "premium", "name": "Super sans plomb", "helps": "premium gas: every sale pays 10% more", "price": 6750, "tiers": 3, "fx": {"sale_mult": 1.1}},
-	{"id": "tube_man", "name": "Bonhomme gonflable", "helps": "siphons passing cars' gas into your tank; tier 2 drops them on your lot", "price": 9000, "tiers": 2, "fx": {"tube_man": 1}},
-	{"id": "nest_egg", "name": "Bas de laine", "helps": "start each run with $40 more", "price": 3000, "tiers": 3, "fx": {"start_cash": 40.0}},
+	{"id": "truck_friend", "name": "Ami du camionneur", "helps": "the first delivery of each run costs 25% less", "price": 3000, "tiers": 2, "fx": {"first_delivery_discount": 0.25}},
+	{"id": "lucky", "name": "Bonne étoile", "helps": "luck +5", "price": 2500, "tiers": 4, "fx": {"luck": 5.0}},
+	{"id": "big_cards", "name": "Plus de choix", "helps": "4 cards per delivery", "price": 12000, "tiers": 1, "fx": {"cards_offered": 1}},
+	{"id": "reroll", "name": "Rebrasser", "helps": "1 reroll per delivery", "price": 6000, "tiers": 2, "fx": {"rerolls": 1}},
+	{"id": "morning_rush", "name": "Rush du matin", "helps": "+1 car waiting when you open", "price": 4000, "tiers": 3, "fx": {"queue": 1}},
+	{"id": "jackpot", "name": "Jackpot", "helps": "3% of fills tip ×4", "price": 7000, "tiers": 2, "fx": {"jackpot_chance": 0.03}},
+	{"id": "slot", "name": "Place pour bling", "helps": "one more bling slot", "price": 5000, "tiers": 2, "fx": {"bling_slots": 1}},
+	{"id": "head_start", "name": "Longueur d'avance", "helps": "start each run with a drone nozzle", "price": 20000, "tiers": 1, "fx": {"drones": 1}},
+	{"id": "contract", "name": "Contrat du fournisseur", "helps": "gas prices rise 20% slower", "price": 4500, "tiers": 3, "fx": {"price_rise_mult": 0.8}},
+	{"id": "premium", "name": "Super sans plomb", "helps": "premium gas: every sale pays 10% more", "price": 4500, "tiers": 3, "fx": {"sale_mult": 1.1}},
+	{"id": "tube_man", "name": "Bonhomme gonflable", "helps": "siphons passing cars' gas into your tank; tier 2 drops them on your lot", "price": 6000, "tiers": 2, "fx": {"tube_man": 1}},
+	{"id": "nest_egg", "name": "Bas de laine", "helps": "start each run with $40 more", "price": 2000, "tiers": 3, "fx": {"start_cash": 40.0}},
 ]
 
 ## Round 10 batch B: the rival across the road. Every run starts 50/50 with Gaétan; win at 100% market

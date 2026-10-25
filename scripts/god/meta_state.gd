@@ -181,24 +181,6 @@ func toggle_bling(id: String) -> bool:
 	return true
 
 
-## Car types unlocked by cars filled across all runs.
-func unlocked_cars() -> Array:
-	var out := []
-	for id in GodData.CAR_ORDER:
-		if total_cars >= GodData.CAR_TYPES[id].unlock:
-			out.append(id)
-	return out
-
-
-## The next car type to unlock: {id, name, have, need}, or {} when all are unlocked.
-func next_unlock() -> Dictionary:
-	for id in GodData.CAR_ORDER:
-		var need: int = GodData.CAR_TYPES[id].unlock
-		if total_cars < need:
-			return {"id": id, "name": GodData.CAR_TYPES[id].name, "have": total_cars, "need": need}
-	return {}
-
-
 ## The permanent effects: the equipped nozzle, equipped bling, and every perk tier.
 func fx_mods(mods: Dictionary) -> void:
 	GodData.apply_fx(mods, GodData.item(GodData.NOZZLES, nozzle).get("fx", {}))

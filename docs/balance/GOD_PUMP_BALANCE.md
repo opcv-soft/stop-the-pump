@@ -31,6 +31,13 @@ Tried along the way (price rise per delivery, fresh save):
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
 
+## Round 10 D: the car ladder by run XP (2026-10-25)
+Car types unlock during the run (sedan 0 … trio elétrico 9,000 XP). The tricky cars break the bot's chains:
+- 16 fresh runs: days survived median 35; market share at the end 21–80%, no win; 5,888 XP a run, **10,568 XP per hour**.
+- Garage prices ×15 → **×10** round 8. Campaign: first win 10 of 12 players, median **3.6 h** (at ×15: 3.9 h).
+- Open: the campaign is limited by surviving the price wall while holding reputation, not by XP. If 3.6 h is too
+  long, raise reputation from good fills a notch rather than cutting prices further.
+
 ## Round 10, take 3: XP = litres × the sum of chains × accuracy (playtest 11, 2026-10-25)
 - 12 fresh runs: 9,557 XP a run, **16,755 XP per hour** (×14.5 round 8). Garage prices **×15** round 8; F6 / F1 give 15,000 XP.
 

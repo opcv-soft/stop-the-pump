@@ -4,7 +4,7 @@
 > fuel-truck bill, cards, car types and Papa's Garage, is **docs/GOD_PUMP_PLAN.md**. Sections below that
 > describe the key-per-pump game are history.
 
-> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.46.0: round 10 batches A, B and E built, awaiting playtest; the C look test next; plan in docs/ROUND_10_PLAN.md)
+> **Current phase:** 5 — Vertical Slice (GOD PUMP v0.47.0: round 10 built (A, B, C pass 1, D, E), awaiting playtest; C pass 2 (menus, icons) next; plan in docs/ROUND_10_PLAN.md)
 > **Last updated:** 2026-10-25
 > This file is the Committee's memory. Read it before every Godot or Blender action. Update it after every approved decision.
 
@@ -246,4 +246,8 @@ Failure is cheap early: a miss costs a little money and teaches the rule.
 | 2026-10-25 | The report's books: "Today's results" (the P&L) and a real balance sheet: assets (cash, gas in the tank, equipment), liabilities (the cousin's loan), equity (Dad's capital + retained earnings); assets = liabilities + equity | Playtest 11 | Round 10 (#37) |
 | 2026-10-25 | The vacuum tube man is drawn in the cartoon style and visibly sucks: he leans over the puddle, mouth open, the puddle shrinks, gold gulps run down his tube | Playtest 11 | Round 10 (#37) |
 | 2026-10-25 | The cartoon look, pass 1: a new default view ("cartoon"; I still cycles HD-2D, pixel, flat) drawn in code by scripts/components/cartoon_art.gd: grass, the avenue, Chez Gaétan, the lot, puddles and coins, the gaz bar with its neon, the regulars as chunky figures, every upgrade's prop, cars per type, the tube men, drones, the nozzle, the old pump, gauges, the combo pill. The world is drawn at 85% so Gaétan's station fits under the HUD. Branch colours in the tree are bright and distinct. Pass 2 (to do): the menu screens and the icons | Designer approved the look test | Round 10 C (#37) |
+| 2026-10-25 | Car types are a difficulty ladder that unlocks during each run by the run's XP (no longer permanent): Berline 0, Pick-up 150, Cadillac 400, Bazou 800, Char de course 1300, Pressé 1900, Balayeuse 2600, Auto tamponneuse 3400, Voleur 4300, Maladroit 5300, Mastodonte 6400, Électrique 7600, Trio elétrico 9000. The report says what comes tomorrow or next | Playtest 9 | Round 10 D (#37) |
+| 2026-10-25 | The car codex (night screen, CAR CODEX): every type drawn, its rule, its XP; unlocked ones lit | Playtest 9: "it's unclear what each car type does" | Round 10 D (#37) |
+| 2026-10-25 | New cars: Le Pressé (patience ×0.4, tips ×2.5), L'Auto tamponneuse (bounces off the curbs, knocks cars out of the ring), Le Mastodonte (a tanker: $100–150 orders, straight lines, takes gas ×1.8), Le Trio elétrico (samba truck: reputation ×5 both ways, an overfill costs $20), each with its own cartoon look | Playtest 9 | Round 10 D (#37) |
+| 2026-10-25 | Garage prices ×10 round 8: the car ladder breaks chains, XP per hour fell to ~10.6k; campaign median first win 3.6 h (the limit is surviving and holding reputation) | Balance bot | Round 10 D (#37) |
 | 2026-10-25 | Market share is per run: 50/50 with Gaétan at the start, win at 100%, lose broke or at 0%; XP and the Garage carry over. The cartoon art starts with a look test | Designer, 2026-10-25 | Round 10 B, C (#37) |

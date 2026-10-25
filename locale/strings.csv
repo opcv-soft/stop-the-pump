@@ -382,3 +382,25 @@ Dad's capital,Dad's capital,Capital de Papa
 Retained earnings,Retained earnings,Bénéfices non répartis
 Total equity,Total equity,Total de l'avoir
 Assets = liabilities + equity,Assets = liabilities + equity,Actif = passif + avoir
+"The everyday car. Fill it, get paid.","The everyday car. Fill it, get paid.","L'auto de tous les jours. Fais le plein, fais-toi payer."
+"A huge order, but it haggles: pays 80%.","A huge order, but it haggles: pays 80%.","Une grosse commande, mais il marchande : paie 80 %."
+A big tipper: tips x2.,A big tipper: tips x2.,Gros pourboire : pourboires x2.
+A rusty beater: its tank takes gas slowly (60%).,A rusty beater: its tank takes gas slowly (60%).,Un vieux bazou : son réservoir prend l'essence lentement (60 %).
+Drives around fast. Tips x1.3.,Drives around fast. Tips x1.3.,"Tourne vite. Pourboires x1,3."
+"In a rush: leaves quickly, but tips x2.5.","In a rush: leaves quickly, but tips x2.5.","Pressé : il repart vite, mais pourboires x2,5."
+Not a customer: cleans up the puddles it drives over.,Not a customer: cleans up the puddles it drives over.,Pas un client : nettoie les flaques sur son passage.
+A bumper car: bounces around and knocks other cars out of your ring.,A bumper car: bounces around and knocks other cars out of your ring.,Une auto tamponneuse : rebondit partout et pousse les autres autos hors de ton cercle.
+Not a customer: siphons gas from your customers. Pour on it to scare it off.,Not a customer: siphons gas from your customers. Pour on it to scare it off.,Pas un client : siphonne l'essence de tes clients. Verse dessus pour le faire fuir.
+Bumps into cars and makes them spill a quarter of their gas.,Bumps into cars and makes them spill a quarter of their gas.,Accroche les autos et leur fait renverser le quart de leur essence.
+"A tanker: a huge order, drives in straight lines, takes gas fast.","A tanker: a huge order, drives in straight lines, takes gas fast.","Un mastodonte : une énorme commande, roule en ligne droite, prend l'essence vite."
+Doesn't take gas: pour on it and you pay a $10 fine.,Doesn't take gas: pour on it and you pay a $10 fine.,Ne prend pas d'essence : verse dessus et tu paies une amende de 10 $.
+A samba truck: a good fill is reputation x5; an overfill costs $20 and reputation x5.,A samba truck: a good fill is reputation x5; an overfill costs $20 and reputation x5.,"Un camion de samba : un beau plein, c'est réputation x5; un débordement coûte 20 $ et réputation x5."
+SAMBA RUINED! -$%d,SAMBA RUINED! -$%d,SAMBA GÂCHÉE! -%d $
+NEW TOMORROW: %s!,NEW TOMORROW: %s!,NOUVEAU DEMAIN : %s!
+Next car: %s at %d XP,Next car: %s at %d XP,Prochaine auto : %s à %d XP
+CAR CODEX,CAR CODEX,CODEX DES AUTOS
+This run: %d XP. New car types come as you earn XP.,This run: %d XP. New car types come as you earn XP.,Cette partie : %d XP. Les nouvelles autos arrivent à mesure que tu gagnes de l'XP.
+Next: %s at %d XP.,Next: %s at %d XP.,Prochaine : %s à %d XP.
+unlocked,unlocked,débloquée
+at %d XP,at %d XP,à %d XP
+Click or press ESC to close,Click or press ESC to close,Clique ou appuie sur ÉCHAP pour fermer

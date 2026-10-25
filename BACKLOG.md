@@ -16,9 +16,9 @@
 - [x] `[innovation]` **Round 10 batch B (built): Gaétan across the road, market share and reputation, the new lore and ending, the P&L and balance sheet**
 - [x] `[art]` **Round 10 batch C, pass 1: the look test approved; the day redrawn in the cartoon look (scripts/components/cartoon_art.gd)**
 - [ ] `[art]` **Round 10 batch C, pass 2: the menu screens (night, report, title, garage, cards, truck) and the icons in the cartoon look**
-- [ ] `[standard]` **Round 10 batch D: car codex, in-run unlocks by XP, bumper car, in a rush, the tank, trio elétrico** (after the look is approved, so the new cars are drawn once)
+- [x] `[standard]` **Round 10 batch D (built): car codex, in-run unlocks by XP, bumper car, in a rush, the tanker, trio elétrico**
 - [x] `[standard]` **Round 10 batch E (built): the spill branch (a second tube man returns spills), the herding dog robot**
-- [ ] Playtest v0.46: Gaétan and the market share (does the fight feel winnable, is the report readable), coins on the lot, MULTI-JET and the dog, DÉGÂTS, the drone tip rule, the new XP
+- [ ] Playtest v0.47: the cartoon look in play, the four new cars and the codex, the car ladder's pace, chaining for XP, the balance sheet, the vacuum's slurp, Gaétan and the market share (does 100% feel reachable)
 - [ ] Still to check from playtest 9: the clamps; play once in French
 - [x] `[innovation]` **God-pump prototype: a giant nozzle pours from the sky onto cars driving around the lot** (#36, kept: this is the game now)
 - [x] `[art]` **Scene view for the god pump: isometric tried, three-quarter top-down kept; dépanneur, neon, regulars, vintage pump, tip jar** (#36, v0.32.0, kept)

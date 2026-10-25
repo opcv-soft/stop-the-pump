@@ -6,7 +6,7 @@ extends Node
 ##   TITLE → (first time: INTRO → NAMING) → DAY → REPORT → NIGHT (shop, truck → TRUCK → CARDS) → DAY ...
 ##   → bankrupt or 0% share: RUN_OVER → GARAGE → new run   ·   100% share: REPORT → ENDING → RUN_OVER → GARAGE
 ## Designer keys: F1 opens the dev configurator (DevPanel), F3 ends the day, F4 gives $100, F6 gives
-## 15000 XP.
+## 10000 XP.
 
 const DAY_SCENE := preload("res://scenes/god/day/god_pump.tscn")
 
@@ -169,7 +169,7 @@ func start_day() -> void:
 		var first: Array = day.visit.lines[0]
 		meta.clip("%s\t%s" % [first[0], first[1]], day.visit.get("postcard", 0))  # who, line: translated when shown
 	day.market_share = run.share  # round 10 B: today's split of the avenue with Gaétan
-	day.start_day(run.mods(), run.tank, run.day, meta.unlocked_cars())
+	day.start_day(run.mods(), run.tank, run.day, run.unlocked_cars())
 
 
 func _on_day_over(report: Dictionary) -> void:
@@ -389,5 +389,5 @@ func _unhandled_input(e: InputEvent) -> void:
 				run.cash += 100.0
 				night.refresh()
 		KEY_F6:
-			meta.xp += 15000
+			meta.xp += 10000
 			meta.save()

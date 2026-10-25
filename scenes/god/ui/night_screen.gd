@@ -11,6 +11,9 @@ var run: RunState
 var tree: GodTreeView
 var _truck_btn: Button
 var _open_btn: Button
+var _codex_btn: Button
+## Round 10 D: the car codex, over the night.
+var codex: CodexScreen
 var _t := 0.0
 var _hover_card := -1
 
@@ -29,6 +32,12 @@ func _init() -> void:
 	_open_btn.position = Vector2(888, 586)
 	_open_btn.pressed.connect(func() -> void: open_pressed.emit())
 	add_child(_open_btn)
+	_codex_btn = GodUI.button("CAR CODEX", Vector2(212, 44), 17)
+	_codex_btn.position = Vector2(26, 590)
+	_codex_btn.pressed.connect(func() -> void: codex.open(run))
+	add_child(_codex_btn)
+	codex = CodexScreen.new()
+	add_child(codex)
 
 
 func show_night(the_run: RunState) -> void:
@@ -56,7 +65,7 @@ func _process(dt: float) -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if visible and e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_ENTER, KEY_KP_ENTER] and not _open_btn.disabled:
+	if visible and not codex.visible and e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_ENTER, KEY_KP_ENTER] and not _open_btn.disabled:
 		get_viewport().set_input_as_handled()
 		open_pressed.emit()
 

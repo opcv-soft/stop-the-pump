@@ -29,11 +29,13 @@ func build(g: GodGame) -> void:
 	_row("Day", func() -> String: return str(game.run.day) if game.run else "-",
 		[["-1", func() -> void: _day(-1)], ["+1", func() -> void: _day(1)], ["+10", func() -> void: _day(10)]])
 	_row("XP (garage)", func() -> String: return str(game.meta.xp),
-		[["+15000", func() -> void: _xp(15000)], ["+150000", func() -> void: _xp(150000)]])
-	_row("Cars filled (unlocks)", func() -> String:
-		var n := game.meta.next_unlock()
-		return "%d%s" % [game.meta.total_cars, "  (next: %s at %d)" % [n.name, n.need] if not n.is_empty() else "  (all)"],
-		[["-50", func() -> void: _cars(-50)], ["+50", func() -> void: _cars(50)], ["ALL", func() -> void: _cars(100000)]])
+		[["+10000", func() -> void: _xp(10000)], ["+100000", func() -> void: _xp(100000)]])
+	_row("Run XP (car unlocks)", func() -> String:
+		if not game.run:
+			return "-"
+		var n := game.run.next_unlock()
+		return "%d%s" % [game.run.xp, "  (next: %s at %d)" % [n.name, n.need] if not n.is_empty() else "  (all)"],
+		[["+500", func() -> void: _cars(500)], ["+2000", func() -> void: _cars(2000)], ["ALL", func() -> void: _cars(100000)]])
 	_row("Game speed", func() -> String: return "%.0fx" % Engine.time_scale,
 		[["1x", func() -> void: Engine.time_scale = 1.0], ["2x", func() -> void: Engine.time_scale = 2.0], ["4x", func() -> void: Engine.time_scale = 4.0], ["8x", func() -> void: Engine.time_scale = 8.0]])
 	var y := BOX.position.y + 76 + _rows.size() * ROW_H + 16
@@ -102,8 +104,8 @@ func _xp(d: int) -> void:
 
 
 func _cars(d: int) -> void:
-	game.meta.total_cars = maxi(game.meta.total_cars + d, 0)
-	game.meta.save()
+	if game.run:
+		game.run.xp = maxi(game.run.xp + d, 0)  # round 10 D: car types unlock by the run's XP
 
 
 ## Two clicks: wipes the save (XP, garage, unlocks, the intro) and goes back to the title.

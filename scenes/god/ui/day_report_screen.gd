@@ -126,6 +126,12 @@ func _draw_day(r: Rect2) -> void:
 		var col: Color = GodPump.TIER_COLORS[grades[i][0]]
 		GodUI.text(self, Vector2(x, y + 50), str(tiers.get(grades[i][0], 0)), 24, col, true)
 		GodUI.text(self, Vector2(x, y + 68), tr(grades[i][1]), 9, Color(col, 0.8), true)
+	var fresh: Array = run.last_night.get("unlocked", []) if run else []
+	if not fresh.is_empty():  # round 10 D: the ladder's next rung arrives tomorrow
+		CartoonArt.label(self, Vector2(r.get_center().x, r.end.y - 64), tr("NEW TOMORROW: %s!") % GodData.CAR_TYPES[fresh[-1]].name, 16, Color(1.0, 0.8, 0.3))
+	elif run and not run.next_unlock().is_empty():
+		var n := run.next_unlock()
+		GodUI.text(self, Vector2(r.get_center().x, r.end.y - 64), tr("Next car: %s at %d XP") % [n.name, n.need], 13, Color(GodUI.CREAM, 0.7), true)
 	GodUI.text(self, Vector2(r.get_center().x, r.end.y - 12), tr("Gas left in the tank: $%.0f") % report.get("tank_left", 0.0), 14, Color(GodUI.CREAM, 0.7), true)
 
 

@@ -656,7 +656,7 @@ func spawn_road_car() -> ProtoCar:
 			rival_cars += 1
 	else:
 		car.customer = false
-	car.patience = 24.0 * mods.patience_mult
+	car.patience = 24.0 * mods.patience_mult * car.patience_k
 	cars_spawned += 1
 	return car
 
@@ -966,6 +966,11 @@ func _settle(car: ProtoCar) -> void:
 		paid_mult = combo.register(t)
 	_best_combo = maxi(_best_combo, combo.multiplier)
 	_count(car, t, paid_mult if combo.tiers.extends_combo(t) else 0)
+	var miss_fine: float = GodData.CAR_TYPES.get(car.type_id, {}).get("miss_fine", 0.0)
+	if t == ScoreTiers.MISS and miss_fine > 0.0:  # the trio elétrico: the samba is ruined
+		fines += miss_fine
+		cash -= miss_fine
+		_floaters.append({"text": tr("SAMBA RUINED! -$%d") % int(miss_fine), "pos": scr(car.position) + Vector2(0, -120), "life": 1.8, "color": Color(1, 0.35, 0.3), "size": 26})
 	var tips_ok := not (car.by_drone or car.drone_touched)  # playtest 10: a car a drone touched never tips
 	car.tip = tip_for(car.fill(), car.spilled) * _tip_mult(car) if tips_ok else 0.0
 	if t in [ScoreTiers.SUPER_PERFECT, ScoreTiers.PERFECT]:
@@ -1164,7 +1169,7 @@ func start_day(m: Dictionary, tank_dollars: float, day_n: int, pool: Array) -> v
 	for i in int(mods.queue):  # cars already waiting when you open (marketing)
 		var car := park_customer(0.0, random_lot_point())
 		car.set_type(_pick_type(true), rng)
-		car.patience = 24.0 * mods.patience_mult
+		car.patience = 24.0 * mods.patience_mult * car.patience_k
 	drones.clear()
 	for i in int(mods.drones):
 		drones.append({"pos": Vector2(WIDTH * 0.5 + i * 40, 140), "car": null, "state": "idle", "goal": 0.0})
@@ -1429,6 +1434,17 @@ func _step_roles(dt: float) -> void:
 						_clamp_thief(car)
 					else:
 						car.leave(self)
+			"bumper":  # the bumper car: knocks the cars it hits out of the way (and out of your ring)
+				car.bump_cool = maxf(car.bump_cool - dt, 0.0)
+				if car.bump_cool <= 0.0:
+					for other in cars:
+						if other != car and other.phase == ProtoCar.Phase.WANDER and other.position.distance_to(car.position) < 50.0:
+							var away := (other.position - car.position).normalized()
+							other.position = (other.position + away * 46.0).clamp(LOT.position + Vector2(24, 20), LOT.end - Vector2(24, 20))
+							car.heading = (-away).angle() + rng.randf_range(-0.6, 0.6)
+							_floaters.append({"text": "BOING!", "pos": scr(other.position) + Vector2(0, -60), "life": 1.0, "color": Color(0.55, 0.85, 1.0), "size": 22})
+							car.bump_cool = 0.8
+							break
 			"clumsy":  # bumps into cars, who spill some of their gas
 				car.bump_cool = maxf(car.bump_cool - dt, 0.0)
 				if car.bump_cool <= 0.0:

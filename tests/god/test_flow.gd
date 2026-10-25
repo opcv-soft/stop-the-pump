@@ -180,3 +180,13 @@ func test_the_game_speaks_french_and_english() -> void:
 	assert_eq(g.meta.language, "fr", "the choice is kept")
 	g.set_language("en")
 	assert_eq(g.tr("PLAY"), "PLAY")
+
+
+func test_the_night_opens_the_car_codex() -> void:
+	g.day.end_round()
+	g._after_report()
+	assert_eq(g.state, "night")
+	g.night._codex_btn.pressed.emit()
+	assert_true(g.night.codex.visible)
+	g.night.codex.close()
+	assert_false(g.night.codex.visible)

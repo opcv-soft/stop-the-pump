@@ -31,6 +31,11 @@ const CARS := {
 	"clumsy": {"len": 72.0, "wid": 36.0, "cab": Vector2(16, 22), "kind": "van", "paint": Color(0.62, 0.78, 0.86)},
 	"electric": {"len": 50.0, "wid": 28.0, "cab": Vector2(22, -2), "kind": "electric", "paint": Color(0.36, 0.95, 0.6)},
 	"papa": {"len": 58.0, "wid": 32.0, "cab": Vector2(28, -6), "kind": "papa", "paint": Color(1.0, 0.55, 0.15)},
+	# round 10 D
+	"rush": {"len": 66.0, "wid": 28.0, "cab": Vector2(20, -4), "kind": "rush", "paint": Color(0.3, 0.9, 1.0)},
+	"bumper": {"len": 46.0, "wid": 40.0, "cab": Vector2(0, 0), "kind": "bumper", "paint": Color(1.0, 0.3, 0.6)},
+	"tank": {"len": 124.0, "wid": 38.0, "cab": Vector2(24, 44), "kind": "tanker", "paint": Color(0.86, 0.88, 0.92)},
+	"trio": {"len": 132.0, "wid": 46.0, "cab": Vector2(22, 50), "kind": "trio", "paint": Color(0.1, 0.72, 0.38)},
 }
 
 
@@ -89,6 +94,17 @@ static func car(ci: CanvasItem, at: Vector2, heading: float, type_id: String, co
 	ci.draw_set_transform(at + Vector2(0, -lift), heading, squash * scale)
 	var hl := ln * 0.5
 	var hw := wid * 0.5
+	if spec.kind == "bumper":  # an arcade bumper car: a fat rubber ring, a seat, a pole with a spark
+		box(ci, Rect2(-hl - 5, -hw - 5, ln + 10, wid + 10), Color(0.2, 0.2, 0.26), 20.0, 3.0)
+		box(ci, Rect2(-hl, -hw, ln, wid), col, 16.0, 3.0)
+		ci.draw_rect(Rect2(-hl + 4, hw * 0.3, ln - 8, hw * 0.5), Color(0, 0, 0, 0.15))
+		disc(ci, Vector2(-4, 0), 9.0, Color(0.95, 0.75, 0.6), 2.5)  # the driver's head
+		ci.draw_circle(Vector2(-1, -3), 1.8, INK)
+		ci.draw_circle(Vector2(-1, 3), 1.8, INK)
+		disc(ci, Vector2(-hl + 6, 0), 3.0, Color(0.8, 0.82, 0.88), 2.0)  # the pole
+		ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		sparkle(ci, at + Vector2(0, -lift) + Vector2(-hl + 6, -18).rotated(heading) * scale, 7.0 + 3.0 * absf(sin(t * 20.0)))
+		return
 	for x in [-hl * 0.55, hl * 0.5]:  # wheels poke out
 		for y in [-hw - 3.0, hw - 4.0]:
 			ci.draw_rect(Rect2(x - 7, y, 14, 7), INK)
@@ -127,6 +143,25 @@ static func car(ci: CanvasItem, at: Vector2, heading: float, type_id: String, co
 			poly(ci, PackedVector2Array([Vector2(-6, -9), Vector2(2, -9), Vector2(-1, -1), Vector2(6, -1), Vector2(-4, 10), Vector2(-1, 2), Vector2(-7, 2)]), Color(1.0, 0.92, 0.2), 1.5)
 		"papa":  # a fishing rod on the roof
 			ci.draw_line(Vector2(-hl + 4, -hw + 6), Vector2(hl + 18, -hw - 10), INK, 2.5)
+		"rush":  # speed lines behind, a clock on the roof
+			for i in 3:
+				ci.draw_line(Vector2(-hl - 8 - i * 4, -8 + i * 8), Vector2(-hl - 24 - i * 6, -8 + i * 8), Color(1, 1, 1, 0.8), 3.0)
+		"tanker":  # a huge silver tank on the back, GAZ on its side
+			box(ci, Rect2(-hl + 4, -hw + 2, ln * 0.68, wid - 4), col.lerp(Color.WHITE, 0.35), 16.0, 3.0)
+			for i in 3:
+				ci.draw_line(Vector2(-hl + 22 + i * 26, -hw + 4), Vector2(-hl + 22 + i * 26, hw - 4), Color(INK, 0.35), 2.0)
+			ci.draw_rect(Rect2(-hl + 6, -3, ln * 0.64, 6), Color(0.91, 0.26, 0.23))
+		"trio":  # the samba truck: a stage, speakers, dancers with feathers, notes in the air
+			box(ci, Rect2(-hl + 4, -hw + 3, ln * 0.7, wid - 6), Color(1.0, 0.85, 0.15), 6.0, 3.0)
+			for c in [Vector2(-hl + 12, -hw + 9), Vector2(-hl + 12, hw - 9), Vector2(-hl + ln * 0.68, -hw + 9), Vector2(-hl + ln * 0.68, hw - 9)]:
+				box(ci, Rect2(c - Vector2(6, 6), Vector2(12, 12)), INK, 3.0, 1.5)  # speakers
+				ci.draw_circle(c, 3.0 + absf(sin(t * 16.0)) * 1.5, Color(0.5, 0.5, 0.6))
+			var feathers := [Color(1.0, 0.3, 0.55), Color(0.3, 0.6, 1.0), Color(1.0, 0.55, 0.15), Color(0.68, 0.45, 0.95)]
+			for i in 4:  # dancers, bobbing
+				var d := Vector2(-hl + 28 + i * 19, sin(t * 8.0 + i) * 5.0)
+				for f in 5:
+					ci.draw_line(d, d + Vector2.from_angle(PI + (f - 2) * 0.45 + sin(t * 9.0 + i) * 0.2) * 12.0, feathers[i], 3.0)
+				disc(ci, d, 5.0, Color(0.85, 0.6, 0.45), 2.0)
 	var cx: float = cab.y
 	var cl: float = cab.x
 	box(ci, Rect2(cx - cl * 0.5, -hw + 5, cl, wid - 10), col.lerp(Color.WHITE, 0.4), 7.0, 2.5)  # the roof
@@ -141,6 +176,15 @@ static func car(ci: CanvasItem, at: Vector2, heading: float, type_id: String, co
 		disc(ci, Vector2(hl - 2, y), 3.0, Color(1.0, 0.97, 0.7), 1.5)
 	ci.draw_line(Vector2(hl * 0.35, -hw + 4), Vector2(hl - 6, -hw + 6), SHINE, 3.0)  # one shine
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if spec.kind == "trio":  # music notes floating up from the samba truck
+		for i in 3:
+			var k := fmod(t * 0.7 + i / 3.0, 1.0)
+			var n := at + Vector2(-30 + i * 28 + sin(t * 3.0 + i) * 8.0, -20 - k * 50.0 - lift)
+			var a := 1.0 - k
+			ci.draw_circle(n, 4.5, Color(INK, a))
+			ci.draw_circle(n, 3.0, Color([Color(1.0, 0.3, 0.55), Color(0.3, 0.6, 1.0), Color(1.0, 0.85, 0.15)][i], a))
+			ci.draw_line(n + Vector2(3.5, 0), n + Vector2(3.5, -14), Color(INK, a), 2.0)
+			ci.draw_line(n + Vector2(3.5, -14), n + Vector2(10, -10), Color(INK, a), 2.0)
 
 
 ## The fuel gauge over a car (playtest 6: a dial, not a bar), cartoon: the order on a dark tag, a cream

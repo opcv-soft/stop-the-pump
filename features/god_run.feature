@@ -43,27 +43,26 @@ Feature: A GOD PUMP run  (#37, docs/GOD_PUMP_PLAN.md)
     Then the report shows a P&L: sales, tips, gas sold at cost, spilled gas, drone gas, fines, net profit
     And a balance sheet: cash, gas in the tank at cost, equipment at cost, the cousin's loan, equity
 
-  Scenario: Papa's Garage
-    Given XP
-    When I buy a nozzle, a bling and a perk
-    Then they apply to every run
-    And they are saved
+  Scenario: The Garage, in the run  (round 11, replaces Papa's Garage between runs)
+    Given the night
+    Then it has two tabs: THE SHOP (the tree, paid with cash) and THE GARAGE (paid with this run's XP)
+    And the Garage sells the nozzle ladder (each faster with a bigger ring, plus a perk), bling and perks
+    And nothing carries over to the next run
 
   Scenario: No dead end when I forget the truck  (playtest 7)
     Given the tank won't last tomorrow
     Then the night shows a red warning to call the truck
     And buying an upgrade that leaves too little for the truck asks me to click again
-    When I can't afford a full delivery but have at least $20
+    When the tank is dry and I can't afford a full delivery but have at least $20
     Then the truck brings as much gas as my cash buys
+    And otherwise the truck brings a full tank or nothing  (round 11: no small top-offs)
     And a partial delivery under half a tank deals no cards
     And the run is only over when the tank is dry and I have under $20
 
-  Scenario: 100% needs hours of Papa's Garage  (playtest 7, round 10 B)
-    Given a fresh save
-    Then the gas price climbs 25% a delivery and runs go broke before 100%
-    When I own the supplier's contract (prices rise 20% slower a tier)
-    And premium gas (every sale pays 10% more a tier)
-    Then 100% is within reach (balance bot: a first win around 3 to 4 h)
+  Scenario: 100% takes skill  (playtest 12, round 11)
+    Given an average player (the balance bot: an even split of grades)
+    Then a run ends around 30 to 60% market share and rarely wins (about 1 in 25)
+    And Gaétan's nightly push grows day by day
 
   Scenario: Bonhomme gonflable, the tube man  (round 8, Papa's Garage perk)
     Given the tube man perk at tier 1

@@ -21,7 +21,12 @@ var links: Array = []  # the two-parent upgrades bought (GodData.LINKS ids)
 var cards: Array = []
 var price_frozen := false
 var next_delivery_extra := 0.0
-var xp := 0
+var xp := 0  # XP earned this run (the car ladder counts it all)
+## Round 11 (playtest 12): the Garage is in the run, paid with this run's XP. `xp_spent` of `xp` is gone.
+var xp_spent := 0
+var nozzle_tier := 0  # GodData.NOZZLES index: each one replaces the last
+var bling: Array = []  # GodData.BLING ids bought (all on)
+var perk_tiers := {}  # GodData.PERKS id -> tiers bought
 var totals := {"cars": 0, "loot": 0.0, "supers": 0, "perfects": 0, "goods": 0, "oks": 0, "misses": 0, "unserved": 0, "best_combo": 1}
 var over := false
 var won := false
@@ -249,10 +254,63 @@ func pick_card(id: String) -> bool:
 	match id:
 		"price_freeze":
 			price_frozen = true
-		"loan":
-			cash += 300.0
-			next_delivery_extra = 0.4
 	return true
+
+
+# --- The Garage (round 11: in the run, paid with this run's XP) --------------------------------------
+
+## XP left to spend tonight.
+func xp_left() -> int:
+	return xp - xp_spent
+
+
+func next_nozzle() -> Dictionary:
+	return GodData.NOZZLES[nozzle_tier + 1] if nozzle_tier + 1 < GodData.NOZZLES.size() else {}
+
+
+func buy_nozzle() -> bool:
+	var n := next_nozzle()
+	if n.is_empty() or xp_left() < n.price:
+		return false
+	xp_spent += n.price
+	nozzle_tier += 1
+	return true
+
+
+func buy_bling(id: String) -> bool:
+	var b := GodData.item(GodData.BLING, id)
+	if b.is_empty() or id in bling or xp_left() < b.price:
+		return false
+	xp_spent += b.price
+	bling.append(id)
+	return true
+
+
+## What the next tier of a perk costs, or -1 if it's maxed.
+func perk_price(id: String) -> int:
+	var p := GodData.item(GodData.PERKS, id)
+	var tier: int = perk_tiers.get(id, 0)
+	return -1 if p.is_empty() or tier >= p.tiers else p.price * (tier + 1)
+
+
+func buy_perk(id: String) -> bool:
+	var price_xp := perk_price(id)
+	if price_xp < 0 or xp_left() < price_xp:
+		return false
+	xp_spent += price_xp
+	perk_tiers[id] = perk_tiers.get(id, 0) + 1
+	return true
+
+
+## The Garage's effects for GodMods: the nozzle in hand, every bling, every perk tier.
+func garage_mods(m: Dictionary) -> void:
+	GodData.apply_fx(m, GodData.NOZZLES[nozzle_tier].fx)
+	for id in bling:
+		GodData.apply_fx(m, GodData.item(GodData.BLING, id).get("fx", {}))
+	for id in perk_tiers:
+		GodData.apply_fx(m, GodData.item(GodData.PERKS, id).get("fx", {}), perk_tiers[id])
+	if "bobblehead" in bling:
+		m["bobblehead"] = 1
 
 
 # --- Days ---------------------------------------------------------------------------------------
@@ -296,7 +354,8 @@ func next_unlock() -> Dictionary:
 ## village follows your reputation, a few points a night. 100% wins the run; 0% loses it.
 func _fight_for_the_village(rep_gain: float) -> void:
 	last_night = {"share_from": share, "rep_from": reputation}
-	reputation = clampf(reputation + rep_gain - GodData.GAETAN_PUSH, 0.0, 100.0)
+	var m := mods()
+	reputation = clampf(reputation + rep_gain + m.rep_nightly - gaetan_push() * m.gaetan_push_mult, 0.0, 100.0)
 	share = move_toward(share, reputation, GodData.SHARE_STEP)
 	last_night.share_to = share
 	last_night.rep_to = reputation
@@ -306,6 +365,11 @@ func _fight_for_the_village(rep_gain: float) -> void:
 	elif share <= 0.0:
 		lost_to_gaetan = true
 		over = true
+
+
+## How hard Gaétan pushes back tonight: his specials grow day by day (round 11: he upgrades too).
+func gaetan_push() -> float:
+	return GodData.GAETAN_PUSH + GodData.GAETAN_PUSH_GROWTH * (day - 1)
 
 
 ## The books for a day (round 10, playtest 9): a P&L at wholesale cost and a balance sheet. Gas is in
@@ -341,7 +405,6 @@ func next_day() -> void:
 ## Ends the run and banks it in the meta: XP, cars, best day.
 func finish() -> void:
 	over = true
-	meta.xp += xp
 	meta.total_cars += totals.cars
 	meta.runs += 1
 	meta.best_day = maxi(meta.best_day, day)

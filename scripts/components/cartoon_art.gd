@@ -391,8 +391,8 @@ static func old_pump(ci: CanvasItem, at: Vector2, tank_k: float, shake: float, a
 
 
 ## The God Pump's nozzle: a big red grip, a steel spout ending at `tip`, the lever squeezed when pouring.
-static func nozzle(ci: CanvasItem, tip: Vector2, squeeze: bool, kick: float) -> void:
-	ci.draw_set_transform(tip, 1.15, Vector2.ONE)  # hanging down toward where it pours
+static func nozzle(ci: CanvasItem, tip: Vector2, squeeze: bool, _kick: float, angle := 1.15, s := 1.0) -> void:
+	ci.draw_set_transform(tip, angle, Vector2.ONE * s)  # by default hanging down toward where it pours
 	box(ci, Rect2(-34, -10, 30, 14), Color(0.8, 0.82, 0.88), 5.0)  # the spout
 	box(ci, Rect2(-96, -18, 66, 32), Color(0.91, 0.26, 0.23), 12.0, 4.0)  # the grip
 	ci.draw_rect(Rect2(-90, -13, 34, 6), SHINE)

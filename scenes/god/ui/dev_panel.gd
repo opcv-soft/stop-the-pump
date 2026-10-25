@@ -28,8 +28,6 @@ func build(g: GodGame) -> void:
 		[["-10", func() -> void: _share(-10.0)], ["+10", func() -> void: _share(10.0)], ["99%", func() -> void: _share(99.0 - (game.run.share if game.run else 0.0))]])
 	_row("Day", func() -> String: return str(game.run.day) if game.run else "-",
 		[["-1", func() -> void: _day(-1)], ["+1", func() -> void: _day(1)], ["+10", func() -> void: _day(10)]])
-	_row("XP (garage)", func() -> String: return str(game.meta.xp),
-		[["+10000", func() -> void: _xp(10000)], ["+100000", func() -> void: _xp(100000)]])
 	_row("Run XP (car unlocks)", func() -> String:
 		if not game.run:
 			return "-"
@@ -98,9 +96,6 @@ func _share(d: float) -> void:
 		game.day.market_share = game.run.share
 
 
-func _xp(d: int) -> void:
-	game.meta.xp += d
-	game.meta.save()
 
 
 func _cars(d: int) -> void:

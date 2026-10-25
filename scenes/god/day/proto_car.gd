@@ -327,6 +327,8 @@ func _move_pattern(dt: float, game: GodPump) -> void:
 			var ahead := _theta + _dir * 0.35
 			_steer(_centre + Vector2(cos(ahead), sin(ahead)) * _radii, dt, speed)
 		"shuttle":
+			if _ends.size() < 2:
+				start_pattern(game)  # its type turned it into a shuttle after it arrived (Le Mastodonte)
 			if _wait > 0.0:
 				_wait -= dt
 				return

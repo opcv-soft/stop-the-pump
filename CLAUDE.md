@@ -43,19 +43,19 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs 
   - **The bling:** `scripts/components/nozzle_bling.gd`.
   - **The delivery:** `scenes/god/ui/truck_scene.gd`.
   - **The lore bible:** `docs/LORE.md`.
-- Balance bot: `godot --headless -s tools/sim/god_bot.gd -- 20 fresh` (fresh | mid | late) plays the real game headless; `-- 12 campaign` plays players from a fresh save run after run, buying in the Garage, and reports the hour of their first day 50 (target: about 3 h, i.e. ~2 h of upgrades). Report in `docs/balance/GOD_PUMP_BALANCE.md`.
+- Balance bot: `godot --headless -s tools/sim/god_bot.gd -- 20 fresh` (fresh | mid | late) plays the real game headless (round 11: fresh runs only; it buys in the night's Garage with the run's XP). Target: an average player (the bot) rarely wins (about 1 run in 25). Report in `docs/balance/GOD_PUMP_BALANCE.md`.
 - Web build / artifact: `sh tools/web/pack_artifact.sh` exports the "Web" preset (single-threaded, Compatibility renderer) and packs `build/artifact/` (engine and data gzipped under .wasm names, unzipped by the page `tools/web/godpump.html`). Publish `build/artifact/index.html` with its 5 files to https://claude.ai/artifact/EcEB3srrceAkaePKW8RHhL. Needs the Godot 4.7.2 web export templates.
 - Windows installer: `sh tools/windows/build_installer.sh` exports the "Windows" preset and wraps it with NSIS (`tools/windows/installer.nsi`) into `build/windows/GodPump-Setup-<version>.exe`. Needs the Windows export templates and `brew install makensis`. Unsigned: Windows SmartScreen warns on first run.
 - Snapshot: `godot --path . -s tools/demo/snapshot.gd -- <out.png> [seconds]` saves one frame of a day in progress (needs a window), to check a layout without playing.
 - Demo video: `tools/demo/director.gd` (instructions at its top) records 45 s of the real game with Movie Maker, ffmpeg encodes `docs/video/godpump_demo.mp4`.
 - Sounds: `python3 tools/make_godpump_sounds.py` synthesizes the placeholders (applause, register, horn, choir, truck).
 - Blender (`tools/blender/`, `assets/art/source|export/`): the old low-poly kit, unused by GOD PUMP (kept for reference).
-- The meta save lives in `user://godpump_meta.cfg` (delete it to start over).
+- The meta save lives in `user://godpump_meta.cfg` (round 11: lifetime stats, language, the station's name; no XP).
 
 ## Designer tools (in game)
 - **I:** cycle the views: cartoon (default, round 10), HD-2D, three-quarter pixel, flat top-down.
 - **F1 dev mode:** a configurator panel (pauses a day): cash, gas in the tank, day, XP, cars filled (car-type unlocks), game speed, NEXT NIGHT, END THE DAY, RESET SAVE (two clicks).
-- **F3:** end the day now. **F4:** +$100 (day or night). **F6:** +10000 XP (for the garage).
+- **F3:** end the day now. **F4:** +$100 (day or night). **F6:** +10000 XP to this run (for the night's Garage).
 - **Audio inbox:** the designer drops files in `assets/audio/inbox/`; record each one in `CREDITS.md`.
 - **Audio direction:** plain SFX + looping background music. No music engineering unless the designer asks again.
 - Bump `config/version` in `project.godot` every build the designer plays (shown on the title screen).

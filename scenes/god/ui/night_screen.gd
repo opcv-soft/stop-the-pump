@@ -14,6 +14,10 @@ var _open_btn: Button
 var _codex_btn: Button
 ## Round 10 D: the car codex, over the night.
 var codex: CodexScreen
+## Round 11: the night's two tabs, THE SHOP (cash, the tree) and THE GARAGE (this run's XP).
+var garage: GarageTab
+var tab := "shop"
+var _tab_btns := {}
 var _t := 0.0
 var _hover_card := -1
 
@@ -36,6 +40,17 @@ func _init() -> void:
 	_codex_btn.position = Vector2(26, 590)
 	_codex_btn.pressed.connect(func() -> void: codex.open(run))
 	add_child(_codex_btn)
+	garage = GarageTab.new()
+	garage.visible = false
+	garage.bought.connect(refresh)
+	add_child(garage)
+	for i in 2:
+		var id: String = ["shop", "garage"][i]
+		var b := GodUI.button(["THE SHOP", "THE GARAGE"][i], Vector2(150 if i == 0 else 220, 40), 15)
+		b.position = Vector2(770 + i * 160, 18)  # top right, beside the night's plaque
+		b.pressed.connect(func() -> void: set_tab(id))
+		add_child(b)
+		_tab_btns[id] = b
 	codex = CodexScreen.new()
 	add_child(codex)
 
@@ -43,13 +58,26 @@ func _init() -> void:
 func show_night(the_run: RunState) -> void:
 	run = the_run
 	tree.run = run
+	garage.run = run
 	visible = true
+	refresh()
+
+
+## Shows THE SHOP (the tree, cash) or THE GARAGE (this run's XP).
+func set_tab(id: String) -> void:
+	tab = id
+	tree.visible = id == "shop"
+	garage.visible = id == "garage"
 	refresh()
 
 
 func refresh() -> void:
 	if not run:
 		return
+	for id in _tab_btns:
+		_tab_btns[id].modulate = Color.WHITE if id == tab else Color(0.6, 0.6, 0.6)
+	if _tab_btns.has("garage"):
+		_tab_btns.garage.text = tr("THE GARAGE  (%d XP)") % run.xp_left()
 	var cost := run.delivery_cost()
 	_truck_btn.disabled = not run.can_call_truck()
 	_truck_btn.text = tr("TANK FULL") if cost <= 0.0 else (tr("CALL THE TRUCK") if run.cash >= cost or run.tank >= 1.0 else tr("BUY $%.0f OF GAS") % run.cash)

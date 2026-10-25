@@ -658,7 +658,7 @@ func spawn_road_car() -> ProtoCar:
 	if rng.randf() < customer_chance * WANTS_MULT:  # it wants gas: a low gauge, then you or Gaétan
 		car.set_type(_pick_type(), rng)  # a customer, or one of the troublemakers
 		car.low_fuel = car.customer
-		if rng.randf() * 100.0 < market_share:
+		if rng.randf() * 100.0 < market_share or rng.randf() < mods.get("poach", 0.0):  # Vol de clients
 			car.wants_in = true
 		else:
 			car.to_rival = true
@@ -929,7 +929,7 @@ func _tip_mult(car: ProtoCar) -> float:
 	if car.by_drone:
 		m *= 0.5
 	if int(mods.happy_hour) > 0 and hour_now() < GodData.OPEN_HOUR + 2.0:
-		m *= 2.0
+		m *= 3.0  # round 11: the card is a big deal now
 	if not _first_car_done:
 		_first_car_done = true
 		m *= mods.first_car_tip_mult
@@ -987,10 +987,18 @@ func _settle(car: ProtoCar) -> void:
 		if tips_ok:
 			car.tip += mods.perfect_bonus + mods.applause_bonus
 		applause += 1
+	if t == ScoreTiers.SUPER_PERFECT and tips_ok:
+		if int(mods.get("double_or_nothing", 0)) > 0:
+			car.tip *= 3.0  # Double ou rien: a top-off triples
+		car.tip += mods.get("topoff_coin", 0.0)  # Pluie de pièces: a $20 coin on top
 	if tips_ok and mods.loto_chance > 0.0 and rng.randf() < mods.loto_chance * (1.0 + mods.luck / 100.0):
 		car.tip += 20.0
 		_floaters.append({"text": "LOTO! +$20", "pos": scr(car.position) + Vector2(0, -110), "life": 1.6, "color": Color(1, 0.9, 0.3), "size": 22})
 	var sale: float = minf(car.amount, car.target) * car.pay_share * mods.get("sale_mult", 1.0) + mods.per_car_bonus
+	if t == ScoreTiers.MISS and int(mods.get("double_or_nothing", 0)) > 0:
+		sale = 0.0  # Double ou rien: an overfilled car pays nothing
+		car.tip = 0.0
+		_floaters.append({"text": tr("NOTHING!"), "pos": scr(car.position) + Vector2(0, -120), "life": 1.4, "color": Color(1, 0.35, 0.3), "size": 24})
 	if mods.get("coffee_sale", 0.0) > 0.0 and car.waited > 3.0:  # Fenêtre au volant: a coffee while they waited
 		sale += mods.coffee_sale
 		_floaters.append({"text": "CAFÉ +$%d" % int(mods.coffee_sale), "pos": scr(car.position) + Vector2(30, -40), "life": 1.0, "color": Color(0.85, 0.65, 0.4), "size": 15})

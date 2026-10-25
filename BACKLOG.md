@@ -20,8 +20,8 @@
 - [x] `[standard]` **Round 10 batch E (built): the spill branch (a second tube man returns spills), the herding dog robot**
 - [x] Playtest v0.47 (playtest 12): report works; too easy; ladder too slow; chaining irrelevant; three upgrade layers confusing; closing and unlocks need reveals (docs/ROUND_11_PLAN.md)
 - [x] `[standard]` **Round 11A (built): full truck unless dry, drone + player fix, closing pays visibly, OUVERT/FERMÉ sign, CASH and TANK labels, the books without negatives**
-- [ ] `[innovation]` **Round 11B: Papa's Garage in the run (night tab, paid with XP), the nozzle ladder, cards as rule-changers, no meta**
-- [ ] `[tech]` **Round 11 balance: faster car ladder, harder to win**
+- [x] `[innovation]` **Round 11B (built): Papa's Garage in the run (night tab, paid with XP), the nozzle ladder, cards as rule-changers, no meta**
+- [x] `[tech]` **Round 11 balance (done): faster car ladder, harder to win**
 - [ ] `[innovation]` **Round 11C: combo juice, the chain's value on screen, a first-day tutorial**
 - [ ] `[juice]` **Round 11D: pack-opening closing and report, new-car card reveal**
 - [ ] Still to check from playtest 9: the clamps; play once in French

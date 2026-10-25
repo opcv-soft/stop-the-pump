@@ -47,3 +47,10 @@ Feature: The night shop's tree  (round 8, docs/ROUND_8_PLAN.md)
     Given the Chien de berger robot
     Then every 12 s a robot dog rounds my customers up in a tight circle around where the nozzle points
     And then they go back to their rounds
+
+  # --- Round 11: the truck's cards bend a rule ----------------------------------------------------
+
+  Scenario: Cards are rule-changers, not stat bumps
+    Then the cards include: an OK doesn't break the chain, chains climb to x8, Gaétan's push halved,
+      1 car in 3 heading to Gaétan's turns into my lot, Double ou rien (a top-off tips x3, an overfill pays nothing)
+    And the tree's steady upgrades (tips +20%, longer hours...) are not cards

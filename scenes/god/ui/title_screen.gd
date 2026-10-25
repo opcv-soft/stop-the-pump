@@ -4,7 +4,6 @@ extends Control
 ## the intro again, QUIT; the best day so far, and a nod if Dad has come home.
 
 signal play_pressed
-signal garage_pressed
 signal intro_pressed
 signal quit_pressed
 signal language_pressed
@@ -27,7 +26,7 @@ func _init() -> void:
 	lang.position = Vector2(1006, 14)
 	lang.pressed.connect(func() -> void: language_pressed.emit())
 	add_child(lang)
-	var labels := [["PLAY", "play_pressed"], ["PAPA'S GARAGE", "garage_pressed"], ["THE STORY", "intro_pressed"], ["QUIT", "quit_pressed"]]  # buttons translate themselves
+	var labels := [["PLAY", "play_pressed"], ["THE STORY", "intro_pressed"], ["QUIT", "quit_pressed"]]  # buttons translate themselves
 	if OS.has_feature("web"):
 		labels.pop_back()  # a browser tab has nothing to quit to
 	for i in labels.size():
@@ -94,7 +93,7 @@ func _draw() -> void:
 	draw_string(f, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 0.9, clampf(0.35 - absf(shine - 0.5) * 0.7, 0.0, 0.35)))
 	GodUI.text(self, Vector2(576, 256), tr("Saint-Clin-Clin-des-Meuh-Meuh, Québec"), 20, GodUI.CREAM, true, 5)
 	if meta:
-		var line := tr("Best market share: %d%%   ·   Runs: %d   ·   XP: %d") % [int(meta.best_share), meta.runs, meta.xp]
+		var line := tr("Best market share: %d%%   ·   Runs: %d") % [int(meta.best_share), meta.runs]
 		GodUI.text(self, Vector2(576, 300), line, 16, Color(GodUI.CREAM, 0.75), true, 4)
 		var v := "v" + str(ProjectSettings.get_setting("application/config/version", ""))
 		GodUI.text(self, Vector2(12, 636), tr("OPCV Games"), 14, Color(1, 1, 1, 0.5))

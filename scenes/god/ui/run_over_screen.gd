@@ -14,7 +14,7 @@ var _btn: Button
 func _init() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_btn = GodUI.button("PAPA'S GARAGE  »", Vector2(280, 48))
+	_btn = GodUI.button("MENU  »", Vector2(280, 48))
 	_btn.position = Vector2(436, 506)
 	_btn.pressed.connect(func() -> void: done.emit())
 	add_child(_btn)
@@ -73,7 +73,7 @@ func _draw() -> void:
 		[tr("Topped off · Perfect · Good"), "%d · %d · %d" % [t.supers, t.perfects, t.goods]],
 		[tr("OK · Overfilled · Unserved"), "%d · %d · %d" % [t.oks, t.misses, t.unserved]],
 		[tr("Best combo"), "×%d" % t.best_combo], [tr("Truck deliveries"), str(run.deliveries)],
-		[tr("Loot"), "$%d" % int(t.loot)], [tr("XP earned"), tr("+%d  (garage: %d)") % [run.xp, meta.xp if meta else 0]],
+		[tr("Loot"), "$%d" % int(t.loot)], [tr("XP earned"), "+%d" % run.xp],
 	]
 	var ry := y + 14.0
 	for row in rows:

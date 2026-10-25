@@ -414,3 +414,32 @@ Total costs,Total costs,Total des charges
 Net loss,Net loss,Perte nette
 Owed to the truck,Owed to the truck,Dû au camion
 Accumulated deficit,Accumulated deficit,Déficit accumulé
+an OK no longer breaks your chain,an OK no longer breaks your chain,un OK ne brise plus ta chaîne
+spills waste half as much gas,spills waste half as much gas,les dégâts gaspillent deux fois moins d'essence
+tips x3 for the first 2 hours of each day,tips x3 for the first 2 hours of each day,pourboires x3 les 2 premières heures de chaque jour
+cars wait twice as long before giving up,cars wait twice as long before giving up,les autos attendent deux fois plus longtemps avant d'abandonner
+the village talks: +1 reputation every night,the village talks: +1 reputation every night,le village jase : +1 de réputation chaque soir
+the nozzle fills one more car at once,the nozzle fills one more car at once,le pistolet remplit une auto de plus à la fois
+you know his specials: Gaétan's nightly push is halved,you know his specials: Gaétan's nightly push is halved,tu connais ses spéciaux : la poussée de Gaétan chaque soir est réduite de moitié
+chains climb 3 higher: up to x8,chains climb 3 higher: up to x8,les chaînes montent de 3 crans : jusqu'à x8
+every Topped off drops a $20 coin too,every Topped off drops a $20 coin too,chaque plein à ras bord laisse aussi une pièce de 20 $
+a Topped off tips x3; an Overfilled car pays nothing,a Topped off tips x3; an Overfilled car pays nothing,un plein à ras bord : pourboire x3; une auto débordée ne paie rien
+1 car in 3 heading to Gaétan's turns into your lot instead,1 car in 3 heading to Gaétan's turns into your lot instead,1 auto sur 3 qui allait chez Gaétan entre chez toi à la place
+"speed x1.2, ring +8; a top-off pays $2 more","speed x1.2, ring +8; a top-off pays $2 more","vitesse x1,2, cercle +8; un plein à ras bord paie 2 $ de plus"
+"speed x1.4, ring +16; a drip under 50 cents isn't Overfilled","speed x1.4, ring +16; a drip under 50 cents isn't Overfilled","vitesse x1,4, cercle +16; une goutte de moins de 50 cennes n'est pas un débordement"
+"speed x1.6, ring +24; the stream bends toward cars nearby","speed x1.6, ring +24; the stream bends toward cars nearby","vitesse x1,6, cercle +24; le jet se plie vers les autos proches"
+"speed x1.8, ring +32; 10% golden fills (tip x3)","speed x1.8, ring +32; 10% golden fills (tip x3)","vitesse x1,8, cercle +32; 10 % de pleins dorés (pourboire x3)"
+chains climb 1 higher,chains climb 1 higher,les chaînes montent d'un cran
+"once a day, an overfill doesn't break the chain","once a day, an overfill doesn't break the chain","une fois par jour, un débordement ne brise pas la chaîne"
++5% tip per chain step,+5% tip per chain step,+5 % de pourboire par cran de chaîne
+NOTHING!,NOTHING!,RIEN!
+THE SHOP,THE SHOP,LA BOUTIQUE
+THE GARAGE,THE GARAGE,LE GARAGE
+THE GARAGE  (%d XP),THE GARAGE  (%d XP),LE GARAGE  (%d XP)
+THE GARAGE  ·  XP to spend: %d,THE GARAGE  ·  XP to spend: %d,LE GARAGE  ·  XP à dépenser : %d
+"BLING  ·  bought once, always on","BLING  ·  bought once, always on","BLING  ·  acheté une fois, toujours actif"
+speed x%.1f · ring +%d,speed x%.1f · ring +%d,vitesse x%.1f · cercle +%d
+IN HAND,IN HAND,EN MAIN
+tier %d · %d XP,tier %d · %d XP,niveau %d · %d XP
+MENU  »,MENU  »,MENU  »
+Best market share: %d%%   ·   Runs: %d,Best market share: %d%%   ·   Runs: %d,Meilleure part de marché : %d %%   ·   Parties : %d

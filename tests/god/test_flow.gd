@@ -53,7 +53,7 @@ func test_the_truck_deals_cards_and_opening_starts_day_2() -> void:
 	assert_eq(g.run.day, 2)
 
 
-func test_bankrupt_ends_the_run_and_banks_xp() -> void:
+func test_bankrupt_ends_the_run_and_returns_to_the_menu() -> void:
 	g.day.reset_day_stats()
 	g.day.day_stats.xp = 40
 	g.day.tank = 0.0
@@ -61,10 +61,9 @@ func test_bankrupt_ends_the_run_and_banks_xp() -> void:
 	g.day.end_round()
 	g._after_report()
 	assert_eq(g.state, "run_over")
-	assert_eq(g.meta.xp, 40)
 	assert_eq(g.meta.runs, 1)
 	g.run_over.done.emit()
-	assert_eq(g.state, "garage")
+	assert_eq(g.state, "title", "round 11: no Garage between runs")
 
 
 func test_100_percent_market_share_plays_the_ending() -> void:
@@ -190,3 +189,16 @@ func test_the_night_opens_the_car_codex() -> void:
 	assert_true(g.night.codex.visible)
 	g.night.codex.close()
 	assert_false(g.night.codex.visible)
+
+
+func test_the_night_has_a_garage_tab_paid_with_xp() -> void:
+	g.day.end_round()
+	g._after_report()
+	g.run.xp = 400
+	g.night.set_tab("garage")
+	assert_true(g.night.garage.visible)
+	assert_false(g.night.tree.visible)
+	assert_true(g.night.garage.press("nozzle:1"))
+	assert_eq(g.run.nozzle_tier, 1)
+	g.night.set_tab("shop")
+	assert_true(g.night.tree.visible)

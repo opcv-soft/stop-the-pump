@@ -5,8 +5,7 @@ extends SceneTree
 ## overfill (the designer's assumption). At night it buys upgrades and calls the truck just in time.
 ##
 ##     godot --headless -s tools/sim/god_bot.gd -- 20 fresh      (runs, meta level: fresh | mid | late)
-##     godot --headless -s tools/sim/god_bot.gd -- 10 campaign   (10 players from a fresh save: run after
-##         run, spending XP in Papa's Garage; reports the hour of play of each one's first win)
+##     (round 11: no campaign mode: the Garage is in the run, paid with its XP; every run starts fresh)
 
 const DT := 0.05
 const AIM_SPEED := 900.0  # px/s the "mouse" moves
@@ -37,9 +36,6 @@ func _run_all() -> void:
 		level = args[1]
 	if args.size() > 2:
 		out_path = args[2]
-	if level == "campaign":
-		_campaigns()
-		return
 	var results := []
 	var t0 := Time.get_ticks_msec()
 	for i in runs:
@@ -130,6 +126,7 @@ func play_run(seed: int, meta: MetaState) -> Dictionary:
 		if run.over:
 			break
 		_night(run, last_gas)
+		_garage(run)
 		if run.tank < 1.0 and run.call_truck():  # dry: a partial delivery with whatever cash is left
 			if not run.offer.is_empty():
 				run.pick_card(_best_card(run))
@@ -137,8 +134,6 @@ func play_run(seed: int, meta: MetaState) -> Dictionary:
 			break
 		run.next_day()
 	day.queue_free()
-	if level == "campaign":
-		run.finish()  # banks XP and cars into the meta
 	return {"days": run.day, "won": run.won, "share": run.share, "lost": run.lost_to_gaetan, "deliveries": run.deliveries, "cars": run.totals.cars, "xp": run.xp,
 		"cash": run.cash, "loot_per_day": run.totals.loot / run.day, "gas_per_day": gas_used / run.day,
 		"cars_per_day": float(run.totals.cars) / run.day, "minutes": seconds / 60.0}
@@ -226,69 +221,35 @@ func _night(run: RunState, last_gas: float) -> void:
 
 
 func _best_card(run: RunState) -> String:
-	var order := ["golden_hose", "drone_card", "twin_stream", "fat_tips", "magnet", "happy_hour", "rush_hour", "gold_rush", "recycler", "gas_saver", "combo_lock", "encourage", "price_freeze", "loan", "devil"]
+	var order := ["poach", "golden_hose", "spy", "twin_stream", "golden_chain", "drone_card", "rumour", "combo_lock",
+		"coin_rain", "happy_hour", "recycler", "patient", "gas_saver", "price_freeze", "devil", "double_or_nothing"]
 	for id in order:
 		if id in run.offer:
 			return id
 	return run.offer[0] if not run.offer.is_empty() else ""
 
 
-# --- Campaign: a player's progress over hours -----------------------------------------------------
-
-## What a player buys in Papa's Garage, in order, whenever the XP is there.
-const GARAGE_ORDER := [["perk", "contract"], ["perk", "premium"], ["perk", "contract"], ["perk", "premium"],
-	["perk", "contract"], ["perk", "premium"], ["perk", "tube_man"], ["perk", "nest_egg"], ["bling", "receipt"], ["perk", "truck_friend"],
-	["bling", "hula"], ["perk", "slot"], ["perk", "lucky"], ["perk", "morning_rush"], ["nozzle", "laser"],
-	["bling", "rabbit"], ["perk", "slot"], ["bling", "coupons"], ["perk", "jackpot"], ["perk", "reroll"],
-	["perk", "big_cards"], ["perk", "head_start"], ["nozzle", "doree"]]
-const CAMPAIGN_HOURS := 4.0
+## Round 11: the Garage is a night tab paid with this run's XP. What the bot buys, in order, when it can.
+const GARAGE_ORDER := [["nozzle", ""], ["perk", "contract"], ["perk", "premium"], ["nozzle", ""], ["bling", "pine"],
+	["perk", "contract"], ["perk", "premium"], ["nozzle", ""], ["bling", "flame_decal"], ["perk", "tube_man"],
+	["bling", "medal"], ["perk", "contract"], ["perk", "premium"], ["nozzle", ""], ["bling", "hula"], ["perk", "lucky"],
+	["bling", "rabbit"], ["perk", "jackpot"], ["perk", "reroll"], ["bling", "bobblehead"], ["perk", "big_cards"]]
 
 
-func _campaigns() -> void:
-	var lines := ["GOD PUMP bot campaign: %d players from a fresh save, up to %.0f h each" % [runs, CAMPAIGN_HOURS]]
-	var firsts := []
-	for p in runs:
-		var meta := MetaState.new()
-		meta.path = ""
-		var minutes := 0.0
-		var first := -1.0
-		var log := []
-		var i := 0
-		while minutes < CAMPAIGN_HOURS * 60.0:
-			i += 1
-			var r := play_run(p * 1000 + i, meta)
-			minutes += r.minutes
-			log.append("%d" % r.days + ("*" if r.won else ""))
-			if r.won and first < 0.0:
-				first = minutes / 60.0
-			_shop(meta)
-		firsts.append(first)
-		lines.append("player %d: first win at %s; runs (days): %s" % [p + 1, "%.1f h" % first if first >= 0.0 else "never", " ".join(log)])
-		lines.append("    garage: %s, nozzle %s, bling %s" % [meta.perk_tiers, meta.nozzle, meta.equipped_bling])
-	var won := firsts.filter(func(h: float) -> bool: return h >= 0.0)
-	won.sort()
-	lines.append("first win: %d of %d players; median %s" % [won.size(), runs, "%.1f h" % won[won.size() / 2] if not won.is_empty() else "-"])
-	for l in lines:
-		print(l)
-	if out_path != "":
-		var f := FileAccess.open(out_path, FileAccess.WRITE)
-		f.store_string("\n".join(lines) + "\n")
-		f.close()
-
-
-func _shop(meta: MetaState) -> void:
+## Spends the run's XP in the Garage, first affordable thing in GARAGE_ORDER, again and again.
+func _garage(run: RunState) -> void:
 	var bought := true
 	while bought:
 		bought = false
 		for item in GARAGE_ORDER:
 			var ok := false
 			match item[0]:
-				"perk":
-					ok = meta.buy_perk(item[1])
-				"bling":
-					ok = meta.buy_bling(item[1])
 				"nozzle":
-					ok = meta.buy_nozzle(item[1])
+					ok = run.buy_nozzle()
+				"perk":
+					ok = run.buy_perk(item[1])
+				"bling":
+					ok = run.buy_bling(item[1])
 			if ok:
 				bought = true
 				break

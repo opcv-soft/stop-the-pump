@@ -24,7 +24,7 @@ func _initialize() -> void:
 	if args.size() > 2:
 		mode = args[2]
 	DisplayServer.window_set_size(Vector2i(1152, 648))
-	if mode in ["report", "night", "codex"]:
+	if mode in ["report", "night", "codex", "garage"]:
 		game = load("res://scenes/god/god_game.tscn").instantiate()
 		game.meta_path = ""
 		game.sound_on = false
@@ -56,6 +56,20 @@ func _process(_dt: float) -> bool:
 		return _report_frame()
 	if mode == "night":
 		return _night_frame()
+	if mode == "garage":
+		if game.run and f == 5:
+			game.run.xp = 2400
+			game.run.buy_nozzle()
+			game.run.buy_bling("pine")
+			game.day.end_round()
+		if f == 8:
+			game._after_report()
+			game.night.set_tab("garage")
+		if f == 20:
+			root.get_viewport().get_texture().get_image().save_png(out)
+			print("saved ", out)
+			return true
+		return false
 	if mode == "codex":
 		if game.run and f == 5:
 			game.run.xp = 3600

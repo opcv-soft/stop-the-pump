@@ -65,11 +65,11 @@ func test_a_delivery_offers_three_different_cards() -> void:
 
 func test_cards_change_the_mods() -> void:
 	var r := _run()
-	r.cards.append("rush_hour")
-	assert_eq(r.mods().queue, 2)
+	r.cards.append("golden_chain")
+	assert_eq(r.mods().combo_max, GodData.BASE.combo_max + 3)
 
 
-func test_price_freeze_and_the_cousins_loan() -> void:
+func test_price_freeze() -> void:
 	var r := _run()
 	r.cards.append("price_freeze")
 	r.price_frozen = true
@@ -77,12 +77,6 @@ func test_price_freeze_and_the_cousins_loan() -> void:
 	r.cash = 5000.0
 	r.call_truck()
 	assert_almost_eq(r.price, GodData.WHOLESALE_START, 0.0001, "frozen")
-	r.offer = ["loan"]
-	var cash := r.cash
-	r.pick_card("loan")
-	assert_almost_eq(r.cash, cash + 300.0, 0.01)
-	r.tank = 0.0
-	assert_almost_eq(r.delivery_cost(), roundf(r.tank_capacity() / 2.0 * r.price * 1.4), 1.0)
 
 
 func test_luck_brings_rarer_cards() -> void:
@@ -94,13 +88,10 @@ func test_luck_brings_rarer_cards() -> void:
 		for id in r.draw_cards(3):
 			if GodData.card(id).rarity != "common":
 				plain += 1
-	var m := MetaState.new()
-	m.path = ""
-	m.perk_tiers = {"lucky": 4}
-	m.owned_bling = ["fuzzy_dice"]
-	m.equipped_bling = ["fuzzy_dice"]
 	for seed in 300:
-		var r := RunState.new(m)
+		var r := _run()
+		r.perk_tiers = {"lucky": 4}  # round 11: the Garage is in the run
+		r.bling = ["fuzzy_dice"]
 		r.rng.seed = seed
 		for id in r.draw_cards(3):
 			if GodData.card(id).rarity != "common":
@@ -185,23 +176,30 @@ func test_the_shop_sells_nodes_in_order() -> void:
 	assert_eq(r.next_node("hours").id, "mom_lunch")
 
 
-func test_garage_purchases_apply_and_are_saved() -> void:
-	var m := MetaState.new()
-	m.path = SAVE
-	m.xp = 50000  # round 10: Garage prices ×10
-	assert_true(m.buy_nozzle("laser"))
-	assert_true(m.buy_bling("receipt"))
-	assert_true(m.buy_perk("nest_egg"))
-	var r := RunState.new(m)
-	assert_almost_eq(r.cash, GodData.BASE.start_cash + 50.0 + 40.0, 0.01)
-	assert_almost_eq(r.mods().flow_mult, 1.4, 0.001)
-	var back := MetaState.load_from(SAVE)
-	assert_eq(back.nozzle, "laser")
-	assert_true("receipt" in back.equipped_bling)
-	assert_eq(back.perk_tiers.get("nest_egg", 0), 1)
+func test_the_garage_spends_this_runs_xp() -> void:
+	var r := _run()
+	r.xp = 1500
+	assert_true(r.buy_nozzle(), "Le Costaud, the next nozzle")
+	assert_eq(r.nozzle_tier, 1)
+	assert_almost_eq(r.mods().flow_mult, 1.2, 0.001)
+	assert_almost_eq(r.mods().stream_radius, 8.0, 0.001)
+	assert_true(r.buy_bling("pine"))
+	assert_true(r.buy_perk("lucky"))
+	assert_eq(r.xp_left(), 1500 - 300 - 350 - 200)
+	assert_eq(r.xp, 1500, "the car ladder counts all the XP earned")
+	assert_false(r.buy_nozzle(), "not enough XP left for Le Chromé")
 
 
-func test_finishing_a_run_banks_xp_and_cars() -> void:
+func test_each_nozzle_is_a_straight_improvement() -> void:
+	for i in range(1, GodData.NOZZLES.size()):
+		var a: Dictionary = GodData.NOZZLES[i - 1].fx
+		var b: Dictionary = GodData.NOZZLES[i].fx
+		assert_gt(b.get("flow_mult", 1.0), a.get("flow_mult", 1.0), "faster")
+		assert_gt(b.get("stream_radius", 0.0), a.get("stream_radius", 0.0), "a bigger ring")
+		assert_gt(GodData.NOZZLES[i].price, GodData.NOZZLES[i - 1].price)
+
+
+func test_finishing_a_run_banks_its_stats_but_no_xp() -> void:
 	var m := MetaState.new()
 	m.path = ""
 	var r := RunState.new(m)
@@ -209,7 +207,7 @@ func test_finishing_a_run_banks_xp_and_cars() -> void:
 	r.totals.cars = 40
 	r.day = 6
 	r.finish()
-	assert_eq(m.xp, 120)
+	assert_eq(m.xp, 0, "round 11: nothing carries over")
 	assert_eq(m.total_cars, 40)
 	assert_eq(m.best_day, 6)
 	assert_eq(m.runs, 1)
@@ -261,13 +259,13 @@ func test_the_run_knows_when_the_tank_wont_last() -> void:
 func test_the_suppliers_contract_slows_the_price_rise() -> void:
 	var r := _run()
 	var plain := r.price_rise()
-	r.meta.perk_tiers = {"contract": 2}
+	r.perk_tiers = {"contract": 2}
 	assert_almost_eq(r.price_rise(), plain * 0.64, 0.0001)
 
 
 func test_premium_gas_makes_sales_pay_more() -> void:
 	var r := _run()
-	r.meta.perk_tiers = {"premium": 3}
+	r.perk_tiers = {"premium": 3}
 	assert_almost_eq(r.mods().sale_mult, 1.331, 0.001)
 
 

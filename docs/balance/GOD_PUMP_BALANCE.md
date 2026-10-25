@@ -31,6 +31,19 @@ Tried along the way (price rise per delivery, fresh save):
 - **32–40%:** median day 27–29.
 - **Perk tiers at 200 XP:** half the bot players won in their second run (1.5 h).
 
+## Round 11: one run, two currencies, harder (playtest 12, 2026-10-25)
+The Garage is in the run (paid with its XP), there's no meta, and every run starts fresh. So the bot plays
+fresh runs only (no campaign): it buys in the Garage each night (nozzles first, then contract and premium gas).
+- First pass with the new cards and the in-run Garage: **12 of 16 runs won.** Far too easy.
+- Ladder ÷2.5, reputation down (1.4 / 0.9 / 0.4), share step 5, Garage ×2: 0 of 16, shares 0–47%. Too hard for an average player.
+- **Chosen:** reputation Topped off 1.8, Perfect 1.1, Good 0.5 (OK 0, Overfilled −0.75, Unserved −0.5); Gaétan's
+  push 0.5 + 0.03 a day; share step 5; Garage ×2.
+
+    fresh (24 runs): days survived median 36; market share at the end 3–100%, mostly 30–60%; won: 1; lost to Gaétan: 0
+    XP: about 11,400 a run
+
+The bot pours an even split of grades. A player who pours better wins; one who pours like the bot hovers around even.
+
 ## Round 10 D: the car ladder by run XP (2026-10-25)
 Car types unlock during the run (sedan 0 … trio elétrico 9,000 XP). The tricky cars break the bot's chains:
 - 16 fresh runs: days survived median 35; market share at the end 21–80%, no win; 5,888 XP a run, **10,568 XP per hour**.

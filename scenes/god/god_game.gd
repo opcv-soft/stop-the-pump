@@ -4,9 +4,10 @@ extends Node
 ## run and the meta; the day itself is GodPump (the lot, the cars, the God Pump), which this node
 ## starts each morning and listens to each evening.
 ##   TITLE → (first time: INTRO → NAMING) → DAY → REPORT → NIGHT (shop, truck → TRUCK → CARDS) → DAY ...
-##   → bankrupt or 0% share: RUN_OVER → GARAGE → new run   ·   100% share: REPORT → ENDING → RUN_OVER → GARAGE
+##   → bankrupt or 0% share: RUN_OVER → TITLE   ·   100% share: REPORT → ENDING → RUN_OVER → TITLE
+##   (round 11: the Garage is a night tab, paid with this run's XP; nothing carries over between runs)
 ## Designer keys: F1 opens the dev configurator (DevPanel), F3 ends the day, F4 gives $100, F6 gives
-## 10000 XP.
+## 10000 XP to this run (for the night's Garage).
 
 const DAY_SCENE := preload("res://scenes/god/day/god_pump.tscn")
 
@@ -29,7 +30,6 @@ var report_screen: DayReportScreen
 var night: NightScreen
 var cards: CardPickScreen
 var run_over: RunOverScreen
-var garage: GarageScreen
 var truck_scene: TruckScene
 var _last_report := {}
 
@@ -58,15 +58,13 @@ func _ready() -> void:
 	night = NightScreen.new()
 	cards = CardPickScreen.new()
 	run_over = RunOverScreen.new()
-	garage = GarageScreen.new()
 	truck_scene = TruckScene.new()
 	truck_scene.sound_on = sound_on
-	for s in [title, report_screen, night, cards, run_over, garage, naming, cinematic, truck_scene]:
+	for s in [title, report_screen, night, cards, run_over, naming, cinematic, truck_scene]:
 		s.visible = false
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST  # crisp pixel icons
 		ui.add_child(s)
 	title.play_pressed.connect(new_run)
-	title.garage_pressed.connect(show_garage)
 	title.intro_pressed.connect(func() -> void: _play_cinematic(Cinematic.INTRO, "title"))
 	title.quit_pressed.connect(func() -> void: get_tree().quit())
 	title.language_pressed.connect(func() -> void: set_language("en" if TranslationServer.get_locale().begins_with("fr") else "fr"))
@@ -77,9 +75,7 @@ func _ready() -> void:
 	truck_scene.finished.connect(_after_truck)
 	night.open_pressed.connect(open_next_day)
 	cards.picked.connect(func(_id: String) -> void: _show_night())
-	run_over.done.connect(show_garage)
-	garage.play_pressed.connect(new_run)
-	garage.menu_pressed.connect(show_title)
+	run_over.done.connect(show_title)  # round 11: no Garage between runs; the next run starts from the menu
 	if autostart:
 		new_run()
 	else:
@@ -87,7 +83,7 @@ func _ready() -> void:
 
 
 func _hide_all() -> void:
-	for s in [title, report_screen, night, cards, run_over, garage, naming, cinematic, truck_scene]:
+	for s in [title, report_screen, night, cards, run_over, naming, cinematic, truck_scene]:
 		s.visible = false
 
 
@@ -103,13 +99,6 @@ func show_title() -> void:
 	_hide_all()
 	_hud(false)
 	title.show_title(meta)
-
-
-func show_garage() -> void:
-	state = "garage"
-	_hide_all()
-	_hud(false)
-	garage.show_garage(meta)
 
 
 ## A fresh run. The first time ever: the intro, then name the gaz bar.
@@ -161,9 +150,9 @@ func start_day() -> void:
 	_hud(true)
 	day.owned = run.owned.duplicate()  # upgrades bought last night pop in this morning
 	day.links = run.links.duplicate()
-	day.perks = meta.perk_tiers.duplicate()  # Garage perks stand on the lot every day
-	day.bling = meta.equipped_bling.duplicate()  # and the bling hangs off the nozzle
-	day.bling_owned = meta.owned_bling.duplicate()  # every piece owned: a ring on the handle
+	day.perks = run.perk_tiers.duplicate()  # Garage perks stand on the lot (round 11: bought this run)
+	day.bling = run.bling.duplicate()  # and the bling hangs off the nozzle
+	day.bling_owned = run.bling.duplicate()
 	day.visit = Visitors.beat_for(run.day)  # round 9: the lore drives in and chats
 	if not day.visit.is_empty():
 		var first: Array = day.visit.lines[0]
@@ -310,8 +299,6 @@ func toggle_dev() -> void:
 func dev_refresh() -> void:
 	if state == "night":
 		night.refresh()
-	elif state == "garage":
-		garage.show_garage(meta)
 
 
 func dev_end_day() -> void:
@@ -389,5 +376,6 @@ func _unhandled_input(e: InputEvent) -> void:
 				run.cash += 100.0
 				night.refresh()
 		KEY_F6:
-			meta.xp += 10000
+			if run:
+				run.xp += 10000  # round 11: spend it in the night's Garage
 			meta.save()

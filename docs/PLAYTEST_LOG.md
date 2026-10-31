@@ -2,6 +2,13 @@
 
 One entry per hypothesis. Newest first.
 
+> **Summary (2026-10-31).** Playtests 1–8 built the pour-and-stop core, the combo, then GOD PUMP (the nozzle
+> from the sky, the run, the truck, the tree). Playtest 9: focus (bubbles, money over cars, an invisible reach)
+> → the ring, coins, quiet regulars, Gaétan and market share asked for. Playtest 10: coins back on the lot,
+> MULTI-JET, drone-touched cars don't tip. Playtest 11 (review): XP = litres × sum of chains × accuracy, a real
+> balance sheet, the cartoon look approved. Playtest 12 (v0.47): too easy, slow ladder, chaining irrelevant,
+> three upgrade layers confusing → round 11. v0.48 is awaiting its playtest.
+
 ## 2026-10-25 — v0.47 played  (#37)
 Hypothesis: The cartoon look, chaining for XP, the car ladder and the codex make the run readable and worth replaying.
 Variable: v0.47.0

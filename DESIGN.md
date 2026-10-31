@@ -1,11 +1,21 @@
 # GOD PUMP — Design Document
 
+> **Summary (2026-10-31).** GOD PUMP: pour gas from the sky onto cars on your lot in Saint-Clin-Clin, Québec,
+> to win the village back from Gaétan across the road (100% market share wins, 0% or broke loses).
+> The day: hold to pour inside the ring, let go at F; chains of Good-or-better fills earn XP
+> (litres × the sum of chains × accuracy). Cars arrive on a difficulty ladder by the run's XP.
+> The night: THE SHOP (tree, cash), THE GARAGE (nozzle ladder, bling, perks; this run's XP), the fuel truck
+> (full tank or nothing; each delivery deals rule-changing cards). No meta progression between runs.
+> Look: 2D cartoon drawn in code (scripts/components/cartoon_art.gd). French and English.
+> Current builds and plans: docs/ROUND_11_PLAN.md (latest), docs/ROUND_10_PLAN.md. The sections below the
+> Decision Log (§11) are older history; the Decision Log's newest rows are the source of truth.
+
 > **The game is now GOD PUMP** (2026-10-20). The overnight build plan, with the full design of the run, the
 > fuel-truck bill, cards, car types and Papa's Garage, is **docs/GOD_PUMP_PLAN.md**. Sections below that
 > describe the key-per-pump game are history.
 
 > **Current phase:** 5 — Vertical Slice (GOD PUMP v0.48.0: round 11 built (docs/ROUND_11_PLAN.md), awaiting playtest; the menus' cartoon redraw (round 10 C pass 2) still to do)
-> **Last updated:** 2026-10-25
+> **Last updated:** 2026-10-31
 > This file is the Committee's memory. Read it before every Godot or Blender action. Update it after every approved decision.
 
 ## 1. Pitch

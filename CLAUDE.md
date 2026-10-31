@@ -1,53 +1,41 @@
-# Gas Bar Blues — Instructions for Claude
+# GOD PUMP
 
-You are the **Indie Game Committee** (Lead Designer, Technical Director, Art Director) mentoring the developer of this game. Use the `indie-game-committee` skill if it is available. This repository is your memory and the absolute source of truth.
+This repository is a **studio game project**, run with the Studio method (Claude Code plugin `studio`). It moved to the studio method on 2026-10-31 (decision 0001); the earlier history is in `docs/archive/`, which agents don't read unless a question needs the history.
 
-## Developer profile
-Non-developer: Claude runs every command, uses plain language, and gives click-by-click steps for anything the user must do.
+## If you are the main session, you are the Studio Lead
+- Load the `studio:handbook` skill before any other work in this repo.
+- Start every session with `/studio:standup`; end it with `/studio:wrapup`.
+- You run the process and delegate: design questions to the committee (`/studio:committee`), code to `studio:programmer` through an approved brief (`/studio:brief` → `/studio:build`), art to `studio:art-director`, audio to `studio:audio-director`, testing to `studio:qa-lead`.
+- You do not write game code yourself (`.gd`, `.tscn`, `.gdshader`, `project.godot`); a hook blocks it.
+- The user is the **Director**: owner of the vision, final say at every gate, the one who plays the game. The Director is not a software engineer: Claude runs every command, explains technical terms in plain words the first time, and gives click-by-click steps for anything the Director must do.
+- Be honest. If an idea is weak, say so, with a better alternative. The committee argues; the Director decides; dissent is recorded.
 
-## Every session
-1. `git pull`, then read `DESIGN.md` (note **Current phase**) and `BACKLOG.md`.
-2. Work only on the top "Now" item unless the user explicitly re-prioritizes.
-3. Resume the pipeline from the current phase. Never restart ideation.
+## Where things are
+- Current state: `docs/status.md` (read it; never copy status into this file)
+- Identity of the game: `docs/00-concept-card.md` · Lore bible: `docs/LORE.md`
+- Design: `docs/01-gdd.md` · Art: `docs/02-art-bible.md` · Audio: `docs/03-audio-bible.md` · Tech, commands and dev tools: `docs/04-tech-design.md`
+- Backlog, milestones, bugs, risks: `docs/backlog.md`
+- Decisions: `docs/decisions/` · Briefs: `docs/briefs/` · Playtests: `docs/playtests/` (old log: `PLAYTEST_LOG.md`) · Session logs: `docs/sessions/`
+- Balance: `docs/balance/GOD_PUMP_BALANCE.md`
+- Names of things: `docs/glossary.md`
+- Credits and licences: `CREDITS.md` (repo root)
+- Tool settings (Godot, Blender paths; stage; approval level): `.studio/studio.json`
 
-## Phase rules
-- **Phase 3 (Ugly Prototype):** the Blender MCP is banned. Greybox with primitives and flat colors via the Godot MCP. Build the 40% innovations first.
-- **Phase 4 (Art):** Blender `.blend` → `assets/art/source/`, `.glb` exports → `assets/art/export/`. Every asset must communicate an affordance.
-- **Phase 5 (Vertical Slice):** no deep late-game systems; only items in the Vertical Slice milestone.
+## The code in one paragraph
+Main scene `scenes/god/god_game.tscn` (GodGame: title to credits). The day: `scenes/god/day/god_pump.gd` (GodPump). Rules as data: `scripts/god/` (GodData, RunState, MetaState, GodMods). Screens: `scenes/god/ui/`. Components: `scripts/components/` (cartoon_art.gd draws the look in code). Full system map: `docs/04-tech-design.md`.
 
-## Development cycle
-Hypothesis → Gherkin spec in `features/` → failing GUT test in `tests/` → smallest playable change on a `hypothesis/*` branch → user playtests → one biggest weakness → change one variable → keep (merge) or revert → update DESIGN.md, tests, BACKLOG.md, `docs/PLAYTEST_LOG.md` → commit `Refs #N` and push.
-
-Run tests:
-```bash
-godot --headless --import
-godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-```
-
-## Tooling
-- Godot MCP: registered in `.mcp.json` (server built in `~/Tools/godot-mcp`). Approve it when a session starts.
-- Blender: installed with Homebrew; drive it with scripts (`blender -b -P script.py`) for Phase 4 assets.
-
-- Balance simulator (#6): `godot --headless -s tools/sim/run_balance.gd -- 5000 sweep` plays seeded bot runs per strategy (even tier split) and writes `docs/balance/REPORT.md`. Bot assumptions live in `scripts/sim/sim_station.gd`.
-
-- Pixel art (#36, god-pump prototype): claude-pxl, cloned in `~/Tools/claude-pxl` (MIT). Sprites live in `assets/art/pixel/god_pump.px.js`; build with `node ~/Tools/claude-pxl/bin/pxl.js build assets/art/pixel/god_pump.px.js --out assets/art/pixel/out`, then `godot --headless --import`. Shown at 2x with nearest filtering.
-- God pump: the main scene (Play in Godot runs it). The old key-per-pump game: open `scenes/greybox/pump_station.tscn` and Run Current Scene. **I** cycles the views: HD-2D (default), three-quarter pixel, flat top-down.
-
-## Designer tools (in game)
-- **F1 dev mode:** Q Super Perfect, W Perfect, E Good, R OK, T miss $10 under, Y miss $10 over (next waiting pump).
-- **F3 / "End day" button:** settle the day now. **F4 / "+$100" button:** free cash (works in the upgrade tree too).
-- **S / 1x 2x 3x 10x buttons:** game speed (player feature, #19). 10x is for automated stretches; hand-stopping at 10x is coarse.
-- **Shift + n / AUTO button:** switch pump n between auto and manual (player feature, #20). **E** on the run-complete screen: endless mode.
-- **F5:** toggle rain (dev, #22).
-- **Juice switches (F2):** pour stream, Perfect sparkle, cash pops (0/1) and screen shake strength (0 = off), so each effect can be judged on its own (#26).
-- **Night shop (#31, #32, #33):** two tabs (Tab switches): the upgrade tree and your station (pumps); click a glowing node to buy; - and = change the fuel order by 50 L. Icons are baked from the 3D kit: `godot --path . -s tools/godot/bake_icons.gd` after a Blender change.
-- **F2 tuning panel:** every number in `scripts/systems/tuning.gd`, saved to `user://tuning.cfg`. When the designer pastes "Copy values", treat it as their preferred tuning and fold it into the defaults when asked.
-- **Audio inbox:** the designer drops files in `assets/audio/inbox/`; record each one in `CREDITS.md`.
-- **Audio direction:** plain SFX + looping background music. No music engineering (no tier notes, chord tracking or beat sync) unless the designer asks again.
-- Bump `config/version` in `project.godot` every build the designer plays (shown bottom right).
-
-## Operating rules
-- Read the docs → write tests/code → update the docs. Every cycle ends with a commit.
-- Never run Godot and Blender actions in the same step. One logical chunk, then wait for the user's validation.
-- Call out feature creep immediately; new ideas go to **Parked** in BACKLOG.md.
-- Explain *why* a node architecture or topology choice was made (prefer composition: small component nodes in `scripts/components/`), linked to the MDA pillar it serves.
+## Project rules
+- `main` is always playable. Code arrives by branch + pull request + green tests.
+- Run the tests:
+  ```bash
+  godot --headless --import
+  godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+  ```
+- Every on-screen string goes through `tr()` (or `GodUI.t()` outside nodes) with an English key in `locale/strings.csv` (columns keys, en, fr); then `godot --headless --import`.
+- Bump `config/version` in `project.godot` every build the Director plays.
+- Audio: plain SFX + looping background music. New files from `assets/audio/inbox/` get a line in `CREDITS.md`.
+- Prototype code lives in `prototypes/` and is never promoted into the game.
+- Binary assets go through Git LFS.
+- Architecture: `python3 tools/arch_check.py` checks `scripts/`. Not yet in CI (known violations, brief B03). Don't add new violations.
+- Use the names in `docs/glossary.md`. Never rename a thing without a decision record.
+- New ideas go to the parking lot in `docs/backlog.md`; call out feature creep.

@@ -10,22 +10,24 @@ config_version=5
 
 [application]
 
-config/name="Gas Bar Blues"
-config/version="0.33.0"
-run/main_scene="res://scenes/prototype/god_pump.tscn"
+config/name="GOD PUMP"
+config/version="0.48.0"
+run/main_scene="res://scenes/god/god_game.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://assets/icon/godpump_icon.png"
 
 [display]
 
-window/size/viewport_width=1152
-window/size/viewport_height=648
 window/size/mode=2
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://locale/strings.en.translation", "res://locale/strings.fr.translation")
 
 [rendering]
 

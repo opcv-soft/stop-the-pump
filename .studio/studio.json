@@ -1,0 +1,17 @@
+{
+  "game": "GOD PUMP",
+  "slug": "stop-the-pump",
+  "created": "2026-10-18",
+  "converted_to_studio": "2026-10-31",
+  "stage": "implement",
+  "milestone": "M1 Vertical Slice",
+  "approval_level": "gates",
+  "mode": "lean",
+  "lead_can_code": false,
+  "godot_bin": "/opt/homebrew/bin/godot",
+  "godot_version": "4.7.2",
+  "blender_bin": "/Applications/Blender.app/Contents/MacOS/Blender",
+  "comfyui_url": null,
+  "learning_mode": false,
+  "knowledge_dir": "/Users/olivier/Games/game-studio/knowledge"
+}

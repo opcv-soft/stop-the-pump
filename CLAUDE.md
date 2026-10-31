@@ -1,5 +1,7 @@
 # GOD PUMP
 
+> **SUNSET (2026-10-31, decision 0002).** This repo is frozen at v0.48.0 as a read-only reference. GOD PUMP is being rebuilt in a new studio project; the hand-over is `docs/BRAINDUMP.md`. Don't start new work here.
+
 This repository is a **studio game project**, run with the Studio method (Claude Code plugin `studio`). It moved to the studio method on 2026-10-31 (decision 0001); the earlier history is in `docs/archive/`, which agents don't read unless a question needs the history.
 
 ## If you are the main session, you are the Studio Lead

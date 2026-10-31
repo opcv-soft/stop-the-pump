@@ -3,8 +3,8 @@
   "slug": "stop-the-pump",
   "created": "2026-10-18",
   "converted_to_studio": "2026-10-31",
-  "stage": "implement",
-  "milestone": "M1 Vertical Slice",
+  "stage": "sunset",
+  "milestone": null,
   "approval_level": "gates",
   "mode": "lean",
   "lead_can_code": false,
@@ -13,5 +13,6 @@
   "blender_bin": "/Applications/Blender.app/Contents/MacOS/Blender",
   "comfyui_url": null,
   "learning_mode": false,
-  "knowledge_dir": "/Users/olivier/Games/game-studio/knowledge"
+  "knowledge_dir": "/Users/olivier/Games/game-studio/knowledge",
+  "sunset": "2026-10-31"
 }

@@ -1,5 +1,6 @@
 # GOD PUMP — Backlog
 
+> **Sunset 2026-10-31 (decision 0002):** this backlog moves to the new project via docs/BRAINDUMP.md §8 and §12.
 > Owner: Producer. Ordered. Briefs live in `docs/briefs/`.
 > Rebuilt on 2026-10-31 from the old BACKLOG.md (docs/archive/BACKLOG_history.md: rounds 1–11, all done items, the old Gas Bar Blues ideas).
 

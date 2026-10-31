@@ -6,20 +6,18 @@
 - **Milestone:** M1 Vertical Slice
 - **Last gate:** G1 counted as passed under the pre-studio method (decision 0001)
 - **Last session:** 2026-10-31: converted the project to the studio method
-- **Build:** v0.48.0 on `hypothesis/god-pump-run` (round 11 built, not yet playtested)
+- **Build:** v0.48.0 on `main` (round 11 built, not yet playtested)
 
 ## Now
 Waiting for the Director's v0.48 playtest (playtest 13).
 
 ## Next actions (ordered)
 1. `/studio:playtest` on v0.48.0: log it, name the one biggest weakness.
-2. Merge `hypothesis/god-pump-run` (and this conversion) into `main`.
-3. `/studio:brief` for the biggest weakness (B01), then `/studio:build`.
-4. Then B02 (menus in the cartoon look) and B03 (split the day scene).
+2. `/studio:brief` for the biggest weakness (B01), then `/studio:build`.
+3. Then B02 (menus in the cartoon look) and B03 (split the day scene).
 
 ## Waiting on the Director
 - Play v0.48.0 (the tutorial first: F1 → RESET SAVE).
-- Go-ahead to merge into `main`.
 
 ## Undecided questions (design / architecture) — close at the next committee
 | Question | Raised | Blocking? |

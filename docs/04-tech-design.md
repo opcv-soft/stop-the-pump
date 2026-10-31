@@ -48,7 +48,7 @@ godot --path . -s tools/demo/snapshot.gd -- <out.png> [seconds]
 
 ## Technical risks
 1. `god_pump.gd` (2,315 lines) holds most of the day: every change there is slower and riskier. Split it before the menus' redraw adds more.
-2. `main` is 51 commits behind `hypothesis/god-pump-run`: all of GOD PUMP lives on that branch.
+2. (Resolved 2026-10-31: GOD PUMP merged into `main`, PR #38.)
 
 ## Performance log
 | Date | Build | Measure | Result |

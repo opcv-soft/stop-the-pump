@@ -10,12 +10,12 @@ Exit criteria:
 - The Director plays a full run and wants another.
 - Every screen in the cartoon look; no known blocking bugs.
 - The bot wins about 1 run in 25; a skilled player can reach 100% with work.
-- `main` holds the playable build.
+- `main` holds the playable build (done 2026-10-31, PR #38).
 
 | Priority | ID | Brief | Type | Status | PR |
 |---|---|---|---|---|---|
 | 1 | — | Playtest v0.48 (`/studio:playtest`): tutorial (reset save in F1), chain on screen, Garage tab and nozzle ladder, new cards, closing and report reveal, new-car card, difficulty | Playtest | Waiting on the Director | |
-| 2 | — | Merge `hypothesis/god-pump-run` into `main` so main is playable | Tech | Waiting on the Director | |
+| 2 | — | Merge `hypothesis/god-pump-run` into `main` so main is playable | Tech | Done | #38 |
 | 3 | B01 | Fix the one biggest weakness from playtest 13 | Feature | Not written | |
 | 4 | B02 | Menus in the cartoon look: night, report, title, garage, cards, truck, icons (round 10 C pass 2) | Art | Not written | |
 | 5 | B03 | Split the day scene (`god_pump.gd`, 2,315 lines) into components; then run arch_check in CI | Tech | Not written | |
@@ -49,4 +49,3 @@ Exit criteria:
 | Title clash ("Gaz Bar Blues" film, 2003) / GOD PUMP not checked | Medium | High at release | Name check before any public page | Producer | Before G3 |
 | `god_pump.gd` too big to change safely | High | Medium | Brief B03 | Programmer | Before B02 |
 | Music licence (ElevenLabs plan) | Low | High at release | Confirm commercial use | Audio Director | Before G3 |
-| main not playable (all work on a hypothesis branch) | Certain | Medium | Merge after playtest 13 | Lead | This week |
